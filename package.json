@@ -1,0 +1,25 @@
+{
+  "name": "noah",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:client": "pnpm --filter @apps/client dev",
+    "dev:server": "pnpm --filter @apps/server dev",
+    "dev": "concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
+    "build:client": "pnpm --filter @apps/client build",
+    "build:server": "pnpm --filter @apps/server build",
+    "build": "concurrently \"pnpm run build:client\" \"pnpm run build:server\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "hono": "^4.6.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.7.1"
+  }
+}
