@@ -1,47 +1,42 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { envConfig } from "./env.js";
+import { supabaseMiddleware } from "./middleware/auth.middleware.js";
+import { errorHandlerMiddleware } from "./middleware/error.middleware.js";
 import route from "./route/route.js";
 
 const app = new Hono();
 
-app.use("*", async (c, next) => {
-  console.log("------ Incoming Request ------");
-  console.log(`Method: ${c.req.method}`);
-  console.log(`URL: ${c.req.url}`);
-
-  // Parse query parameters (if present)
-  const url = new URL(c.req.url);
-  console.log(
-    `Query Params: ${JSON.stringify(
-      Object.fromEntries(url.searchParams),
-      null,
-      2
-    )}`
-  );
-
-  // Parse body (if applicable)
-  if (c.req.method !== "GET" && c.req.method !== "HEAD") {
-    try {
-      const body = await c.req.json();
-      console.log(`Body: ${JSON.stringify(body, null, 2)}`);
-    } catch (err) {
-      console.log("Body: Unable to parse (not JSON)");
-    }
-  }
-  console.log("-----------------------------");
-
-  await next(); // Continue to the next handler
-});
+app.use(
+  "*",
+  supabaseMiddleware(),
+  cors({
+    origin: [
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : "https://primepinas.com",
+    ],
+    credentials: true,
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["Content-Range", "X-Total-Count"],
+  })
+);
 
 app.get("/", (c) => {
-  return c.text("Api endpoint is working!");
+  return c.text("API endpoint is working!");
 });
+
+app.onError(errorHandlerMiddleware);
+app.use(logger());
 
 app.route("/api/v1", route);
 
-const port = 8080;
-
 serve({
   fetch: app.fetch,
-  port,
+  port: envConfig.PORT,
 });
+
+console.log(`Server is running on port ${envConfig.PORT}`);
