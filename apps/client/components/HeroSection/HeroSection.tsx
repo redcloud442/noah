@@ -12,6 +12,7 @@ const HeroSection = () => {
           width={4000}
           height={2000}
           quality={80}
+          priority
           className=" -translate-y-10 sm:-translate-y-20"
         />
       </AspectRatio>

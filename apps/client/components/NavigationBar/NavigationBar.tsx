@@ -12,51 +12,44 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import useUserStore from "@/lib/userStore";
 import { cn } from "@/lib/utils";
+import { authService } from "@/services/auth";
+import { User } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { FaRegUser } from "react-icons/fa";
-import { IoBagOutline } from "react-icons/io5";
-const components: { title: string; href: string; description: string }[] = [
+import ShoppingCartModal from "../ShoppingCartModal/ShoppingCartModal";
+
+const components: {
+  imageSrc: string;
+  title: string;
+  href: string;
+  description: string;
+}[] = [
   {
-    title: "Alert Dialog",
-    href: "/docs/primitives/alert-dialog",
+    imageSrc: "/assets/model/noire-10278.jpg",
+    title: "Noire fashion",
+    href: "/collections/noire-fashion",
     description:
-      "A modal dialog that interrupts the user with important content and expects a response.",
-  },
-  {
-    title: "Hover Card",
-    href: "/docs/primitives/hover-card",
-    description:
-      "For sighted users to preview content available behind a link.",
-  },
-  {
-    title: "Progress",
-    href: "/docs/primitives/progress",
-    description:
-      "Displays an indicator showing the completion progress of a task, typically displayed as a progress bar.",
-  },
-  {
-    title: "Scroll-area",
-    href: "/docs/primitives/scroll-area",
-    description: "Visually or semantically separates content.",
-  },
-  {
-    title: "Tabs",
-    href: "/docs/primitives/tabs",
-    description:
-      "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
-  },
-  {
-    title: "Tooltip",
-    href: "/docs/primitives/tooltip",
-    description:
-      "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
+      "Noire fashion is a fashion brand that sells fashionable and stylish clothes.",
   },
 ];
 
 export const NavigationBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const { user, setUser } = useUserStore();
+
+  useEffect(() => {
+    const handleFetchUser = async () => {
+      if (!user.id) return;
+      const data = await authService.verifyToken();
+
+      setUser(data);
+    };
+
+    handleFetchUser();
+  }, [user.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,6 +58,13 @@ export const NavigationBar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const [hoveredItem, setHoveredItem] = useState({
+    title: "Noire fashion",
+    description:
+      "Noire fashion is a fashion brand that sells fashionable and stylish clothes.",
+    imageSrc: "/assets/model/noire-10278.jpg",
+  });
 
   return (
     <div
@@ -88,35 +88,71 @@ export const NavigationBar = () => {
           <NavigationMenuItem>
             <NavigationMenuTrigger>Collections</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[700px] lg:grid-cols-[.75fr_1fr]">
-                <li className="row-span-3">
-                  <NavigationMenuLink asChild>
-                    <Link
-                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                      href="/"
-                    >
-                      <div className="mb-2 mt-4 text-lg font-medium">
-                        shadcn/ui
+              <ul className="grid gap-2 p-4 md:w-[400px] lg:w-[700px] lg:grid-cols-[.75fr_1fr]">
+                {/* Main item with hover effect */}
+                <li className="row-span-3 group relative">
+                  <Link
+                    href="/"
+                    className="flex h-full w-full select-none flex-col justify-end rounded-md p-6 no-underline outline-none focus:shadow-md"
+                  >
+                    <div className="relative w-full h-full bg-gray-200 rounded-md overflow-hidden">
+                      <Image
+                        src={hoveredItem.imageSrc}
+                        alt={hoveredItem.title}
+                        width={150}
+                        height={150}
+                        quality={100}
+                        className="w-full h-full object-cover transition-opacity duration-500"
+                      />
+
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
+                        <h2 className="text-lg font-medium">
+                          {hoveredItem.title}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          {hoveredItem.description}
+                        </p>
                       </div>
-                      <p className="text-sm leading-tight text-muted-foreground">
-                        Beautifully designed components built with Radix UI and
-                        Tailwind CSS.
-                      </p>
-                    </Link>
-                  </NavigationMenuLink>
+                    </div>
+                  </Link>
                 </li>
-                <ListItem href="/docs" title="Introduction">
-                  Re-usable components built using Radix UI and Tailwind CSS.
-                </ListItem>
-                <ListItem href="/docs/installation" title="Installation">
-                  How to install dependencies and structure your app.
-                </ListItem>
-                <ListItem href="/docs/primitives/typography" title="Typography">
-                  Styles for headings, paragraphs, lists...etc
-                </ListItem>
+
+                {/* Other items */}
+                <div className="flex flex-col gap-2">
+                  <ListItem
+                    title="Tee"
+                    description="Tee that is comfortable and stylish."
+                    imageSrc="/assets/model/noire-10278.jpg"
+                    link="/collections/tee"
+                    setHoveredItem={setHoveredItem}
+                  >
+                    Tee that is comfortable and stylish
+                  </ListItem>
+
+                  <ListItem
+                    title="Pants"
+                    description="Pants that are comfortable and stylish."
+                    imageSrc="/assets/model/noire-10243.jpg"
+                    link="/collections/pants"
+                    setHoveredItem={setHoveredItem}
+                  >
+                    Pants that are comfortable and stylish
+                  </ListItem>
+
+                  <ListItem
+                    title="Hoodies"
+                    description="Hoodies that are comfortable and stylish."
+                    imageSrc="/assets/model/QR_59794.jpg"
+                    link="/collections/hoodies"
+                    setHoveredItem={setHoveredItem}
+                  >
+                    Hoodies that are comfortable and stylish
+                  </ListItem>
+                </div>
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
+
           <NavigationMenuItem>
             <NavigationMenuTrigger>Featured Products</NavigationMenuTrigger>
             <NavigationMenuContent>
@@ -126,6 +162,9 @@ export const NavigationBar = () => {
                     key={component.title}
                     title={component.title}
                     href={component.href}
+                    setHoveredItem={setHoveredItem}
+                    description={component.description}
+                    imageSrc={component.imageSrc as string}
                   >
                     {component.description}
                   </ListItem>
@@ -142,6 +181,9 @@ export const NavigationBar = () => {
                     key={component.title}
                     title={component.title}
                     href={component.href}
+                    setHoveredItem={setHoveredItem}
+                    description={component.description}
+                    imageSrc={component.imageSrc as string}
                   >
                     {component.description}
                   </ListItem>
@@ -155,17 +197,14 @@ export const NavigationBar = () => {
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
-            <Link href="/docs" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <IoBagOutline />
-              </NavigationMenuLink>
-            </Link>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <ShoppingCartModal />
+            </NavigationMenuLink>
           </NavigationMenuItem>
-
           <NavigationMenuItem>
-            <Link href="/docs" legacyBehavior passHref>
+            <Link href="/login" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <FaRegUser />
+                <User className="w-5 h-5" />
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -177,26 +216,56 @@ export const NavigationBar = () => {
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
+  React.ComponentPropsWithoutRef<"a"> & {
+    title: string;
+    description: string;
+    imageSrc: string;
+    link?: string;
+    setHoveredItem: React.Dispatch<
+      React.SetStateAction<{
+        title: string;
+        description: string;
+        imageSrc: string;
+      }>
+    >;
+  }
+>(
+  (
+    {
+      className,
+      title,
+      description,
+      imageSrc,
+      setHoveredItem,
+      children,
+      link,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <li>
+        <NavigationMenuLink asChild>
+          <Link
+            href={link || "#"}
+            ref={ref}
+            onMouseEnter={() =>
+              setHoveredItem({ title, description, imageSrc })
+            }
+            className={cn(
+              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+              className
+            )}
+            {...props}
+          >
+            <div className="text-sm font-medium leading-none">{title}</div>
+            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+              {children}
+            </p>
+          </Link>
+        </NavigationMenuLink>
+      </li>
+    );
+  }
+);
 ListItem.displayName = "ListItem";

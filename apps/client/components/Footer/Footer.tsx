@@ -4,7 +4,7 @@ import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 
 export const Footer = () => {
   return (
-    <footer className="bg-black/70 text-white py-10">
+    <footer className="bg-zinc-950 text-white py-10 ">
       <div className="container mx-auto flex flex-col items-center justify-between space-y-8 md:flex-row md:space-y-0 px-6">
         {/* Brand Section */}
         <div className="text-center md:text-left">
@@ -57,7 +57,7 @@ export const Footer = () => {
       </div>
 
       {/* Bottom Section */}
-      <div className="border-t border-white mt-6 pt-4 text-center text-sm text-white/90">
+      <div className=" mt-6 pt-4 text-center text-sm text-white/90">
         © {new Date().getFullYear()} Noire. All Rights Reserved.
       </div>
     </footer>
