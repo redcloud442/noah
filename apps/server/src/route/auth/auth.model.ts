@@ -1,4 +1,4 @@
-import { sign } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
 import { envConfig } from "../../env.js";
 import prisma from "../../utils/prisma.js";
 
@@ -49,7 +49,6 @@ export const authLoginModel = async (params: {
       },
     });
   }
-  console.log(userData);
 
   if (!userData) {
     throw new Error("User not found");
@@ -124,5 +123,35 @@ export const authRegisterModel = async (params: {
   return {
     message: "Register successful",
     token: newToken,
+  };
+};
+
+export const createCheckoutTokenModel = async (params: {
+  checkoutNumber: string;
+}) => {
+  const { checkoutNumber } = params;
+
+  const customPayload = {
+    id: checkoutNumber,
+    role: "ANONYMOUS",
+  };
+
+  const newToken = await sign(customPayload, JWT_SECRET);
+
+  return newToken;
+};
+
+export const verifyCheckoutTokenModel = async (params: { token: string }) => {
+  const { token } = params;
+
+  const decoded = await verify(token, JWT_SECRET);
+
+  if (decoded.role !== "ANONYMOUS") {
+    throw new Error("Invalid token");
+  }
+
+  return {
+    message: "Checkout verified",
+    success: true,
   };
 };

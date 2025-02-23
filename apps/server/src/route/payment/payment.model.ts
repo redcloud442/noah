@@ -1,18 +1,25 @@
+import type { CheckoutFormData } from "@packages/shared";
+import type { user_table } from "@prisma/client";
+import axios from "axios";
 import prisma from "../../utils/prisma.js";
 
-import axios from "axios";
-import { envConfig } from "../../env.js";
-
-export const createPaymentIntent = async (params: {
-  amount: number;
-  order_number: string;
-  productVariant: {
-    product_variant_id: string;
-    quantity: number;
-    price: number;
-  }[];
-}) => {
-  const { amount, productVariant, order_number } = params;
+export const createPaymentIntent = async (
+  params: CheckoutFormData,
+  user: user_table
+) => {
+  const {
+    amount,
+    productVariant,
+    order_number,
+    email,
+    firstName,
+    lastName,
+    phone,
+    address,
+    city,
+    province,
+    postalCode,
+  } = params;
 
   const productVariantIds = productVariant.map(
     (item) => item.product_variant_id
@@ -40,50 +47,63 @@ export const createPaymentIntent = async (params: {
     if (availableStock === undefined) {
       throw new Error(`Product variant ${item.product_variant_id} not found.`);
     }
-    if (availableStock < item.quantity) {
+    if (availableStock < item.product_variant_quantity) {
       throw new Error(
         `Insufficient stock for product ${item.product_variant_id}.`
       );
     }
   }
 
-  const options = {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      authorization: `Basic ${envConfig.PAYMONGO_SECRET_KEY}`,
-    },
-    body: JSON.stringify({
+  const dataAmount = amount + 10000;
+
+  const response = await axios.post(
+    "https://api.paymongo.com/v1/payment_intents",
+    {
       data: {
         attributes: {
-          amount: amount,
+          amount: dataAmount,
           payment_method_allowed: [
-            "atome",
+            "qrph",
             "card",
             "dob",
             "paymaya",
             "billease",
+            "gcash",
+            "grab_pay",
           ],
           payment_method_options: { card: { request_three_d_secure: "any" } },
           currency: "PHP",
           capture_type: "automatic",
         },
       },
-    }),
-  };
-
-  const response = await axios.post(
-    "https://api.paymongo.com/v1/payment_intents",
-    options
+    },
+    {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        authorization: `Basic c2tfdGVzdF9HcDNBRzk3TWZqb2tqTG5IWG5qejkzcEY6`,
+      },
+    }
   );
+
+  const data = response.data;
 
   const paymentIntent = await prisma.$transaction(async (tx) => {
     const paymentIntent = await tx.order_table.create({
       data: {
+        order_user_id: user.user_id ?? null,
         order_number: order_number,
         order_status: "PENDING",
         order_total: amount,
+        order_payment_id: data.data.id,
+        order_email: email,
+        order_first_name: firstName,
+        order_last_name: lastName,
+        order_phone: phone,
+        order_address: address,
+        order_city: city,
+        order_state: province,
+        order_postal_code: postalCode,
       },
       select: {
         order_id: true,
@@ -94,22 +114,33 @@ export const createPaymentIntent = async (params: {
       data: productVariant.map((variant) => ({
         order_id: paymentIntent.order_id,
         product_variant_id: variant.product_variant_id,
-        quantity: variant.quantity,
-        price: variant.price,
+        quantity: variant.product_variant_quantity,
+        price: variant.product_variant_price,
       })),
     });
 
+    if (user.user_id) {
+      await tx.cart_table.deleteMany({
+        where: {
+          cart_product_variant_id: {
+            in: productVariant.map((variant) => variant.product_variant_id),
+          },
+          cart_user_id: user.user_id ?? null,
+        },
+      });
+    }
+
     return {
-      paymentIntent: response.data.id,
-      paymentIntentStatus: response.data.attributes.status,
+      paymentIntent: data.data.id,
+      paymentIntentStatus: data.data.attributes.status,
       order_id: paymentIntent.order_id,
       order_number: order_number,
     };
   });
 
   return {
-    paymentIntent: response.data.id,
-    paymentIntentStatus: response.data.attributes.status,
+    paymentIntent: data.data.id,
+    paymentIntentStatus: "SUCCESS",
     order_id: paymentIntent.order_id,
     order_number: order_number,
     order_status: "PENDING",

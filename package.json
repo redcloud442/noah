@@ -3,23 +3,33 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "pnpm@8.6.0",
   "scripts": {
     "dev:client": "pnpm --filter @apps/client dev",
     "dev:server": "pnpm --filter @apps/server dev",
-    "dev": "concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
     "build:client": "pnpm --filter @apps/client build",
     "build:server": "pnpm --filter @apps/server build",
-    "build": "concurrently \"pnpm run build:client\" \"pnpm run build:server\""
+    "db": "pnpm --filter @apps/server db && pnpm --filter @apps/client db",
+    "package": "pnpm run build --filter @packages/shared",
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "hono": "^4.6.19"
+    "hono": "^4.6.19",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
     "concurrently": "^9.1.2",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "turbo": "^2.4.2"
   }
 }

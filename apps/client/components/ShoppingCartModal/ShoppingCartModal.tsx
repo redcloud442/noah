@@ -22,6 +22,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
 import useUserStore from "@/lib/userStore";
+import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
 import { client } from "@/utils/rpc/rpcClient";
 import { Product } from "@/utils/types";
@@ -117,8 +118,13 @@ const ShoppingCartModal = () => {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     const checkoutNumber = generateCheckoutNumber();
+
+    if (!user.id) {
+      await authService.createCheckoutToken(checkoutNumber);
+    }
+
     if (!checkoutNumber) {
       toast({
         title: "Error",

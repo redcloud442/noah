@@ -5,10 +5,14 @@ import {
   authLogoutController,
   authRegisterController,
   authVerifyTokenController,
+  createCheckoutTokenController,
+  verifyCheckoutTokenController,
 } from "./auth.controller.js";
 import {
   authLoginMiddleware,
   authRegisterMiddleware,
+  createCheckoutTokenMiddleware,
+  verifyCheckoutTokenMiddleware,
 } from "./auth.middleware.js";
 
 const auth = new Hono();
@@ -26,6 +30,16 @@ auth.post("/logout", authLogoutController);
 
 auth.get("/user", protectionMiddleware, authVerifyTokenController);
 
-auth.get("/", (c) => c.text("Hello World"));
+auth.post(
+  "/checkout-token",
+  createCheckoutTokenMiddleware,
+  createCheckoutTokenController
+);
+
+auth.get(
+  "/verify-checkout-token",
+  verifyCheckoutTokenMiddleware,
+  verifyCheckoutTokenController
+);
 
 export default auth;

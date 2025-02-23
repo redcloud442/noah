@@ -47,6 +47,24 @@ export const authService = {
     return result.data;
   },
 
+  createCheckoutToken: async (checkoutNumber: string) => {
+    const result = await apiClient.post("/auth/checkout-token", {
+      checkoutNumber,
+    });
+    if (result.status !== 200) {
+      throw new Error("Failed to create checkout token");
+    }
+    return result.data;
+  },
+
+  verifyCheckoutToken: async () => {
+    const result = await apiClient.get(`/auth/verify-checkout-token`);
+    if (result.status !== 200) {
+      throw new Error("Failed to verify checkout token");
+    }
+    return result.data;
+  },
+
   logout: async () => {
     await apiClient.post("/auth/logout");
   },

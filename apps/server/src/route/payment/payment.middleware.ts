@@ -1,28 +1,78 @@
-import type { Next } from "hono";
-
-import type { Context } from "hono";
+import { paymentSchema } from "@packages/shared";
+import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
-import { decode } from "hono/jwt";
+import { verify } from "hono/jwt";
+const JWT_SECRET = process.env.JWT_SECRET || "your-strong-secret";
 
-export const cartMiddleware = async (c: Context, next: Next) => {
-  const user = c.get("user");
-  const token = getCookie(c, "auth_token");
+export const paymentMiddleware = async (c: Context, next: Next) => {
+  const userData = c.get("user");
+  const checkoutToken = getCookie(c, "checkout_token");
+  let user: { role?: string } | null = null;
+  try {
+    if (userData?.role === "ANONYMOUS") {
+      user = userData;
+    } else {
+      if (!checkoutToken) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
 
-  if (!token) {
-    return c.json({ message: "Unauthorized" }, 401);
+      try {
+        const decoded = await verify(checkoutToken, JWT_SECRET);
+        const payload = decoded.payload as { role?: string };
+
+        if (payload.role !== "MEMBER") {
+          return c.json({ message: "Unauthorized" }, 401);
+        }
+
+        user = payload;
+      } catch (error) {
+        return c.json({ message: "Invalid checkout token" }, 401);
+      }
+    }
+  } catch (error) {
+    console.log(error);
   }
 
-  const decoded = decode(token);
+  const {
+    order_number,
+    email,
+    firstName,
+    lastName,
+    phone,
+    amount,
+    barangay,
+    address,
+    city,
+    province,
+    postalCode,
+    productVariant,
+  } = await c.req.json();
 
-  if (!decoded) {
-    return c.json({ message: "Unauthorized" }, 401);
+  const validate = paymentSchema.safeParse({
+    order_number,
+    email,
+    firstName,
+    lastName,
+    phone,
+    address,
+    city,
+    barangay,
+    amount,
+    province,
+    postalCode,
+    productVariant,
+  });
+
+  if (!validate.success) {
+    return c.json(
+      { message: "Invalid request", errors: validate.error.errors },
+      400
+    );
   }
 
-  if (decoded.payload.role === "MEMBER") {
-    c.set("user", user);
-  } else {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
+  c.set("user", user);
+
+  c.set("params", validate.data);
 
   return next();
 };

@@ -1,7 +1,12 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { decode } from "hono/jwt";
-import { authLoginModel, authRegisterModel } from "./auth.model.js";
+import {
+  authLoginModel,
+  authRegisterModel,
+  createCheckoutTokenModel,
+  verifyCheckoutTokenModel,
+} from "./auth.model.js";
 
 export const authLoginController = async (c: Context) => {
   try {
@@ -59,4 +64,39 @@ export const authVerifyTokenController = async (c: Context) => {
   const decoded = decode(token);
 
   return c.json(decoded.payload);
+};
+
+export const createCheckoutTokenController = async (c: Context) => {
+  try {
+    const { checkoutNumber } = c.get("params");
+
+    const result = await createCheckoutTokenModel({ checkoutNumber });
+
+    setCookie(c, "checkout_token", result, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+      maxAge: 10 * 60,
+    });
+
+    return c.json(result, 200);
+  } catch (error) {
+    return c.json({ message: "Error" }, 500);
+  }
+};
+
+export const verifyCheckoutTokenController = async (c: Context) => {
+  try {
+    const token = c.get("token");
+
+    if (!token) {
+      return c.json({ message: "Unauthorized" }, 401);
+    }
+
+    const result = await verifyCheckoutTokenModel({ token });
+
+    return c.json(result);
+  } catch (error) {
+    return c.json({ message: "Error" }, 500);
+  }
 };

@@ -1,14 +1,15 @@
-// import { Product } from "@/utils/types";
-// import { apiClient } from "./axios";
+import { CheckoutFormData } from "@packages/shared";
+import { PaymentResponse } from "../../../types/types";
+import { apiClient } from "./axios";
 
-// export const paymentService = {
-//   create: async (params: { payment: }) => {
-//     const result = await apiClient.post("/cart", params);
+export const paymentService = {
+  create: async (params: CheckoutFormData) => {
+    const result = await apiClient.post("/payment", params);
 
-//     if (result.status !== 200) {
-//       throw new Error("Login failed");
-//     }
+    if (result.status !== 200) {
+      throw new Error("Payment failed");
+    }
 
-//     return result.data as Product;
-//   },
-// };
+    return result as unknown as PaymentResponse;
+  },
+};

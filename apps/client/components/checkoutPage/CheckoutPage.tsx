@@ -7,58 +7,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
+import useUserStore from "@/lib/userStore";
+import { cartService } from "@/services/cart";
+import { paymentService } from "@/services/payment";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckoutFormData, paymentSchema } from "@packages/shared";
 import axios from "axios";
-import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Loader2, Smartphone } from "lucide-react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-const schema = z.object({
-  email: z.string().email(),
-  firstName: z.string(),
-  lastName: z.string(),
-  address: z.string(),
-  province: z.string(),
-  city: z.string(),
-  barangay: z.string(),
-  postalCode: z.string(),
-  phone: z.string(),
-  amount: z.number(),
-  order_number: z.string(),
-  productVariant: z.array(
-    z.object({
-      product_variant_id: z.string(),
-      product_variant_quantity: z.number(),
-      product_variant_price: z.number(),
-    })
-  ),
-});
-
-type CheckoutFormData = z.infer<typeof schema>;
-
 const CheckoutNumberPage = () => {
   const params = useParams();
+  const router = useRouter();
   const { cart, setCart } = useCartStore();
+  const { user } = useUserStore();
+  const { toast } = useToast();
 
-  const { register, handleSubmit, watch, control, setValue } =
-    useForm<CheckoutFormData>({
-      resolver: zodResolver(schema),
-      defaultValues: {
-        email: "",
-        firstName: "",
-        lastName: "",
-        address: "",
-        province: "",
-        order_number: params.order_number as string,
-      },
-    });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      address: "",
+      province: "",
+      city: "",
+      postalCode: "",
+      phone: "",
+      order_number: params.checkoutNumber as string,
+    },
+  });
 
   const [provices, setProvices] = useState<
     {
@@ -82,17 +75,22 @@ const CheckoutNumberPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = localStorage.getItem("cart");
-        if (res) {
-          const cart = JSON.parse(res);
+        if (user.id) {
+          const cart = await cartService.get();
           setCart(cart);
+        } else {
+          const res = localStorage.getItem("cart");
+          if (res) {
+            const cart = JSON.parse(res);
+            setCart(cart);
+          }
         }
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
     fetchProducts();
-  }, []);
+  }, [user.id]);
 
   useEffect(() => {
     const fetchRegions = async () => {
@@ -161,11 +159,35 @@ const CheckoutNumberPage = () => {
     );
   }, [cart, setValue]);
 
-  const onSubmit = (data: CheckoutFormData) => {
+  const onSubmit = async (data: CheckoutFormData) => {
     try {
-      console.log(data);
+      const { productVariant, ...rest } = data;
+
+      const res = await paymentService.create({
+        ...rest,
+        productVariant: productVariant.map((variant) => ({
+          product_variant_id: variant.product_variant_id,
+          product_variant_quantity: variant.product_variant_quantity,
+          product_variant_price: variant.product_variant_price,
+        })),
+      });
+
+      if (!user.id) {
+        localStorage.removeItem("shoppingCart");
+      }
+
+      if (res) {
+        toast({
+          title: "Payment on process",
+          description: "You will be redirected to the payment page",
+        });
+
+        setTimeout(() => {
+          router.push(`/payment/pn/${params.checkoutNumber}`);
+        }, 2000);
+      }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting payment:", error);
     }
   };
 
@@ -230,7 +252,7 @@ const CheckoutNumberPage = () => {
                   render={({ field }) => (
                     <Select onValueChange={field.onChange}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Provice" />
+                        <SelectValue placeholder="Province" />
                       </SelectTrigger>
                       <SelectContent>
                         {provices.map((province) => (
@@ -429,8 +451,19 @@ const CheckoutNumberPage = () => {
             </div>
           </div>
 
-          <Button type="submit" variant="secondary" className="w-full">
-            Pay Now
+          <Button
+            type="submit"
+            variant="secondary"
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Processing...
+              </>
+            ) : (
+              "Pay Now"
+            )}
           </Button>
         </div>
 

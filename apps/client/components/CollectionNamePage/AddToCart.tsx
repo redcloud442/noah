@@ -2,6 +2,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
 import useUserStore from "@/lib/userStore";
 import { cn } from "@/lib/utils";
+import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
 import {
   product_table,
@@ -44,6 +45,16 @@ export const VariantSelectionToast = ({
   const { cart, addToCart } = useCartStore();
   const { toast: toaster } = useToast();
 
+  const handleProceedToCheckout = async () => {
+    const checkoutNumber = generateCheckoutNumber();
+    if (!user.id) {
+      await authService.createCheckoutToken(checkoutNumber);
+    }
+
+    router.push(`/checkout/cn/${checkoutNumber}`);
+    closeToast();
+  };
+
   const handleAddToCart = async () => {
     if (!selectedVariant) {
       toaster({
@@ -63,7 +74,6 @@ export const VariantSelectionToast = ({
     }
 
     if (user.id === "") {
-      console.log("No user id");
       localStorage.setItem(
         "shoppingCart",
         JSON.stringify({
@@ -183,10 +193,7 @@ export const VariantSelectionToast = ({
             <Button
               variant="default"
               className="w-full bg-black text-white transition"
-              onClick={() => {
-                router.push(`/checkout/cn/${generateCheckoutNumber()}`);
-                closeToast();
-              }}
+              onClick={handleProceedToCheckout}
             >
               Checkout
             </Button>

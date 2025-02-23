@@ -10,27 +10,38 @@ datasource db {
   schemas   = ["user_schema", "product_schema", "order_schema", "category_schema", "payment_schema", "public"]
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELED
+  @@schema("order_schema")
+}
+
 model user_table {
   user_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_name String
+  user_first_name String
+  user_last_name String
   user_email String @unique
-  user_created_at DateTime @default(now())  @db.Timestamptz(3)
-  user_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  user_created_at DateTime @default(now())
+  user_updated_at DateTime? @updatedAt
   user_profile_picture String?
-  user_group_id String @db.Uuid @default("79b0d3b5-f110-4874-a9b8-72777fd4257a")
+  user_group_id String @db.Uuid
 
   user_address_table user_address_table[]
   cart_table cart_table[]
   user_group user_group_table @relation(fields: [user_group_id], references: [user_group_id], onDelete: Cascade)
   @@schema("user_schema")
+  order_table order_table[]
 }
 
 model user_group_table {
   user_group_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_group_name String
   user_group_description String
-  user_group_created_at DateTime @default(now())  @db.Timestamptz(3)
-  user_group_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  user_group_created_at DateTime @default(now()) @db.Timestamptz(3)
+  user_group_updated_at DateTime? @updatedAt @db.Timestamptz(3)
 
   user_table user_table[]
   @@schema("user_schema")
@@ -44,8 +55,8 @@ model user_address_table {
   user_address_city String
   user_address_state String
   user_address_postal_code String
-  user_address_created_at DateTime @default(now())  @db.Timestamptz(3)
-  user_address_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  user_address_created_at DateTime @default(now()) @db.Timestamptz(3)
+  user_address_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   user_address_user_id String @db.Uuid
 
   user_address_user user_table @relation(fields: [user_address_user_id], references: [user_id], onDelete: Cascade)
@@ -53,15 +64,56 @@ model user_address_table {
 }
 
 model cart_table {
-  cart_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  cart_user_id String @db.Uuid
+  cart_id                 String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cart_user_id            String @db.Uuid
   cart_product_variant_id String @db.Uuid
-  cart_quantity Int
-  cart_created_at DateTime @default(now())  @db.Timestamptz(3)
-  cart_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  cart_quantity           Int
+  cart_created_at         DateTime @default(now()) @db.Timestamptz(3)
+  cart_updated_at         DateTime? @updatedAt @db.Timestamptz(3)
 
   cart_user user_table @relation(fields: [cart_user_id], references: [user_id], onDelete: Cascade)
   cart_product_variant product_variant_table @relation(fields: [cart_product_variant_id], references: [product_variant_id], onDelete: Cascade)
+
+  @@unique([cart_user_id, cart_product_variant_id]) // Unique constraint
+
+  @@schema("order_schema")
+}
+
+model order_table {
+  order_id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  order_number     String    @unique
+  order_payment_id String    @unique
+  order_email      String
+  order_first_name String
+  order_last_name  String
+  order_address    String
+  order_city       String
+  order_state      String
+  order_postal_code String
+  order_phone      String
+  order_status     OrderStatus
+  order_total      Float?   
+  order_created_at DateTime  @default(now()) @db.Timestamptz(3)
+  order_updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  order_user_id    String?    @db.Uuid
+
+  order_user       user_table? @relation(fields: [order_user_id], references: [user_id], onDelete: Cascade)
+  order_items      order_item_table[]
+
+  @@schema("order_schema")
+}
+
+model order_item_table {
+  order_item_id      String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  order_id           String    @db.Uuid
+  product_variant_id String    @db.Uuid
+  quantity           Int
+  price             Float?
+
+  order             order_table @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  product_variant   product_variant_table @relation(fields: [product_variant_id], references: [product_variant_id], onDelete: Cascade)
+
+  @@unique([order_id, product_variant_id])
   @@schema("order_schema")
 }
 
@@ -71,8 +123,8 @@ model product_table {
   product_description String
   product_price Int
   product_sale_percentage Int @default(0)
-  product_created_at DateTime @default(now())  @db.Timestamptz(3)
-  product_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  product_created_at DateTime @default(now()) @db.Timestamptz(3)
+  product_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   product_category_id String @db.Uuid
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
@@ -84,8 +136,8 @@ model product_category_table {
   product_category_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   product_category_name String
   product_category_description String
-  product_category_created_at DateTime @default(now())  @db.Timestamptz(3)
-  product_category_updated_at DateTime? @updatedAt  @db.Timestamptz(3)
+  product_category_created_at DateTime @default(now()) @db.Timestamptz(3)
+  product_category_updated_at DateTime? @updatedAt @db.Timestamptz(3)
 
   products product_table[]
   @@schema("product_schema")
@@ -103,13 +155,14 @@ model product_variant_table {
   cart_items cart_table[]
   variant_sample_images variant_sample_image_table[]
   @@schema("product_schema")
+  order_item_table order_item_table[]
 }
 
 model variant_sample_image_table {
   variant_sample_image_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   variant_sample_image_product_variant_id String @db.Uuid
   variant_sample_image_image_url String
-  variant_sample_image_created_at DateTime @default(now())  @db.Timestamptz(3)
+  variant_sample_image_created_at DateTime @default(now()) @db.Timestamptz(3)
 
   variant_sample_image_product_variant product_variant_table @relation(fields: [variant_sample_image_product_variant_id], references: [product_variant_id], onDelete: Cascade)
   @@schema("product_schema")
