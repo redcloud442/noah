@@ -1,4 +1,7 @@
-import type { CheckoutFormData } from "@packages/shared";
+import type {
+  CheckoutFormData,
+  PaymentCreatePaymentFormData,
+} from "@packages/shared";
 import type { user_table } from "@prisma/client";
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
@@ -146,4 +149,160 @@ export const createPaymentIntent = async (
     order_status: "PENDING",
     order_total: amount,
   };
+};
+
+export const createPaymentMethod = async (
+  params: PaymentCreatePaymentFormData
+) => {
+  try {
+    const { order_number, payment_method, payment_type } = params;
+
+    const payment_details =
+      payment_method === "card" ? params.payment_details : undefined;
+
+    const orderDetails = await prisma.order_table.findUnique({
+      where: { order_number },
+    });
+
+    if (!orderDetails) {
+      throw new Error("Order not found");
+    }
+
+    let expiry_year, expiry_month;
+    if (payment_details?.card.card_expiry) {
+      [expiry_year, expiry_month] = payment_details.card.card_expiry.split("-");
+      if (!expiry_year || !expiry_month) {
+        throw new Error("Invalid card expiry format. Expected YYYY-MM");
+      }
+    }
+
+    // Create Payment Method
+    const createPaymentMethod = await axios.post(
+      "https://api.paymongo.com/v1/payment_methods",
+      {
+        data: {
+          attributes: {
+            type:
+              payment_method === "card" ? "card" : payment_type?.toLowerCase(),
+            details:
+              payment_method === "card"
+                ? {
+                    card: {
+                      number: payment_details?.card.card_number,
+                      expiry_month,
+                      expiry_year,
+                      cvv: payment_details?.card.card_cvv,
+                    },
+                  }
+                : undefined,
+            billing: {
+              name: `${orderDetails.order_first_name} ${orderDetails.order_last_name}`,
+              email: orderDetails.order_email,
+              phone: orderDetails.order_phone,
+            },
+          },
+        },
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+        },
+      }
+    );
+
+    if (createPaymentMethod.status !== 200) {
+      throw new Error("Failed to create payment method");
+    }
+
+    // Attach Payment Method
+    const attachPaymentMethod = await axios.post(
+      `https://api.paymongo.com/v1/payment_intents/${orderDetails.order_payment_id}/attach`,
+      {
+        data: {
+          attributes: {
+            payment_method: createPaymentMethod.data.data.id,
+            client_key: createPaymentMethod.data.data.attributes.client_key,
+            return_url: `http://localhost:3000/payment/pn/${orderDetails.order_number}/redirect`,
+          },
+        },
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+        },
+      }
+    );
+
+    if (attachPaymentMethod.status !== 200) {
+      throw new Error("Failed to attach payment method");
+    }
+
+    await prisma.order_table.update({
+      where: { order_number },
+      data: {
+        order_payment_id: createPaymentMethod.data.data.id,
+        order_status: "PENDING",
+      },
+    });
+
+    return {
+      paymentStatus: attachPaymentMethod.data.data.attributes.status,
+      nextAction: attachPaymentMethod.data.data.attributes.next_action,
+    };
+  } catch (error) {
+    throw new Error("Payment process failed");
+  }
+};
+
+export const getPayment = async (params: {
+  paymentIntentId: string;
+  clientKey: string;
+  orderNumber: string;
+}) => {
+  try {
+    // 🔄 1️⃣ Retrieve Payment Intent
+    const paymentIntent = await axios.get(
+      `https://api.paymongo.com/v1/payment_intents/${params.paymentIntentId}?client_key=${params.clientKey}`,
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+        },
+      }
+    );
+
+    // 🔍 2️⃣ Check API Response
+    if (paymentIntent.status !== 200 || !paymentIntent.data.data) {
+      throw new Error("Payment intent not found");
+    }
+
+    const paymentStatus = paymentIntent.data.data.attributes.status;
+
+    let orderStatus: "PAID" | "CANCELED" | "PENDING" = "PENDING";
+
+    switch (paymentStatus) {
+      case "succeeded":
+        orderStatus = "PAID";
+        break;
+      case "failed":
+        orderStatus = "CANCELED";
+        break;
+      default:
+        orderStatus = "PENDING";
+    }
+
+    await prisma.order_table.update({
+      where: { order_number: params.orderNumber },
+      data: { order_status: orderStatus },
+    });
+
+    return { orderStatus, paymentStatus };
+  } catch (error) {
+    throw new Error("Failed to retrieve payment status");
+  }
 };

@@ -6,3 +6,20 @@ export type PaymentResponse = {
   order_status: string;
   order_total: number;
 };
+
+export type PaymentMethodResponse = {
+  data: {
+    paymentMethod: string;
+    paymentMethodStatus: string;
+    nextAction: {
+      redirect: {
+        url: string;
+        return_url: string;
+      };
+    };
+  };
+};
+
+export type PaymentRedirectResponse = {
+  orderStatus: "PAID" | "CANCELED" | "PENDING";
+};

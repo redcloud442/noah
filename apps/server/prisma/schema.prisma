@@ -81,8 +81,9 @@ model cart_table {
 
 model order_table {
   order_id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  order_number     String
-  order_payment_id String
+  order_number     String @unique
+  order_payment_id String @unique
+  order_payment_method_id String?
   order_email      String
   order_first_name String
   order_last_name  String

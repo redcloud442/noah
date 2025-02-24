@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "packageManager": "pnpm@8.6.0",
   "scripts": {
@@ -23,6 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "framer-motion": "^12.4.7",
     "hono": "^4.6.19",
     "zod": "^3.24.2"
   },

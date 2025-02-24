@@ -174,6 +174,10 @@ const CheckoutNumberPage = () => {
 
       if (!user.id) {
         localStorage.removeItem("shoppingCart");
+        setCart({
+          products: [],
+          count: 0,
+        });
       }
 
       if (res) {

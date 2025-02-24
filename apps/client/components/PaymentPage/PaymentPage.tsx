@@ -10,9 +10,17 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { paymentService } from "@/services/payment";
+import {
+  cardPaymentSchema,
+  PaymentCreatePaymentFormData,
+} from "@packages/shared/src/schema/schema";
 import { order_table } from "@prisma/client";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
+import { z } from "zod";
 
 type PaymentPageProps = {
   order: order_table;
@@ -26,19 +34,88 @@ const paymentMethods = {
 
 const PaymentPage = ({ order }: PaymentPageProps) => {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const router = useRouter();
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm();
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<PaymentCreatePaymentFormData>();
 
-  const onSubmit = (data: any) => {
-    console.log("Payment Data:", data);
-    alert("Payment Successful!");
+  const paymentMethod = watch("payment_method");
+
+  const onSubmit = async (data: PaymentCreatePaymentFormData) => {
+    try {
+      const payload = {
+        order_number: data.order_number,
+        payment_method: data.payment_method,
+      } as const;
+
+      if (data.payment_method === "card") {
+        const cardPayload = {
+          ...payload,
+          payment_details: {
+            card: data.payment_details.card,
+          },
+          payment_type: data.payment_type as "BPI" | "UnionBank",
+        };
+        const result = await paymentService.createPaymentMethod(cardPayload);
+
+        if (result.data.nextAction.redirect.url) {
+          router.push(result.data.nextAction.redirect.url);
+        }
+      } else if (data.payment_method === "e_wallet") {
+        const eWalletPayload = {
+          ...payload,
+          payment_method: "e_wallet" as const,
+          payment_type: data.payment_type as "GCash" | "GrabPay" | "PayMaya",
+        };
+        const result = await paymentService.createPaymentMethod(eWalletPayload);
+        console.log(result);
+
+        if (result.data.nextAction.redirect.url) {
+          router.push(result.data.nextAction.redirect.url);
+        }
+      } else if (data.payment_method === "online_banking") {
+        const bankingPayload = {
+          ...payload,
+          payment_method: "online_banking" as const,
+          payment_type: data.payment_type as "BPI" | "UnionBank",
+        };
+
+        const result = await paymentService.createPaymentMethod(bankingPayload);
+        if (result.data.nextAction.redirect.url) {
+          router.push(result.data.nextAction.redirect.url);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
+  const handleReset = (
+    paymentMethod: "card" | "e_wallet" | "online_banking",
+    bank?: "BPI" | "UnionBank" | "GCash" | "GrabPay" | "PayMaya"
+  ) => {
+    reset({
+      order_number: order.order_number,
+      payment_method: paymentMethod,
+      payment_details: {
+        card: {
+          card_number: "",
+          card_expiry: "",
+          card_cvv: "",
+        },
+      },
+      payment_type: bank,
+    });
+  };
+
+  const cardErrors = errors as FieldErrors<z.infer<typeof cardPaymentSchema>>;
+
   return (
-    <div className="min-h-screen h-full mt-20 p-6 bg-gray-100 text-black">
+    <div className="text-black">
       <div className="max-w-4xl mx-auto bg-white p-6 shadow-md rounded-md">
         {/* Order Info */}
         <div className="flex justify-between items-center border-b pb-4">
@@ -65,60 +142,68 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                     >
                       <input
                         type="radio"
-                        {...register("paymentMethod")}
+                        {...register("payment_method")}
                         value={card}
-                        onChange={() => setSelectedMethod(card)}
+                        onChange={() => {
+                          setSelectedMethod(card);
+                          handleReset("card");
+                        }}
                         className="hidden"
                       />
                       <span className="ml-2">{card}</span>
                     </label>
                   ))}
                 </CardContent>
-                {selectedMethod &&
-                  paymentMethods.card.includes(selectedMethod) && (
-                    <div className="p-4">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        type="text"
-                        {...register("cardNumber", { required: true })}
-                      />
-                      {errors.cardNumber && (
-                        <p className="text-red-500 text-sm">
-                          Card number is required
-                        </p>
-                      )}
+                {paymentMethod === "card" && (
+                  <div className="p-4">
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <Input
+                      id="cardNumber"
+                      type="text"
+                      {...register("payment_details.card.card_number", {
+                        required: true,
+                      })}
+                    />
+                    {cardErrors.payment_details?.card?.card_number && (
+                      <p className="text-red-500 text-sm">
+                        Card number is required
+                      </p>
+                    )}
 
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <div>
-                          <Label htmlFor="expiry">Expiry Date</Label>
-                          <Input
-                            id="expiry"
-                            type="text"
-                            {...register("expiry", { required: true })}
-                          />
-                          {errors.expiry && (
-                            <p className="text-red-500 text-sm">
-                              Expiry date is required
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="cvv">CVV</Label>
-                          <Input
-                            id="cvv"
-                            type="text"
-                            {...register("cvv", { required: true })}
-                          />
-                          {errors.cvv && (
-                            <p className="text-red-500 text-sm">
-                              CVV is required
-                            </p>
-                          )}
-                        </div>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div>
+                        <Label htmlFor="expiry">Expiry Date</Label>
+                        <Input
+                          id="expiry"
+                          type="text"
+                          {...register("payment_details.card.card_expiry", {
+                            required: true,
+                          })}
+                        />
+                        {cardErrors.payment_details?.card?.card_expiry && (
+                          <p className="text-red-500 text-sm">
+                            Expiry date is required
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="cvv">CVV</Label>
+                        <Input
+                          id="cvv"
+                          type="text"
+                          {...register("payment_details.card.card_cvv", {
+                            required: true,
+                          })}
+                        />
+                        {cardErrors.payment_details?.card?.card_cvv && (
+                          <p className="text-red-500 text-sm">
+                            CVV is required
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
 
@@ -136,9 +221,15 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                     >
                       <input
                         type="radio"
-                        {...register("paymentMethod")}
+                        {...register("payment_method")}
                         value={wallet}
-                        onChange={() => setSelectedMethod(wallet)}
+                        onChange={() => {
+                          setSelectedMethod(wallet);
+                          handleReset(
+                            "e_wallet",
+                            wallet as "GCash" | "GrabPay" | "PayMaya"
+                          );
+                        }}
                         className="hidden"
                       />
                       <span className="ml-2">{wallet}</span>
@@ -162,9 +253,15 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                     >
                       <input
                         type="radio"
-                        {...register("paymentMethod")}
+                        {...register("payment_method")}
                         value={bank}
-                        onChange={() => setSelectedMethod(bank)}
+                        onChange={() => {
+                          setSelectedMethod(bank);
+                          handleReset(
+                            "online_banking",
+                            bank as "BPI" | "UnionBank"
+                          );
+                        }}
                         className="hidden"
                       />
                       <span className="ml-2">{bank}</span>
@@ -177,8 +274,20 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
 
           {/* Submit Button */}
           <div className="mt-6">
-            <Button type="submit" className="w-full bg-blue-600 text-white">
-              Pay Now
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={!selectedMethod}
+              className="w-full text-white"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Pay Now"
+              )}
             </Button>
           </div>
         </form>
