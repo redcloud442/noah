@@ -28,13 +28,11 @@ export const checkoutProtectionMiddleware = async (c: Context, next: Next) => {
   const supabase = getSupabase(c);
   const checkoutToken = getCookie(c, "checkout_token");
 
-  console.log(checkoutToken);
-
   let user = null;
 
   const { data } = await supabase.auth.getUser();
 
-  if (!data?.user) {
+  if (!data.user) {
     if (!checkoutToken) {
       return sendErrorResponse("Unauthorized (Missing checkout token)", 401);
     }

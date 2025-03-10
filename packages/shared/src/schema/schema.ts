@@ -62,3 +62,25 @@ export const paymentCreatePaymentSchema = z.discriminatedUnion(
 export type PaymentCreatePaymentFormData = z.infer<
   typeof paymentCreatePaymentSchema
 >;
+
+export const orderGetSchema = z.object({
+  take: z.number().min(1).max(15),
+  skip: z.number().min(0),
+});
+
+export type OrderGetParams = z.infer<typeof orderGetSchema>;
+
+export const addressCreateSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string(),
+  lastName: z.string(),
+  address: z.string(),
+  province: z.string(),
+  city: z.string(),
+  barangay: z.string(),
+  postalCode: z.string(),
+  phone: z.string(),
+  is_default: z.boolean(),
+});
+
+export type AddressCreateFormData = z.infer<typeof addressCreateSchema>;

@@ -12,6 +12,7 @@ import {
   authLoginMiddleware,
   authRegisterMiddleware,
   createCheckoutTokenMiddleware,
+  handleLogoutMiddleware,
   verifyCheckoutTokenMiddleware,
 } from "./auth.middleware.js";
 
@@ -26,7 +27,7 @@ auth.post(
   authRegisterController
 );
 
-auth.post("/logout", authLogoutController);
+auth.post("/logout", handleLogoutMiddleware, authLogoutController);
 
 auth.get("/user", protectionMiddleware, authVerifyTokenController);
 

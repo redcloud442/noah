@@ -10,9 +10,15 @@ import {
 
 export const authLoginController = async (c: Context) => {
   try {
-    const { email, firstName, lastName, userId } = c.get("params");
+    const { email, firstName, lastName, userId, cart } = c.get("params");
 
-    const result = await authLoginModel({ email, firstName, lastName, userId });
+    const result = await authLoginModel({
+      email,
+      firstName,
+      lastName,
+      userId,
+      cart,
+    });
 
     setCookie(c, "auth_token", result.token, {
       httpOnly: true,
@@ -24,6 +30,7 @@ export const authLoginController = async (c: Context) => {
 
     return c.json(result, 200);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };
@@ -44,14 +51,23 @@ export const authRegisterController = async (c: Context) => {
 
     return c.json(result, 200);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };
 
 export const authLogoutController = async (c: Context) => {
-  deleteCookie(c, "auth_token");
+  try {
+    const supabase = c.get("supabase");
 
-  return c.json({ message: "Logged out" });
+    await supabase.auth.signOut();
+
+    deleteCookie(c, "auth_token");
+
+    return c.json({ message: "Logged out" }, 200);
+  } catch (error) {
+    return c.json({ message: "Error" }, 500);
+  }
 };
 
 export const authVerifyTokenController = async (c: Context) => {

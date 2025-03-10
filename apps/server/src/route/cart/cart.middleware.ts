@@ -8,6 +8,7 @@ import {
   cartPostSchema,
   cartPutSchema,
 } from "../../schema/schema.js";
+import { redis } from "../../utils/redis.js";
 
 export const cartMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
@@ -23,7 +24,13 @@ export const cartMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (decoded.payload.role === "MEMBER") {
+  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+
+  if (!isRateLimited) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  if (decoded.payload.role === "MEMBER" || decoded.payload.role === "ADMIN") {
     c.set("user", user);
   } else {
     return c.json({ message: "Unauthorized" }, 401);
@@ -46,7 +53,13 @@ export const cartPostMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (decoded.payload.role === "MEMBER") {
+  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+
+  if (!isRateLimited) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  if (decoded.payload.role === "MEMBER" || decoded.payload.role === "ADMIN") {
     c.set("user", user);
   } else {
     return c.json({ message: "Unauthorized" }, 401);
@@ -79,7 +92,13 @@ export const cartDeleteMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (decoded.payload.role === "MEMBER") {
+  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+
+  if (!isRateLimited) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  if (decoded.payload.role === "MEMBER" || decoded.payload.role === "ADMIN") {
     c.set("user", user);
   } else {
     return c.json({ message: "Unauthorized" }, 401);
@@ -114,7 +133,13 @@ export const cartPutMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (decoded.payload.role === "MEMBER") {
+  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+
+  if (!isRateLimited) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  if (decoded.payload.role === "MEMBER" || decoded.payload.role === "ADMIN") {
     c.set("user", user);
   } else {
     return c.json({ message: "Unauthorized" }, 401);

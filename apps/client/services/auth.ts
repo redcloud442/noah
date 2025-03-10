@@ -44,7 +44,14 @@ export const authService = {
     if (result.status !== 200) {
       throw new Error("Failed to verify token");
     }
-    return result.data;
+    return result.data as {
+      id: string;
+      email: string;
+      role: string;
+      firstName: string;
+      lastName: string;
+      avatar: string;
+    };
   },
 
   createCheckoutToken: async (checkoutNumber: string) => {

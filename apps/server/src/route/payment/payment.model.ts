@@ -8,7 +8,7 @@ import prisma from "../../utils/prisma.js";
 
 export const createPaymentIntent = async (
   params: CheckoutFormData,
-  user: user_table
+  user: user_table & { id: string }
 ) => {
   const {
     amount,
@@ -22,6 +22,7 @@ export const createPaymentIntent = async (
     city,
     province,
     postalCode,
+    barangay,
   } = params;
 
   const productVariantIds = productVariant.map(
@@ -91,10 +92,12 @@ export const createPaymentIntent = async (
 
   const data = response.data;
 
+  console.log(user);
+
   const paymentIntent = await prisma.$transaction(async (tx) => {
     const paymentIntent = await tx.order_table.create({
       data: {
-        order_user_id: user.user_id ?? null,
+        order_user_id: user.id ? user.id : null,
         order_number: order_number,
         order_status: "PENDING",
         order_total: amount,
@@ -107,6 +110,7 @@ export const createPaymentIntent = async (
         order_city: city,
         order_state: province,
         order_postal_code: postalCode,
+        order_barangay: barangay,
       },
       select: {
         order_id: true,
@@ -122,13 +126,13 @@ export const createPaymentIntent = async (
       })),
     });
 
-    if (user.user_id) {
+    if (user.id) {
       await tx.cart_table.deleteMany({
         where: {
           cart_product_variant_id: {
             in: productVariant.map((variant) => variant.product_variant_id),
           },
-          cart_user_id: user.user_id ?? null,
+          cart_user_id: user.id ?? null,
         },
       });
     }
@@ -170,7 +174,7 @@ export const createPaymentMethod = async (
 
     let expiry_year, expiry_month;
     if (payment_details?.card.card_expiry) {
-      [expiry_year, expiry_month] = payment_details.card.card_expiry.split("-");
+      [expiry_year, expiry_month] = payment_details.card.card_expiry.split("/");
       if (!expiry_year || !expiry_month) {
         throw new Error("Invalid card expiry format. Expected YYYY-MM");
       }
@@ -244,7 +248,9 @@ export const createPaymentMethod = async (
     await prisma.order_table.update({
       where: { order_number },
       data: {
-        order_payment_id: createPaymentMethod.data.data.id,
+        order_payment_method_id: createPaymentMethod.data.data.id,
+        order_payment_method:
+          payment_method === "card" ? "card" : payment_type?.toLowerCase(),
         order_status: "PENDING",
       },
     });
@@ -276,7 +282,6 @@ export const getPayment = async (params: {
       }
     );
 
-    // 🔍 2️⃣ Check API Response
     if (paymentIntent.status !== 200 || !paymentIntent.data.data) {
       throw new Error("Payment intent not found");
     }

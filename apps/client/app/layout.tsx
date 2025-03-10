@@ -1,10 +1,7 @@
-import { Footer } from "@/components/Footer/Footer";
-import { NavigationBar } from "@/components/NavigationBar/NavigationBar";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster as ToasterSonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "@/components/LayoutProviders/RootLayoutProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import React from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +19,7 @@ export const metadata: Metadata = {
   description: "Noire Luxury",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -32,18 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NavigationBar />
-          {children}
-          <Footer />
-          <Toaster />
-          <ToasterSonner />
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

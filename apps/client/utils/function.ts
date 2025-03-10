@@ -1,7 +1,6 @@
-export const createCheckoutToken = async (amount: number) => {
-  const res = await paymentService.create({
-    amount,
-  });
-
-  return res;
-};
+export const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(new Date(date));

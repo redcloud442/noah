@@ -12,6 +12,7 @@
     "dist"
   ],
   "scripts": {
+    "dev": "bun build src/index.ts --outdir dist --watch",
     "build": "tsc --build tsconfig.build.json",
     "clean": "rm -rf dist"
   },

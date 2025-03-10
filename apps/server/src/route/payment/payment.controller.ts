@@ -10,7 +10,10 @@ export const paymentPostController = async (c: Context) => {
     const params = c.get("params");
     const user = c.get("user");
 
-    const paymentIntent = await createPaymentIntent(params, user);
+    const paymentIntent = await createPaymentIntent(params, {
+      ...user,
+      user_id: user.user_id ? user.user_id : null,
+    });
 
     return c.json(paymentIntent, 200);
   } catch (error) {

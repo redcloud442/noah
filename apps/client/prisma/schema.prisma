@@ -49,15 +49,19 @@ model user_group_table {
 
 model user_address_table {
   user_address_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_address_name String
+  user_address_first_name String
+  user_address_last_name String
+  user_address_email String
   user_address_phone String
   user_address_address String
   user_address_city String
   user_address_state String
+  user_address_barangay String
   user_address_postal_code String
   user_address_created_at DateTime @default(now()) @db.Timestamptz(3)
   user_address_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   user_address_user_id String @db.Uuid
+  user_address_is_default Boolean @default(false)
 
   user_address_user user_table @relation(fields: [user_address_user_id], references: [user_id], onDelete: Cascade)
   @@schema("user_schema")
