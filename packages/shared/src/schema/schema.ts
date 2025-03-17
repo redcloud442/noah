@@ -84,3 +84,10 @@ export const addressCreateSchema = z.object({
 });
 
 export type AddressCreateFormData = z.infer<typeof addressCreateSchema>;
+
+//product collection schema
+export const productCollectionSchema = z.object({
+  search: z.string().optional(),
+  take: z.number().min(1).max(15),
+  skip: z.number().min(0),
+});

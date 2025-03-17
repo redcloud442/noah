@@ -8,23 +8,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { addressService } from "@/services/address";
+import { useDeleteAddress } from "@/query/addressQuery";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export const DialogDeleteAddress = ({ addressId }: { addressId: string }) => {
+export const DialogDeleteAddress = ({
+  addressId,
+  activePage,
+  deleteUserFunction,
+}: {
+  addressId: string;
+  activePage: number;
+  deleteUserFunction: (addressId: string) => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { isPending: isMutating } = useDeleteAddress(activePage);
 
   const handleDeleteAddress = async (addressId: string) => {
     try {
-      setIsLoading(true);
-      await addressService.deleteAddress(addressId);
+      deleteUserFunction(addressId);
+
       setIsOpen(false);
     } catch (error) {
       console.error("Error deleting address:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -49,12 +56,12 @@ export const DialogDeleteAddress = ({ addressId }: { addressId: string }) => {
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
-        <Button
-            disabled={isLoading}
+          <Button
+            disabled={isMutating}
             variant="destructive"
             onClick={() => handleDeleteAddress(addressId)}
           >
-            {isLoading ? (
+            {isMutating ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               "Delete"

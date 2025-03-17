@@ -66,10 +66,11 @@ const data = {
       title: "Products",
       url: "/admin/products",
       icon: ShoppingCart,
+      isActive: true,
       items: [
         {
           title: "Collections",
-          url: "/admin/collections",
+          url: "/admin/product/collections",
         },
         {
           title: "Explorer",
@@ -85,6 +86,7 @@ const data = {
       title: "Orders",
       url: "/admin/orders",
       icon: ShoppingBag,
+      isActive: true,
       items: [
         {
           title: "Orders",
@@ -108,6 +110,7 @@ const data = {
       title: "Settings",
       url: "#",
       icon: Settings2,
+      isActive: true,
       items: [
         {
           title: "General",

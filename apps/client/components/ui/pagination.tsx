@@ -1,16 +1,15 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
 import { Button } from "./button";
 
 type PaginationProps = {
   activePage: number;
-  setActivePage: Dispatch<SetStateAction<number>>;
+  handleChangePage: (page: number) => void;
   pageCount: number;
 };
 
 export const Pagination = ({
   activePage,
-  setActivePage,
+  handleChangePage,
   pageCount,
 }: PaginationProps) => {
   return (
@@ -19,7 +18,7 @@ export const Pagination = ({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => setActivePage((prev) => Math.max(prev - 1, 1))}
+          onClick={() => handleChangePage(activePage - 1)}
           disabled={activePage <= 1}
         >
           <ChevronLeft />
@@ -65,7 +64,7 @@ export const Pagination = ({
                 key={page}
                 variant={activePage === page ? "secondary" : "outline"}
                 size="sm"
-                onClick={() => setActivePage(page)}
+                onClick={() => handleChangePage(page)}
               >
                 {page}
               </Button>
@@ -81,7 +80,7 @@ export const Pagination = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setActivePage((prev) => Math.min(prev + 1, pageCount))}
+          onClick={() => handleChangePage(activePage + 1)}
           disabled={activePage >= pageCount}
         >
           <ChevronRight />

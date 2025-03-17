@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["user_schema", "product_schema", "order_schema", "category_schema", "payment_schema", "public"]
+  schemas   = ["user_schema", "product_schema", "order_schema", "category_schema", "payment_schema","location_schema", "public"]
 }
 
 enum OrderStatus {
@@ -52,18 +52,19 @@ model user_address_table {
   user_address_first_name String
   user_address_last_name String
   user_address_email String
-  user_address_phone String
   user_address_address String
   user_address_city String
   user_address_state String
   user_address_barangay String
+  user_address_phone String
   user_address_postal_code String
   user_address_created_at DateTime @default(now()) @db.Timestamptz(3)
   user_address_updated_at DateTime? @updatedAt @db.Timestamptz(3)
-  user_address_user_id String @db.Uuid
   user_address_is_default Boolean @default(false)
+  user_address_user_id String @db.Uuid
 
   user_address_user user_table @relation(fields: [user_address_user_id], references: [user_id], onDelete: Cascade)
+  
   @@schema("user_schema")
 }
 
@@ -85,14 +86,17 @@ model cart_table {
 
 model order_table {
   order_id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  order_number     String    @unique
-  order_payment_id String    @unique
+  order_number     String @unique
+  order_payment_id String @unique
+  order_payment_method_id String?
+  order_payment_method    String?
   order_email      String
   order_first_name String
   order_last_name  String
   order_address    String
   order_city       String
   order_state      String
+  order_barangay   String
   order_postal_code String
   order_phone      String
   order_status     OrderStatus
@@ -130,6 +134,7 @@ model product_table {
   product_created_at DateTime @default(now()) @db.Timestamptz(3)
   product_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   product_category_id String @db.Uuid
+  product_slug String? @unique
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
   product_variants product_variant_table[]
@@ -171,3 +176,50 @@ model variant_sample_image_table {
   variant_sample_image_product_variant product_variant_table @relation(fields: [variant_sample_image_product_variant_id], references: [product_variant_id], onDelete: Cascade)
   @@schema("product_schema")
 }
+
+
+model region_table {
+  region_id  Int @id @default(autoincrement())
+  region_name String
+  region_description String
+
+
+  provinces province_table[]
+
+  @@schema("location_schema")
+}
+
+model province_table {
+  province_id  Int @id @default(autoincrement())
+  province_name String
+  province_region_id Int
+
+  province_region region_table @relation(fields: [province_region_id], references: [region_id], onDelete: Cascade)
+
+  cities city_table[]
+
+  @@schema("location_schema")
+}
+
+model city_table {
+  city_id Int @id @default(autoincrement())
+  city_name String  
+  city_province_id Int
+
+  city_province province_table @relation(fields: [city_province_id], references: [province_id], onDelete: Cascade)
+
+  barangays barangay_table[]
+
+  @@schema("location_schema")
+}
+
+model barangay_table {
+  barangay_id Int @id @default(autoincrement())
+  barangay_name String
+  barangay_city_id Int
+
+  barangay_city city_table @relation(fields: [barangay_city_id], references: [city_id], onDelete: Cascade)
+
+  @@schema("location_schema")
+}
+

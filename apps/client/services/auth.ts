@@ -44,6 +44,7 @@ export const authService = {
     if (result.status !== 200) {
       throw new Error("Failed to verify token");
     }
+
     return result.data as {
       id: string;
       email: string;

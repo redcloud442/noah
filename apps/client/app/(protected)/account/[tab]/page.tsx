@@ -14,7 +14,7 @@ const AddressPage = async ({
 
   await protectionUserMiddleware();
 
-  return <AccountPage tab={tab} />;
+  return <AccountPage />;
 };
 
 export default AddressPage;

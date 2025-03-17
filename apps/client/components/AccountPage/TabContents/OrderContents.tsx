@@ -4,26 +4,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrderQuery } from "@/query/orderQuery";
 import { formatDate } from "@/utils/function";
+import { order_table } from "@prisma/client";
 import Link from "next/link";
-import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 
-const OrderContents = () => {
-  const [activePage, setActivePage] = useState(1);
+type OrderContentsProps = {
+  orders: order_table[];
+  count: number;
+  setActivePage: Dispatch<SetStateAction<number>>;
+  activePage: number;
+  isLoading: boolean;
+};
 
-  const { orders, count, isLoading } = useOrderQuery(15, activePage);
-
+const OrderContents = ({
+  orders,
+  count,
+  setActivePage,
+  activePage,
+  isLoading,
+}: OrderContentsProps) => {
   const pageCount = count > 0 ? Math.ceil(count / 15) : 1;
-
-  // // ✅ Pre-fetch next page when user changes page
-  // useEffect(() => {
-  //   queryClient.prefetchQuery({
-  //     queryKey: ["orders", 15, activePage + 1],
-  //     queryFn: () =>
-  //       ordersService.getOrders({ take: 15, skip: activePage + 1 }),
-  //   });
-  // }, [activePage, queryClient]);
 
   return (
     <div className="w-full max-w-4xl sm:max-w-none px-4">

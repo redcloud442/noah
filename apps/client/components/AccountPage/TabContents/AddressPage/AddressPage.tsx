@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { addressService } from "@/services/address";
+import { useCreateAddress, useUpdateAddress } from "@/query/addressQuery";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddressCreateFormData, addressCreateSchema } from "@packages/shared";
 import axios from "axios";
@@ -31,30 +31,24 @@ const AddressPage = ({ type = "create", address }: Props) => {
 
   const { toast } = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    control,
-    setValue,
-    formState: { isSubmitting },
-  } = useForm<AddressCreateFormData>({
-    resolver: zodResolver(addressCreateSchema),
-    defaultValues:
-      type === "create"
-        ? {
-            email: "",
-            firstName: "",
-            lastName: "",
-            address: "",
-            province: "",
-            city: "",
-            postalCode: "",
-            phone: "",
-            is_default: false,
-          }
-        : address,
-  });
+  const { register, handleSubmit, watch, control, setValue } =
+    useForm<AddressCreateFormData>({
+      resolver: zodResolver(addressCreateSchema),
+      defaultValues:
+        type === "create"
+          ? {
+              email: "",
+              firstName: "",
+              lastName: "",
+              address: "",
+              province: "",
+              city: "",
+              postalCode: "",
+              phone: "",
+              is_default: false,
+            }
+          : address,
+    });
 
   const [provices, setProvices] = useState<
     {
@@ -131,10 +125,14 @@ const AddressPage = ({ type = "create", address }: Props) => {
     }
   }, [selectedCity, setValue]);
 
+  const { mutate: createAddress, isPending: isCreating } = useCreateAddress();
+  const { mutate: updateAddress, isPending: isUpdating } = useUpdateAddress();
+
   const onSubmit = async (data: AddressCreateFormData) => {
     try {
       if (type === "create") {
-        await addressService.createAddress(data);
+        createAddress(data);
+
         toast({
           title: "Address created successfully",
         });
@@ -142,7 +140,7 @@ const AddressPage = ({ type = "create", address }: Props) => {
           router.push("/account/address");
         }, 1000);
       } else {
-        await addressService.updateAddress(data, params.addressId as string);
+        updateAddress({ data, addressId: params.addressId as string });
         toast({
           title: "Address updated successfully",
         });
@@ -343,9 +341,9 @@ const AddressPage = ({ type = "create", address }: Props) => {
             type="submit"
             variant="secondary"
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isCreating || isUpdating}
           >
-            {isSubmitting ? (
+            {isCreating || isUpdating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Processing...
               </>

@@ -1,12 +1,14 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { decode } from "hono/jwt";
+import jwt from "jsonwebtoken";
 import {
   authLoginModel,
   authRegisterModel,
   createCheckoutTokenModel,
   verifyCheckoutTokenModel,
 } from "./auth.model.js";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-strong-secret";
 
 export const authLoginController = async (c: Context) => {
   try {
@@ -77,9 +79,9 @@ export const authVerifyTokenController = async (c: Context) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const decoded = decode(token);
+  const decoded = jwt.verify(token, JWT_SECRET);
 
-  return c.json(decoded.payload);
+  return c.json(decoded);
 };
 
 export const createCheckoutTokenController = async (c: Context) => {

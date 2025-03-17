@@ -1,18 +1,17 @@
 import { ordersService } from "@/services/orders";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useOrderQuery = (take: number, skip: number) => {
-  const { data, isLoading, error } = useQuery({
+  const queryClient = useQueryClient();
+
+  return useQuery({
     queryKey: ["orders", take, skip],
     queryFn: () => ordersService.getOrders({ take, skip }),
     staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
     enabled: !!take && !!skip,
-    placeholderData: (previousData) => previousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    initialData: () => queryClient.getQueryData(["orders", take, skip]),
   });
-
-  const orders = data?.orders || [];
-  const count = data?.count as number;
-
-  return { orders, count, isLoading, error };
 };

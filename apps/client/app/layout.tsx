@@ -1,6 +1,8 @@
 import { Providers } from "@/components/LayoutProviders/RootLayoutProvider";
+import { jwtDecode } from "jwt-decode";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import React from "react";
 import "./globals.css";
 
@@ -24,12 +26,24 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const user = cookieStore.get("auth_token");
+
+  const decodedToken = jwtDecode(user?.value || "") as {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatar: string;
+    role: string;
+  };
+
   return (
     <html suppressHydrationWarning lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers currentUser={decodedToken}>{children}</Providers>
       </body>
     </html>
   );

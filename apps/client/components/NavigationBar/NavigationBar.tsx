@@ -42,14 +42,14 @@ export const NavigationBar = () => {
 
   useEffect(() => {
     const handleFetchUser = async () => {
-      if (!user.id) return;
+      if (user) return;
       const data = await authService.verifyToken();
 
       setUser(data);
     };
 
     handleFetchUser();
-  }, [user.id]);
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -202,11 +202,25 @@ export const NavigationBar = () => {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href="/login" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <User className="w-5 h-5" />
-              </NavigationMenuLink>
-            </Link>
+            {user?.role === "ADMIN" ? (
+              <Link href="/admin" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <User className="w-5 h-5" />
+                </NavigationMenuLink>
+              </Link>
+            ) : user?.role === "MEMBER" ? (
+              <Link href="/account" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <User className="w-5 h-5" />
+                </NavigationMenuLink>
+              </Link>
+            ) : (
+              <Link href="/login" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <User className="w-5 h-5" />
+                </NavigationMenuLink>
+              </Link>
+            )}
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

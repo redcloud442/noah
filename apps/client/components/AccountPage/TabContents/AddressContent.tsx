@@ -1,55 +1,37 @@
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { addressService } from "@/services/address";
+import { useDeleteAddress, useSetDefaultAddress } from "@/query/addressQuery";
 import { user_address_table } from "@prisma/client";
 import { Stars } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { DialogDeleteAddress } from "./DialogDeleteAddress/DialogDeleteAddress";
 
-const AddressContent = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [addresses, setAddresses] = useState<user_address_table[]>([]);
-  const [count, setCount] = useState(0);
-  const [activePage, setActivePage] = useState(1);
+type AddressContentProps = {
+  address: user_address_table[];
+  count: number;
+  setActivePage: Dispatch<SetStateAction<number>>;
+  activePage: number;
+  isLoading: boolean;
+};
 
+const AddressContent = ({
+  address,
+  count,
+  setActivePage,
+  activePage,
+  isLoading,
+}: AddressContentProps) => {
   const pageCount = count > 0 ? Math.ceil(count / 15) : 1;
 
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      try {
-        setIsLoading(true);
-        const addresses = await addressService.getAddresses({
-          take: 15,
-          skip: activePage,
-        });
+  const { mutate: setDefaultAddress, isPending: isMutating } =
+    useSetDefaultAddress(activePage);
 
-        setAddresses(addresses.address);
-        setCount(addresses.count);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { mutate: deleteAddress } = useDeleteAddress(activePage);
 
-    fetchAddresses();
-  }, [activePage]);
-
-  const handleSetDefault = async (addressId: string) => {
-    try {
-      await addressService.setDefaultAddress(addressId);
-
-      setAddresses((prevAddresses) =>
-        prevAddresses.map((address) => ({
-          ...address,
-          user_address_is_default: address.user_address_id === addressId,
-        }))
-      );
-    } catch (error) {
-      console.error("Error setting default address:", error);
-    }
+  const handleSetDefaultAddress = (addressId: string) => {
+    setDefaultAddress(addressId);
   };
 
   return (
@@ -70,12 +52,12 @@ const AddressContent = () => {
           <Skeleton className="w-full bg-gray-200 max-w-6xl h-32" />
           <Skeleton className="w-full bg-gray-200 max-w-4xl h-32" />
         </div>
-      ) : addresses.length === 0 ? (
+      ) : address.length === 0 ? (
         <p className="mt-6 text-gray-500">No addresses found.</p>
       ) : (
         <>
           <ul className="space-y-4 mt-6">
-            {addresses.map((address) => (
+            {address.map((address) => (
               <li
                 key={address.user_address_id}
                 className={`p-5 border border-gray-200 rounded-lg shadow-md bg-white flex flex-col md:flex-row justify-between items-start md:items-start ${
@@ -105,9 +87,12 @@ const AddressContent = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleSetDefault(address.user_address_id)}
+                      onClick={() =>
+                        handleSetDefaultAddress(address.user_address_id)
+                      }
+                      disabled={isMutating} // Disable the button while mutation is in progress
                     >
-                      Set as Default
+                      {isMutating ? "Setting..." : "Set as Default"}
                     </Button>
                   )}
                   <Link href={`/account/address/${address.user_address_id}`}>
@@ -116,7 +101,11 @@ const AddressContent = () => {
                     </Button>
                   </Link>
 
-                  <DialogDeleteAddress addressId={address.user_address_id} />
+                  <DialogDeleteAddress
+                    deleteUserFunction={deleteAddress}
+                    activePage={activePage}
+                    addressId={address.user_address_id}
+                  />
                 </div>
               </li>
             ))}

@@ -8,19 +8,12 @@ interface UserStore {
     lastName: string;
     role: string;
     avatar: string;
-  };
+  } | null;
   setUser: (user: UserStore["user"]) => void;
 }
 
 const useUserStore = create<UserStore>((set) => ({
-  user: {
-    id: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    avatar: "",
-    role: "",
-  },
+  user: null,
   setUser: (user) => set({ user }),
 }));
 
