@@ -1,14 +1,9 @@
 import { addressCreateSchema, orderGetSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
-import { getCookie } from "hono/cookie";
-import { verify } from "hono/jwt";
 import { redis } from "../../utils/redis.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-strong-secret";
 
 export const addressGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
-  const token = getCookie(c, "auth_token");
 
   const isRateLimited = await redis.rateLimit(user.id, 10, 60);
 
@@ -16,19 +11,7 @@ export const addressGetMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Too many requests" }, 429);
   }
 
-  if (!token) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  const decoded = await verify(token, JWT_SECRET);
-
-  if (!decoded) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  if (decoded.role === "MEMBER") {
-    c.set("user", decoded);
-  } else {
+  if (!user) {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
@@ -49,33 +32,16 @@ export const addressGetMiddleware = async (c: Context, next: Next) => {
   c.set("params", validated.data);
   c.set("user", user);
 
-  return next();
+  await next();
 };
 
 export const addressCreateMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
-  const token = getCookie(c, "auth_token");
 
   const isRateLimited = await redis.rateLimit(user.id, 10, 60);
 
   if (!isRateLimited) {
     return c.json({ message: "Too many requests" }, 429);
-  }
-
-  if (!token) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  const decoded = await verify(token, JWT_SECRET);
-
-  if (!decoded) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  if (decoded.role === "MEMBER") {
-    c.set("user", decoded);
-  } else {
-    return c.json({ message: "Unauthorized" }, 401);
   }
 
   const params = await c.req.json();
@@ -89,12 +55,11 @@ export const addressCreateMiddleware = async (c: Context, next: Next) => {
   c.set("params", validated.data);
   c.set("user", user);
 
-  return next();
+  await next();
 };
 
 export const addressPutDefaultMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
-  const token = getCookie(c, "auth_token");
 
   const isRateLimited = await redis.rateLimit(user.id, 10, 60);
 
@@ -102,19 +67,7 @@ export const addressPutDefaultMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Too many requests" }, 429);
   }
 
-  if (!token) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  const decoded = await verify(token, JWT_SECRET);
-
-  if (!decoded) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  if (decoded.role === "MEMBER") {
-    c.set("user", decoded);
-  } else {
+  if (!user) {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
@@ -123,12 +76,11 @@ export const addressPutDefaultMiddleware = async (c: Context, next: Next) => {
   c.set("params", id);
   c.set("user", user);
 
-  return next();
+  await next();
 };
 
 export const addressDeleteMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
-  const token = getCookie(c, "auth_token");
 
   const isRateLimited = await redis.rateLimit(user.id, 10, 60);
 
@@ -136,19 +88,7 @@ export const addressDeleteMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Too many requests" }, 429);
   }
 
-  if (!token) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  const decoded = await verify(token, JWT_SECRET);
-
-  if (!decoded) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  if (decoded.role === "MEMBER") {
-    c.set("user", decoded);
-  } else {
+  if (!user) {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
@@ -157,5 +97,5 @@ export const addressDeleteMiddleware = async (c: Context, next: Next) => {
   c.set("params", id);
   c.set("user", user);
 
-  return next();
+  await next();
 };

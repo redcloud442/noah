@@ -1,4 +1,4 @@
-import CheckoutNumberPage from "@/components/checkoutPage/CheckoutPage";
+import CheckoutNumberPage from "@/components/CheckoutPage/CheckoutPage";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { cartService } from "@/services/cart";
 import { paymentService } from "@/services/payment";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +28,7 @@ const CheckoutNumberPage = () => {
   const params = useParams();
   const router = useRouter();
   const { cart, setCart } = useCartStore();
-  const { user } = useUserStore();
+  const { userData } = useUserDataStore();
   const { toast } = useToast();
 
   const {
@@ -75,7 +75,7 @@ const CheckoutNumberPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        if (user.id) {
+        if (userData) {
           const cart = await cartService.get();
           setCart(cart);
         } else {
@@ -90,7 +90,7 @@ const CheckoutNumberPage = () => {
       }
     };
     fetchProducts();
-  }, [user.id]);
+  }, [userData]);
 
   useEffect(() => {
     const fetchRegions = async () => {
@@ -172,7 +172,7 @@ const CheckoutNumberPage = () => {
         })),
       });
 
-      if (!user.id) {
+      if (!userData) {
         localStorage.removeItem("shoppingCart");
         setCart({
           products: [],

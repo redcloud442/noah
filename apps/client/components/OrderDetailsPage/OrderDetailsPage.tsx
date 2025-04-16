@@ -1,6 +1,6 @@
 "use client";
 
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { ordersService } from "@/services/orders";
 import { formatDate } from "@/utils/function";
 import { Order } from "@/utils/types";
@@ -17,9 +17,11 @@ type OrderDetailsPageProps = {
 };
 
 const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
-  const { user } = useUserStore();
+  const { userData } = useUserDataStore();
   const [orderDetails, setOrderDetails] = useState<Order>({
-    order_table: order,
+    ...order,
+    order_total: order.order_total || 0,
+    order_date: new Date().toISOString(),
     order_items: [],
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +29,7 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        if (!user) return;
+        if (!userData) return;
         setIsLoading(true);
         const response = await ordersService.getOrderItems(order.order_number);
 
@@ -43,10 +45,11 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
     };
 
     fetchOrderDetails();
-  }, [order, user]);
+  }, [order, userData]);
 
   const subtotal = orderDetails.order_items.reduce(
-    (total, product) => total + product.price * product.quantity,
+    (total, product) =>
+      total + product.order_item_price * product.order_item_quantity,
     0
   );
 
@@ -166,10 +169,9 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
                   <div className="relative">
                     <Image
                       src={
-                        product.product_variant_image ||
-                        "/assets/model/QR_59794.jpg"
+                        product.order_item_image || "/assets/model/QR_59794.jpg"
                       }
-                      alt={product.product_variant_name}
+                      alt={product.order_item_name}
                       width={80}
                       height={80}
                       className="w-20 h-20 object-contain rounded-xl"
@@ -177,23 +179,26 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
 
                     {/* Quantity Badge */}
                     <div className="absolute -top-4 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {product.quantity}
+                      {product.order_item_quantity}
                     </div>
                   </div>
 
                   {/* Product Details */}
                   <div className="flex-1">
                     <p className="font-semibold text-lg">
-                      {product.product_variant_name}
+                      {product.order_item_name}
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Size: {product.product_variant_size}
+                      Size: {product.order_item_size}
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Color: {product.product_variant_color}
+                      Color: {product.order_item_color}
                     </p>
                     <p className="text-gray-700 font-bold">
-                      ₱{(product.price * product.quantity).toLocaleString()}
+                      ₱
+                      {(
+                        product.order_item_price * product.order_item_quantity
+                      ).toLocaleString()}
                     </p>
                   </div>
                 </div>

@@ -1,6 +1,5 @@
 import { authService } from "@/services/auth";
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -21,14 +20,7 @@ export async function GET(request: Request) {
         data.user.id ?? ""
       );
 
-      // ✅ Corrected way to set the cookie
-      (await cookies()).set("auth_token", result.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30,
-        path: "/",
-      });
+      return NextResponse.redirect(result.redirectTo);
     }
 
     if (!error) {

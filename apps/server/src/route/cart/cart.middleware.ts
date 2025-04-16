@@ -36,7 +36,7 @@ export const cartMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  return next();
+  await next();
 };
 
 export const cartPostMiddleware = async (c: Context, next: Next) => {
@@ -75,7 +75,7 @@ export const cartPostMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validated.data);
 
-  return next();
+  await next();
 };
 
 export const cartDeleteMiddleware = async (c: Context, next: Next) => {
@@ -116,7 +116,7 @@ export const cartDeleteMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validated.data);
 
-  return next();
+  await next();
 };
 
 export const cartPutMiddleware = async (c: Context, next: Next) => {
@@ -159,5 +159,5 @@ export const cartPutMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validated.data);
 
-  return next();
+  await next();
 };

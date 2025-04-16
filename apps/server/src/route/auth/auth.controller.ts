@@ -22,17 +22,8 @@ export const authLoginController = async (c: Context) => {
       cart,
     });
 
-    setCookie(c, "auth_token", result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-
     return c.json(result, 200);
   } catch (error) {
-    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };
@@ -43,17 +34,8 @@ export const authRegisterController = async (c: Context) => {
 
     const result = await authRegisterModel(params);
 
-    setCookie(c, "auth_token", result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 60 * 60,
-      path: "/",
-    });
-
     return c.json(result, 200);
   } catch (error) {
-    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };

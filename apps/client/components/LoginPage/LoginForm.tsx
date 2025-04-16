@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import loginSchema from "@/lib/zod";
 import { authService } from "@/services/auth";
@@ -12,6 +11,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import RegisterModal from "../RegisterModal/RegisterModal";
 
@@ -24,7 +24,6 @@ export const LoginForm = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { toast } = useToast();
   const { handleSubmit, control } = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -41,23 +40,24 @@ export const LoginForm = ({
 
       const { email, password } = formData;
 
-      await authService.login(email);
-
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      const { redirectTo } = await authService.login(email);
+
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-        });
+        toast.error(error.message);
       }
 
-      router.push("/account");
+      router.push(redirectTo);
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setIsLoading(false);
     }

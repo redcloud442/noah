@@ -18,29 +18,31 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { authService } from "@/services/auth";
-import { useRole } from "@/utils/context/context";
+import useUserDataStore from "@/lib/userDataStore";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+import { toast } from "sonner";
+export function NavUser() {
   const { isMobile } = useSidebar();
-  const { firstName, lastName, avatar, email, id } = useRole();
+  const { userData } = useUserDataStore();
+  const supabase = createClient();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await supabase.auth.signOut();
 
-      router.push("/login");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+
+      toast.success("Logged out successfully");
     } catch (error) {
-      console.error(error);
+      if (error instanceof Error && error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to logout");
+      }
     }
   };
 
@@ -54,12 +56,17 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={avatar} alt={`${firstName} ${lastName}`} />
+                <AvatarImage
+                  src={""}
+                  alt={`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}
+                />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{`${firstName} ${lastName}`}</span>
-                <span className="truncate text-xs">{email}</span>
+                <span className="truncate font-semibold">{`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}</span>
+                <span className="truncate text-xs">
+                  {userData?.userProfile.user_email}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -73,12 +80,17 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={avatar} alt={`${firstName} ${lastName}`} />
+                  <AvatarImage
+                    src={""}
+                    alt={`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}
+                  />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{`${firstName} ${lastName}`}</span>
-                  <span className="truncate text-xs">{email}</span>
+                  <span className="truncate font-semibold">{`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}</span>
+                  <span className="truncate text-xs">
+                    {userData?.userProfile.user_email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>

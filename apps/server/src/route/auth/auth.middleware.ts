@@ -136,5 +136,5 @@ export const handleLogoutMiddleware = async (c: Context, next: Next) => {
   c.set("params", id);
   c.set("user", user);
 
-  return next();
+  await next();
 };

@@ -13,7 +13,7 @@ import {
   variant_sample_image_table,
 } from "@prisma/client";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 type Props = {
@@ -26,43 +26,68 @@ type Props = {
 
 const ProductSlugPage = ({ product }: Props) => {
   const router = useRouter();
+  const { teamName } = useParams();
+
   const [selectedSize, setSelectedSize] = useState(
     product.product_variants[0]?.product_variant_size
   );
 
+  const allImages =
+    product.product_variants.flatMap((v) => v.variant_sample_images) || [];
+
+  const [selectedImage, setSelectedImage] = useState(
+    allImages?.[0]?.variant_sample_image_image_url || "/placeholder.png"
+  );
+
   const handleClick = async (slug: string | null) => {
-    router.replace(`/admin/product/${slug}`);
+    router.replace(`/${teamName}/admin/product/${slug}`);
     router.refresh();
   };
 
   return (
-    <div className=" py-8 grid grid-cols-1 md:grid-cols-2 gap-12">
-      {/* Left Side - Scrollable Product Images */}
-      <div className="h-screen overflow-y-auto sticky top-0">
-        <div className="relative w-full h-[600px] bg-gray-200 rounded-lg overflow-hidden">
-          {product.product_variants.map((variant) => (
-            <Image
-              key={variant.product_variant_id}
-              src={
-                variant.variant_sample_images[0]
-                  ?.variant_sample_image_image_url || "/placeholder.png"
+    <div className="py-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="sticky top-0">
+        <div className="relative bg-gray-200 rounded-lg overflow-hidden mb-4">
+          <Image
+            src={selectedImage}
+            alt="Selected Product Image"
+            width={500}
+            height={500}
+            className="object-cover w-full h-full"
+          />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto">
+          {allImages.map((image, idx) => (
+            <div
+              key={idx}
+              className="border rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-black transition"
+              onMouseEnter={() =>
+                setSelectedImage(image.variant_sample_image_image_url)
               }
-              alt={variant.product_variant_color}
-              layout="fill"
-              objectFit="cover"
-            />
+            >
+              <Image
+                src={image.variant_sample_image_image_url}
+                alt="Thumbnail"
+                width={250}
+                height={250}
+                className="object-cover w-full h-full hover:scale-105 hover:bg-gray-900/50 transition duration-300"
+              />
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Right Side - Fixed Product Details */}
       <div className="sticky top-0 self-start">
         <h1 className="text-3xl font-bold">{product.product_name}</h1>
-        <p className="text-lg text-gray-700 mt-2">
-          ₱{product.product_price.toLocaleString()}
+        <p className="text-xl text-white/70 mt-2">
+          ₱{" "}
+          {product.product_price.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
 
-        {/* Color Selector */}
         <div className="mt-4">
           <h3 className="text-sm font-semibold">Select Color:</h3>
           <div className="flex gap-2 mt-2">
@@ -70,6 +95,7 @@ const ProductSlugPage = ({ product }: Props) => {
               <Button
                 key={variant.product_variant_id}
                 onClick={() => handleClick(variant.product_variant_slug)}
+                variant="ghost"
                 className={`w-14 h-14 border ${
                   selectedSize === variant.product_variant_size
                     ? "border-black"
@@ -82,8 +108,8 @@ const ProductSlugPage = ({ product }: Props) => {
                       ?.variant_sample_image_image_url || "/placeholder.png"
                   }
                   alt={variant.product_variant_color}
-                  width={20}
-                  height={20}
+                  width={35}
+                  height={35}
                 />
               </Button>
             ))}
@@ -110,7 +136,7 @@ const ProductSlugPage = ({ product }: Props) => {
           </div>
         </div>
 
-        {/* Quantity Selector */}
+        {/* Quantity Display */}
         <div className="mt-4 flex items-center gap-4">
           <h3 className="text-sm font-semibold">Quantity:</h3>
           <div className="flex items-center border p-1 rounded-md">

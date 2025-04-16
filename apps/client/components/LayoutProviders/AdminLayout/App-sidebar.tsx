@@ -1,18 +1,18 @@
 "use client";
 
 import {
-  Frame,
+  BarChart,
+  Box,
   LayoutDashboard,
-  Map,
-  PieChart,
-  Settings2,
+  ListOrdered,
   ShoppingBag,
   ShoppingCart,
+  User,
+  UserCheckIcon,
 } from "lucide-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/LayoutProviders/AdminLayout/Navigation-main";
-import { NavProjects } from "@/components/LayoutProviders/AdminLayout/Navigation-projects";
 import { NavUser } from "@/components/LayoutProviders/AdminLayout/Navigation-user";
 import { TeamSwitcher } from "@/components/LayoutProviders/AdminLayout/Team-switcher";
 import {
@@ -22,146 +22,94 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { team_table } from "@prisma/client";
 
 // This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/assets/logo/NOIR_Logo_White_png.png",
-  },
-  teams: [
-    {
-      name: "NOIR Clothing",
-      logo: "/assets/logo/NOIR_Logo_White_png.png",
-      plan: "Admin Panel",
-    },
-  ],
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-      isActive: true,
-      items: [
-        {
-          title: "Home",
-          url: "/admin",
-        },
-        {
-          title: "Sales",
-          url: "/admin/sales",
-        },
-        {
-          title: "Users",
-          url: "/admin/users",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Products",
-      url: "/admin/products",
-      icon: ShoppingCart,
-      isActive: true,
-      items: [
-        {
-          title: "Collections",
-          url: "/admin/product/collections",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Orders",
-      url: "/admin/orders",
-      icon: ShoppingBag,
-      isActive: true,
-      items: [
-        {
-          title: "Orders",
-          url: "/admin/orders",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      isActive: true,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  teams: team_table[];
+  activeTeam: team_table;
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
+  const activeTeamName = activeTeam.team_name.toLowerCase();
+  const data = {
+    navMain: [
+      {
+        title: "Dashboard",
+        url: `/${activeTeamName}/admin`,
+        icon: LayoutDashboard,
+        isActive: true,
+        items: [
+          {
+            title: "Analytics",
+            url: `/${activeTeamName}/admin`,
+            icon: BarChart,
+          },
+        ],
+      },
+      {
+        title: "User Management",
+        url: `/${activeTeamName}/admin`,
+        icon: User,
+        isActive: true,
+        items: [
+          {
+            title: "User",
+            url: `/${activeTeamName}/admin/user`,
+            icon: ShoppingBag,
+          },
+          {
+            title: "Reseller",
+            url: `/${activeTeamName}/admin/reseller`,
+            icon: UserCheckIcon,
+          },
+        ],
+      },
+      {
+        title: "Products",
+        url: `/${activeTeamName}/admin/product`,
+        icon: ShoppingCart,
+        isActive: true,
+        items: [
+          {
+            title: "Collections",
+            url: `/${activeTeamName}/admin/product/collections`,
+            icon: ShoppingBag,
+          },
+          {
+            title: "Products",
+            url: `/${activeTeamName}/admin/product`,
+            icon: Box,
+          },
+        ],
+      },
+      {
+        title: "Orders",
+        url: `/${activeTeamName}/admin/orders`,
+        icon: ShoppingBag,
+        isActive: true,
+        items: [
+          {
+            title: "Orders",
+            url: `/${activeTeamName}/admin/orders`,
+            icon: ListOrdered,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

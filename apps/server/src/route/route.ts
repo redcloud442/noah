@@ -9,10 +9,15 @@ import cart from "./cart/cart.route.js";
 import order from "./order/order.route.js";
 import payment from "./payment/payment.route.js";
 import product from "./product/product.route.js";
+import user from "./user/user.route.js";
 
 const app = new Hono();
 
 app.route("/auth", auth);
+
+// User
+app.use("/user/*", protectionMiddleware);
+app.route("/user", user);
 
 // Cart
 app.use("/cart/*", protectionMiddleware);

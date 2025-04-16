@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["user_schema", "product_schema", "order_schema", "category_schema", "payment_schema","location_schema", "public"]
+  schemas   = ["user_schema","team_schema", "product_schema", "order_schema", "category_schema", "payment_schema","location_schema", "public"]
 }
 
 enum OrderStatus {
@@ -26,24 +26,14 @@ model user_table {
   user_email String @unique
   user_created_at DateTime @default(now())
   user_updated_at DateTime? @updatedAt
-  user_profile_picture String?
-  user_group_id String @db.Uuid
+
 
   user_address_table user_address_table[]
   cart_table cart_table[]
-  user_group user_group_table @relation(fields: [user_group_id], references: [user_group_id], onDelete: Cascade)
-  @@schema("user_schema")
+  
   order_table order_table[]
-}
+  team_member_table team_member_table[]
 
-model user_group_table {
-  user_group_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_group_name String
-  user_group_description String
-  user_group_created_at DateTime @default(now()) @db.Timestamptz(3)
-  user_group_updated_at DateTime? @updatedAt @db.Timestamptz(3)
-
-  user_table user_table[]
   @@schema("user_schema")
 }
 
@@ -66,6 +56,57 @@ model user_address_table {
   user_address_user user_table @relation(fields: [user_address_user_id], references: [user_id], onDelete: Cascade)
   
   @@schema("user_schema")
+}
+
+model team_table {
+  team_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_date_created DateTime @default(now())
+  team_name String
+
+  team_members team_member_table[]
+  team_group team_group_table[]
+  team_products product_table[]
+  team_orders order_table[]
+  team_product_categories product_category_table[]
+
+  @@schema("team_schema")
+}
+
+model team_member_table {
+  team_member_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_member_date_created DateTime @default(now())
+  team_member_role String
+  team_member_active_team_id String @db.Uuid
+  team_member_team_id String @db.Uuid
+  team_member_user_id String @db.Uuid
+  team_member_request_reseller Boolean @default(false)
+
+
+  team_member_team team_table @relation(fields: [team_member_team_id], references: [team_id], onDelete: Cascade)
+  team_member_user user_table @relation(fields: [team_member_user_id], references: [user_id], onDelete: Cascade)
+  team_member_team_group team_group_member_table[]
+  @@schema("team_schema")
+}
+
+model team_group_table {
+  team_group_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_group_date_created DateTime @default(now())
+  team_group_name String
+  team_group_team_id String @db.Uuid
+
+  team_group_team team_table @relation(fields: [team_group_team_id], references: [team_id], onDelete: Cascade)
+
+  @@schema("team_schema")
+}
+
+model team_group_member_table {
+  team_group_member_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_group_member_date_created DateTime @default(now())
+  team_group_member_member_id String @db.Uuid
+
+  team_group_member_team_member team_member_table @relation(fields: [team_group_member_member_id], references: [team_member_id], onDelete: Cascade)
+
+  @@schema("team_schema")
 }
 
 model cart_table {
@@ -104,8 +145,10 @@ model order_table {
   order_created_at DateTime  @default(now()) @db.Timestamptz(3)
   order_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   order_user_id    String?    @db.Uuid
+  order_team_id   String    @db.Uuid
 
   order_user       user_table? @relation(fields: [order_user_id], references: [user_id], onDelete: Cascade)
+  order_team      team_table @relation(fields: [order_team_id], references: [team_id], onDelete: Cascade)
   order_items      order_item_table[]
 
   @@schema("order_schema")
@@ -135,8 +178,10 @@ model product_table {
   product_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   product_category_id String @db.Uuid
   product_slug String? @unique 
+  product_team_id String @db.Uuid
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
+  product_team team_table @relation(fields: [product_team_id], references: [team_id], onDelete: Cascade)
   product_variants product_variant_table[]
   @@schema("product_schema")
 }
@@ -147,8 +192,10 @@ model product_category_table {
   product_category_description String
   product_category_created_at DateTime @default(now()) @db.Timestamptz(3)
   product_category_updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  product_category_team_id String @db.Uuid
 
   products product_table[]
+  product_category_team team_table @relation(fields: [product_category_team_id], references: [team_id], onDelete: Cascade)
   @@schema("product_schema")
 }
 
@@ -177,49 +224,4 @@ model variant_sample_image_table {
   @@schema("product_schema")
 }
 
-
-model region_table {
-  region_id  Int @id @default(autoincrement())
-  region_name String
-  region_description String
-
-
-  provinces province_table[]
-
-  @@schema("location_schema")
-}
-
-model province_table {
-  province_id  Int @id @default(autoincrement())
-  province_name String
-  province_region_id Int
-
-  province_region region_table @relation(fields: [province_region_id], references: [region_id], onDelete: Cascade)
-
-  cities city_table[]
-
-  @@schema("location_schema")
-}
-
-model city_table {
-  city_id Int @id @default(autoincrement())
-  city_name String  
-  city_province_id Int
-
-  city_province province_table @relation(fields: [city_province_id], references: [province_id], onDelete: Cascade)
-
-  barangays barangay_table[]
-
-  @@schema("location_schema")
-}
-
-model barangay_table {
-  barangay_id Int @id @default(autoincrement())
-  barangay_name String
-  barangay_city_id Int
-
-  barangay_city city_table @relation(fields: [barangay_city_id], references: [city_id], onDelete: Cascade)
-
-  @@schema("location_schema")
-}
 

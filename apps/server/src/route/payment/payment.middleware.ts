@@ -72,7 +72,7 @@ export const paymentMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validate.data);
 
-  return next();
+  await next();
 };
 
 export const paymentCreatePaymentMiddleware = async (
@@ -121,7 +121,7 @@ export const paymentCreatePaymentMiddleware = async (
 
   c.set("params", validate.data);
 
-  return next();
+  await next();
 };
 
 export const paymentGetMiddleware = async (c: Context, next: Next) => {
@@ -156,5 +156,5 @@ export const paymentGetMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", { paymentIntentId, clientKey, orderNumber });
 
-  return next();
+  await next();
 };

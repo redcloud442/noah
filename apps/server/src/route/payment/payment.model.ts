@@ -92,8 +92,6 @@ export const createPaymentIntent = async (
 
   const data = response.data;
 
-  console.log(user);
-
   const paymentIntent = await prisma.$transaction(async (tx) => {
     const paymentIntent = await tx.order_table.create({
       data: {
@@ -111,6 +109,7 @@ export const createPaymentIntent = async (
         order_state: province,
         order_postal_code: postalCode,
         order_barangay: barangay,
+        order_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
       },
       select: {
         order_id: true,

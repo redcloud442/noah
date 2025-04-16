@@ -85,7 +85,7 @@ const OrderContents = ({
           {count > 0 && (
             <Pagination
               activePage={activePage}
-              setActivePage={setActivePage}
+              handleChangePage={setActivePage}
               pageCount={pageCount}
             />
           )}

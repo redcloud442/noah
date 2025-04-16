@@ -12,14 +12,16 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { cn } from "@/lib/utils";
-import { authService } from "@/services/auth";
-import { User } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { LogOut, User } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import ShoppingCartModal from "../ShoppingCartModal/ShoppingCartModal";
-
+import { Button } from "../ui/button";
 const components: {
   imageSrc: string;
   title: string;
@@ -36,20 +38,27 @@ const components: {
 ];
 
 export const NavigationBar = () => {
+  const { userData, setUserData } = useUserDataStore();
+  const supabase = createClient();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const { user, setUser } = useUserStore();
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUserData(null);
 
-  useEffect(() => {
-    const handleFetchUser = async () => {
-      if (user) return;
-      const data = await authService.verifyToken();
-
-      setUser(data);
-    };
-
-    handleFetchUser();
-  }, [user]);
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error logging out");
+      }
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -202,20 +211,40 @@ export const NavigationBar = () => {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            {user?.role === "ADMIN" ? (
-              <Link href="/admin" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <User className="w-5 h-5" />
+            {userData?.teamMemberProfile?.team_member_role === "ADMIN" ? (
+              <Link
+                href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
+                passHref
+              >
+                <NavigationMenuLink
+                  className={navigationMenuTriggerStyle()}
+                  asChild
+                >
+                  <Link
+                    href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
+                  >
+                    <User className="w-5 h-5" />
+                  </Link>
                 </NavigationMenuLink>
               </Link>
-            ) : user?.role === "MEMBER" ? (
-              <Link href="/account" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <User className="w-5 h-5" />
-                </NavigationMenuLink>
-              </Link>
+            ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ? (
+              <>
+                <Link href="/account" passHref>
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    asChild
+                  >
+                    <Link href="/account">
+                      <User className="w-5 h-5" />
+                    </Link>
+                  </NavigationMenuLink>
+                </Link>
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </>
             ) : (
-              <Link href="/login" legacyBehavior passHref>
+              <Link href="/login" passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   <User className="w-5 h-5" />
                 </NavigationMenuLink>

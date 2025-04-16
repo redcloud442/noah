@@ -1,57 +1,41 @@
 "use client";
 
+import useUserDataStore from "@/lib/userDataStore";
 import { useCollectionQuery } from "@/query/collectionQuery";
-import { PlusIcon, RefreshCcwIcon, SearchIcon } from "lucide-react";
+import { RefreshCcwIcon, SearchIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+import { Card, CardHeader } from "../ui/card";
 import { FloatingLabelInput } from "../ui/floating-input";
 import { Pagination } from "../ui/pagination";
 import { Skeleton } from "../ui/skeleton";
+import CreateProductCategoryModal from "./CreateProductCategory/CreateProductCategoryModal";
 import ProductCollection from "./ProductCollection";
 
 type FormData = {
   search?: string;
 };
 
-type Props = {
-  initialData: {
-    product_category_id: string;
-    product_category_name: string;
-    product_category_description: string;
-  }[];
-};
-
-const ProductCategoryTable = ({ initialData }: Props) => {
+const ProductCategoryTable = () => {
   const [activePage, setActivePage] = useState(1);
   const { register, handleSubmit, reset, getValues } = useForm<FormData>();
+  const { userData } = useUserDataStore();
 
   const search = getValues("search");
 
   const { data, isLoading, refetch } = useCollectionQuery(
     15,
     activePage,
-    initialData,
-    search
+    search,
+    userData?.teamMemberProfile?.team_member_team_id
   );
 
-  // On submit handler
   const onSubmit = useCallback(
     (data: FormData) => {
       if (data.search) {
         setActivePage(1);
-        refetch({
-          throwOnError: true,
-          cancelRefetch: true,
-        });
+        refetch();
       } else {
         setActivePage(1);
         refetch();
@@ -105,34 +89,30 @@ const ProductCategoryTable = ({ initialData }: Props) => {
             onClick={handleRefresh}
             disabled={isLoading}
           >
+            {" "}
             <RefreshCcwIcon className="w-4 h-4" />
           </Button>
         </form>
-
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="secondary">
-              <PlusIcon className="w-4 h-4" />
-              Create Product Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete your
-                account and remove your data from our servers.
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+        <CreateProductCategoryModal
+          take={15}
+          skip={activePage}
+          search={search}
+        />
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col gap-4 w-full">
-          <Skeleton className="w-full h-32" />
-          <Skeleton className="w-full max-w-2xl h-32" />
-          <Skeleton className="w-full max-w-sm h-32" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Card key={index} className="shadow-md">
+              <CardHeader>
+                <Skeleton className="w-full h-48 rounded-md" />
+              </CardHeader>
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </Card>
+          ))}
         </div>
       ) : (
         <ProductCollection collections={collections} />

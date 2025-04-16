@@ -16,6 +16,7 @@
     "db": "bun --filter @apps/server db && bun --filter @apps/client db",
     "package": "bun run build --filter @packages/shared",
     "dev": "turbo run dev --parallel",
+    
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",

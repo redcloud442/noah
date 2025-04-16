@@ -7,12 +7,17 @@ import { order_table, user_address_table } from "@prisma/client";
 import { useState } from "react";
 import AddressContent from "./AddressContent";
 import OrderContents from "./OrderContents";
+import ResellerContents from "./ResellerContents";
+
 const TabButton = ({ tab }: { tab: string }) => {
   const [activeTab, setActiveTab] = useState(tab || "orders");
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    window.history.pushState(null, "", `/account/${value}`);
+
+    const slug = encodeURIComponent(value.toLowerCase().replace(/\s+/g, "-"));
+
+    window.history.pushState(null, "", `/account/${slug}`);
   };
 
   const [activePage, setActivePage] = useState(1);
@@ -50,6 +55,9 @@ const TabButton = ({ tab }: { tab: string }) => {
           <TabsTrigger variant="outline" value="address">
             Address
           </TabsTrigger>
+          <TabsTrigger variant="outline" value="Be a reseller">
+            Be a reseller
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="w-full px-4">
@@ -70,6 +78,10 @@ const TabButton = ({ tab }: { tab: string }) => {
             activePage={activePage}
             isLoading={isLoading}
           />
+        </TabsContent>
+
+        <TabsContent value="Be a reseller" className="w-full px-4">
+          <ResellerContents />
         </TabsContent>
       </Tabs>
     </div>

@@ -8,46 +8,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useUserDataStore from "@/lib/userDataStore";
+import { productService } from "@/services/product";
+import { formattedCreateProductResponse } from "@/utils/function";
+import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusCircle, Trash } from "lucide-react";
+import {
+  ProductFormType,
+  productSchema,
+} from "@packages/shared/src/schema/schema";
+import { product_category_table } from "@prisma/client";
+import { PhilippinePeso, PlusCircle, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 import { FloatingLabelInput } from "../ui/floating-input";
-import { Textarea } from "../ui/textarea";
-
-const productSchema = z.object({
-  products: z.array(
-    z.object({
-      name: z.string().min(1, "Product name is required"),
-      price: z.coerce.number().min(1, "Price must be greater than 0"),
-      description: z.string().optional(),
-      category: z.string().min(1, "Category is required"),
-      variants: z.array(
-        z.object({
-          id: z.string().uuid("ID must be a valid UUID"),
-          color: z.string().min(1, "Color is required"),
-          size: z.string().min(1, "Size is required"),
-          quantity: z.coerce.number().min(0, "Quantity cannot be negative"),
-        })
-      ),
-    })
-  ),
-});
-
-type ProductFormType = z.infer<typeof productSchema>;
+import { ProductVariants } from "./ProductVariants";
 
 const CreateProductPage = () => {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  );
+  const supabaseClient = createClient();
+  const { userData } = useUserDataStore();
+  const [categories, setCategories] = useState<product_category_table[]>([]);
 
   const {
     control,
     handleSubmit,
     register,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ProductFormType>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -57,7 +45,9 @@ const CreateProductPage = () => {
           price: 0,
           description: "",
           category: "",
-          variants: [{ id: uuidv4(), color: "", size: "", quantity: 0 }],
+          variants: [
+            { id: uuidv4(), color: "", size: "", quantity: 0, images: [] },
+          ],
         },
       ],
     },
@@ -72,37 +62,49 @@ const CreateProductPage = () => {
     name: "products",
   });
 
-  const variantFieldArrays = productFields.map((_, productIndex) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useFieldArray({
-      control,
-      name: `products.${productIndex}.variants`,
-    })
-  );
-
   useEffect(() => {
-    setCategories([
-      { id: "electronics", name: "Electronics" },
-      { id: "fashion", name: "Fashion" },
-      { id: "books", name: "Books" },
-    ]);
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .schema("product_schema")
+          .from("product_category_table")
+          .select("*");
+
+        if (error) {
+          toast.error(error.message);
+        }
+
+        setCategories(data || []);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Error fetching categories");
+        }
+      }
+    };
+
+    fetchCategories();
   }, []);
 
-  const onSubmit = (data: ProductFormType) => {
-    console.log("Submitted Products:", data);
-  };
+  const onSubmit = async (data: ProductFormType) => {
+    try {
+      const { formattedProducts } = await formattedCreateProductResponse(
+        data,
+        supabaseClient,
+        userData?.teamMemberProfile.team_member_team_id || ""
+      );
 
-  const handleAddMoreVariants = (productIndex: number) => {
-    variantFieldArrays[productIndex].append({
-      id: uuidv4(),
-      color: "",
-      size: "",
-      quantity: 0,
-    });
-  };
+      await productService.createProduct(formattedProducts);
 
-  const handleRemoveVariant = (productIndex: number, variantIndex: number) => {
-    variantFieldArrays[productIndex].remove(variantIndex);
+      toast.success("Product created successfully");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error creating product");
+      }
+    }
   };
 
   const handleAddProduct = () => {
@@ -111,7 +113,9 @@ const CreateProductPage = () => {
       price: 0,
       description: "",
       category: "",
-      variants: [{ id: uuidv4(), color: "", size: "", quantity: 0 }],
+      variants: [
+        { id: uuidv4(), color: "", size: "", quantity: 0, images: [] },
+      ],
     });
   };
 
@@ -121,20 +125,21 @@ const CreateProductPage = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {productFields.map((product, productIndex) => {
-          const variantFieldArray = variantFieldArrays[productIndex];
           return (
             <div key={product.id} className="border p-4 rounded-md space-y-4">
               <div className="flex justify-between items-center">
                 <h1 className="text-lg font-medium">
-                  Product {productIndex + 1}
+                  Product # {productIndex + 1}
                 </h1>
-                <Button
-                  variant="destructive"
-                  type="button"
-                  onClick={() => removeProduct(productIndex)}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+                {productFields.length > 1 && (
+                  <Button
+                    variant="destructive"
+                    type="button"
+                    onClick={() => removeProduct(productIndex)}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
               <FloatingLabelInput
                 label="Product Name"
@@ -147,24 +152,45 @@ const CreateProductPage = () => {
                 </p>
               )}
 
-              <Textarea
-                placeholder="Description"
+              <FloatingLabelInput
+                label="Product Description"
                 {...register(`products.${productIndex}.description`)}
               />
 
-              {/* Product Category */}
-              <Select {...register(`products.${productIndex}.category`)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FloatingLabelInput
+                label="Product Price"
+                type="number"
+                leftIcon={<PhilippinePeso size={14} />}
+                {...register(`products.${productIndex}.price`)}
+              />
+
+              {errors.products?.[productIndex]?.name && (
+                <p className="text-red-500 text-sm">
+                  {errors.products[productIndex]?.name?.message}
+                </p>
+              )}
+
+              <Controller
+                control={control}
+                name={`products.${productIndex}.category`}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} {...field}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Collections" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem
+                          key={category.product_category_id}
+                          value={category.product_category_id}
+                        >
+                          {category.product_category_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.products?.[productIndex]?.category && (
                 <p className="text-red-500 text-sm">
                   {errors.products[productIndex]?.category?.message}
@@ -172,112 +198,35 @@ const CreateProductPage = () => {
               )}
 
               <div className="p-2 space-y-8">
-                <h3 className="font-medium">Product Variants</h3>
-
-                {variantFieldArray.fields.map((variant, variantIndex) => (
-                  <div
-                    key={variant.id}
-                    className="border p-4 rounded-md space-y-4"
-                  >
-                    <div className="flex justify-between items-center">
-                      <h1>Product Variant #{variantIndex + 1}</h1>
-                      <Button
-                        variant="destructive"
-                        type="button"
-                        onClick={() =>
-                          handleRemoveVariant(productIndex, variantIndex)
-                        }
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <FloatingLabelInput
-                      label="Color"
-                      {...register(
-                        `products.${productIndex}.variants.${variantIndex}.color`
-                      )}
-                    />
-                    {errors.products?.[productIndex]?.variants?.[variantIndex]
-                      ?.color && (
-                      <p className="text-red-500 text-sm">
-                        {
-                          errors.products[productIndex]?.variants?.[
-                            variantIndex
-                          ]?.color?.message
-                        }
-                      </p>
-                    )}
-
-                    <Select
-                      {...register(
-                        `products.${productIndex}.variants.${variantIndex}.size`
-                      )}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="S">S</SelectItem>
-                        <SelectItem value="M">M</SelectItem>
-                        <SelectItem value="L">L</SelectItem>
-                        <SelectItem value="XL">XL</SelectItem>
-                        <SelectItem value="XXL">XXL</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {errors.products?.[productIndex]?.variants?.[variantIndex]
-                      ?.size && (
-                      <p className="text-red-500 text-sm">
-                        {
-                          errors.products[productIndex]?.variants?.[
-                            variantIndex
-                          ]?.size?.message
-                        }
-                      </p>
-                    )}
-
-                    <FloatingLabelInput
-                      label="Quantity"
-                      type="number"
-                      {...register(
-                        `products.${productIndex}.variants.${variantIndex}.quantity`
-                      )}
-                    />
-                    {errors.products?.[productIndex]?.variants?.[variantIndex]
-                      ?.quantity && (
-                      <p className="text-red-500 text-sm">
-                        {
-                          errors.products[productIndex]?.variants?.[
-                            variantIndex
-                          ]?.quantity?.message
-                        }
-                      </p>
-                    )}
-                  </div>
-                ))}
-
-                <div className="flex justify-center">
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    onClick={() => handleAddMoreVariants(productIndex)}
-                  >
-                    <PlusCircle className="w-4 h-4 mr-2" /> Add Variant
-                  </Button>
-                </div>
+                <ProductVariants
+                  key={product.id}
+                  productIndex={productIndex}
+                  control={control}
+                  register={register}
+                  errors={errors}
+                />
               </div>
             </div>
           );
         })}
 
         <div className="flex justify-center">
-          <Button variant="secondary" type="button" onClick={handleAddProduct}>
+          <Button
+            variant="secondary"
+            type="button"
+            className="w-full"
+            onClick={handleAddProduct}
+          >
             <PlusCircle className="w-4 h-4 mr-2" /> Add Product
           </Button>
         </div>
 
         {/* Submit Button */}
-        <Button type="submit" className="w-full bg-blue-500 text-white mt-6">
+        <Button
+          disabled={productFields.length === 0 || isSubmitting}
+          type="submit"
+          className="w-full bg-blue-500 text-white mt-6"
+        >
           Submit Products
         </Button>
       </form>

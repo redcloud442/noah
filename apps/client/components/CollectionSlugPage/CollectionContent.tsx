@@ -19,13 +19,24 @@ const CollectionContent = ({ product }: Props) => {
   };
 
   return (
-    <CardContent onClick={handleClick} className="cursor-pointer">
-      <CardTitle className="text-lg font-semibold">
+    <CardContent
+      onClick={handleClick}
+      className="cursor-pointer h-full relative"
+    >
+      <CardTitle className="text-xl font-bold">
         {product.product_name}
       </CardTitle>
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-white/70">
         Variants: {product.product_variants.length}
+      </p>
+      <p className="text-sm text-white/70">{product.product_description}</p>
+      <p className="text-sm text-white/70">
+        Price: ₱{" "}
+        {product.product_price.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
       </p>
     </CardContent>
   );

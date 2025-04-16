@@ -14,6 +14,7 @@ export function BreadcrumbUser() {
   const pathname = usePathname();
 
   const pathSegments = pathname.split("/").filter(Boolean);
+  
 
   return (
     <Breadcrumb>

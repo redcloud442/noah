@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { cn } from "@/lib/utils";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
@@ -41,13 +41,13 @@ export const VariantSelectionToast = ({
     | null
   >(null);
   const [quantity, setQuantity] = useState(1);
-  const { user } = useUserStore();
+  const { userData } = useUserDataStore();
   const { cart, addToCart } = useCartStore();
   const { toast: toaster } = useToast();
 
   const handleProceedToCheckout = async () => {
     const checkoutNumber = generateCheckoutNumber();
-    if (!user.id) {
+    if (!userData) {
       await authService.createCheckoutToken(checkoutNumber);
     }
 
@@ -73,7 +73,7 @@ export const VariantSelectionToast = ({
       return;
     }
 
-    if (user.id === "") {
+    if (!userData) {
       localStorage.setItem(
         "shoppingCart",
         JSON.stringify({

@@ -54,3 +54,46 @@ export const cartPutSchema = z.object({
 });
 
 export type typeCartPutSchema = z.infer<typeof cartPutSchema>;
+
+export const productVariantSchema = z.object({
+  product_variant_color: z.string(),
+  product_variant_id: z.string(),
+  product_variant_product_id: z.string().uuid(),
+  product_variant_quantity: z.number(),
+  product_variant_size: z.string(),
+  product_variant_slug: z.string(),
+  variant_sample_images: z.array(
+    z.object({
+      variant_sample_image_image_url: z.string(),
+      variant_sample_image_product_variant_id: z.string(),
+    })
+  ),
+});
+
+export const productCreateSchema = z.array(
+  z.object({
+    product_category_id: z.string(),
+    product_description: z.string(),
+    product_id: z.string().uuid(),
+    product_name: z.string(),
+    product_price: z.number(),
+    product_sale_percentage: z.number(),
+    product_slug: z.string(),
+    product_team_id: z.string(),
+    product_variants: z.array(productVariantSchema),
+  })
+);
+
+export type typeProductCreateSchema = z.infer<typeof productCreateSchema>;
+
+export const productCollectionSlugSchema = z.object({
+  collectionSlug: z.string().min(1),
+  take: z.number(),
+  skip: z.number(),
+  search: z.string().optional(),
+  teamId: z.string().optional(),
+});
+
+export type typeProductCollectionSlugSchema = z.infer<
+  typeof productCollectionSlugSchema
+>;

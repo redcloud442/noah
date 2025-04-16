@@ -1,61 +1,49 @@
 import { productService } from "@/services/product";
-
+import { product_category_table, product_table } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCollectionQueryKey, getProductQueryKey } from "./queryKeys";
 
 export const useCollectionQuery = (
   take: number,
   skip: number,
-  initialData?: {
-    product_category_id: string;
-    product_category_name: string;
-    product_category_description: string;
-  }[],
-  search?: string
+  search: string = "",
+  teamId?: string
 ) => {
+  const queryKey = getCollectionQueryKey(take, skip, search, teamId ?? "");
+
   const queryClient = useQueryClient();
 
-  return useQuery({
-    queryKey: ["collections", take, skip, search],
+  const query = useQuery({
+    queryKey,
     queryFn: async () => {
-      const existingData = queryClient.getQueryData([
-        "collections",
+      if (!teamId) return null;
+
+      const query = queryClient.getQueryData<{
+        collections: product_category_table[];
+        count: number;
+      }>(queryKey);
+
+      if (query) {
+        return query;
+      }
+
+      const data = await productService.getCollections({
         take,
         skip,
         search,
-      ]);
+        teamId,
+      });
 
-      if (existingData) {
-        return existingData;
-      }
+      queryClient.setQueryData(queryKey, data);
 
-      const data = await productService.getCollections({ take, skip, search });
       return data;
     },
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-    enabled: !!take && !!skip,
-    initialData: () => {
-      if (!search && initialData) {
-        return {
-          collections: initialData,
-          count: initialData.length,
-        };
-      }
-
-      const cachedData = queryClient.getQueryData([
-        "collections",
-        take,
-        skip,
-        search,
-      ]);
-
-      if (cachedData) {
-        return cachedData;
-      }
-
-      return undefined;
-    },
+    enabled: !!teamId || !!take || !!skip || !!search,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 5,
   });
+
+  return query;
 };
 
 export const useCreateCollectionMutation = (
@@ -89,4 +77,49 @@ export const useCreateCollectionMutation = (
       };
     },
   });
+};
+
+export const useProductQuery = (
+  take: number,
+  skip: number,
+  search: string = "",
+  teamId?: string,
+  category?: string
+) => {
+  const queryKey = getProductQueryKey(take, skip, search, teamId, category);
+
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!teamId) return null;
+
+      const query = queryClient.getQueryData<{
+        data: product_table[];
+        count: number;
+      }>(queryKey);
+
+      if (query) {
+        return query;
+      }
+
+      const data = await productService.getProducts({
+        take,
+        skip,
+        search,
+        teamId,
+        category,
+      });
+
+      queryClient.setQueryData(queryKey, data);
+
+      return data;
+    },
+    enabled: !!teamId || !!take || !!skip || !!search,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 5,
+  });
+
+  return query;
 };

@@ -21,10 +21,10 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
-import { client } from "@/utils/rpc/rpcClient";
+
 import { Product } from "@/utils/types";
 import { Trash } from "lucide-react";
 import Image from "next/image";
@@ -34,7 +34,7 @@ import { IoBagOutline } from "react-icons/io5";
 
 const ShoppingCartModal = () => {
   const { cart, setCart } = useCartStore();
-  const { user } = useUserStore();
+  const { userData } = useUserDataStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,13 +44,13 @@ const ShoppingCartModal = () => {
 
   useEffect(() => {
     const fetchCart = async () => {
-      if (!user?.id) {
+      if (!userData) {
         const storedCart = localStorage.getItem("shoppingCart");
         if (storedCart) {
           setCart(JSON.parse(storedCart));
         }
       } else {
-        const response = await client.cart.$get();
+        const response = await cartService.get();
 
         if (!response.json) {
           toast({
@@ -70,14 +70,14 @@ const ShoppingCartModal = () => {
   }, []);
 
   useEffect(() => {
-    if (cart || !user?.id) {
+    if (cart || !userData) {
       localStorage.setItem("shoppingCart", JSON.stringify(cart));
     }
-  }, [cart, user]);
+  }, [cart, userData]);
 
   const handleRemoveItem = async (id: string) => {
     try {
-      if (!user) {
+      if (!userData) {
         const storedCart = localStorage.getItem("shoppingCart");
         if (storedCart) {
           const parsedCart = JSON.parse(storedCart);
@@ -121,7 +121,7 @@ const ShoppingCartModal = () => {
   const handleCheckout = async () => {
     const checkoutNumber = generateCheckoutNumber();
 
-    if (!user.id) {
+    if (!userData) {
       await authService.createCheckoutToken(checkoutNumber);
     }
 

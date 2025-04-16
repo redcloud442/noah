@@ -55,7 +55,6 @@ export const useSetDefaultAddress = (activePage: number) => {
 
   return useMutation({
     mutationFn: async (addressId: string) => {
-      console.log(addressId);
       await addressService.setDefaultAddress(addressId);
     },
     onMutate: async (addressId: string) => {

@@ -1,3 +1,5 @@
+import { teamMemberProfile } from "@/utils/types";
+import { user_table } from "@prisma/client";
 import { apiClient } from "./axios";
 
 export const authService = {
@@ -18,7 +20,9 @@ export const authService = {
       throw new Error("Login failed");
     }
 
-    return result.data;
+    return result.data as {
+      redirectTo: string;
+    };
   },
 
   register: async ({
@@ -39,22 +43,6 @@ export const authService = {
     return result.data;
   },
 
-  verifyToken: async () => {
-    const result = await apiClient.get("/auth/user");
-    if (result.status !== 200) {
-      throw new Error("Failed to verify token");
-    }
-
-    return result.data as {
-      id: string;
-      email: string;
-      role: string;
-      firstName: string;
-      lastName: string;
-      avatar: string;
-    };
-  },
-
   createCheckoutToken: async (checkoutNumber: string) => {
     const result = await apiClient.post("/auth/checkout-token", {
       checkoutNumber,
@@ -63,6 +51,18 @@ export const authService = {
       throw new Error("Failed to create checkout token");
     }
     return result.data;
+  },
+
+  getUser: async () => {
+    const result = await apiClient.get("/user");
+    if (result.status !== 200) {
+      throw new Error("Failed to get user");
+    }
+
+    return result.data as {
+      userProfile: user_table;
+      teamMemberProfile: teamMemberProfile;
+    };
   },
 
   verifyCheckoutToken: async () => {

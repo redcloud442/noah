@@ -1,6 +1,13 @@
 import { Prisma } from "@prisma/client";
 import type { Context } from "hono";
-import { productCollectionModel } from "./product.model.js";
+import {
+  productCollectionModel,
+  productCollectionSlugModel,
+  productCreateModel,
+  productGetAllProductModel,
+  productVariantCreateModel,
+} from "./product.model.js";
+
 export const productGetController = async (c: Context) => {
   try {
     const params = c.get("params");
@@ -24,6 +31,65 @@ export const productGetController = async (c: Context) => {
         },
         500
       );
+    }
+  }
+};
+
+export const productCreateController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    await productCreateModel(params);
+
+    return c.json({ message: "Product created successfully" }, 200);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return c.json({ message: "Internal server error" }, 500);
+    }
+  }
+};
+
+export const productVariantCreateController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const data = await productVariantCreateModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    console.log(error, "error");
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return c.json({ message: "Internal server error" }, 500);
+    } else if (error instanceof Error) {
+      return c.json({ message: "Internal server error" }, 500);
+    }
+  }
+};
+
+export const productCollectionSlugController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const data = await productCollectionSlugModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return c.json({ message: "Internal server error" }, 500);
+    }
+  }
+};
+
+export const productGetAllProductController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const data = await productGetAllProductModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return c.json({ message: "Internal server error" }, 500);
     }
   }
 };

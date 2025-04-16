@@ -91,3 +91,75 @@ export const productCollectionSchema = z.object({
   take: z.number().min(1).max(15),
   skip: z.number().min(0),
 });
+
+//product category schema
+export const productCategorySchema = z.object({
+  productCategoryName: z.string().min(1, "Product category name is required"),
+  productCategoryDescription: z.string().optional(),
+  teamId: z.string().optional(),
+});
+
+export type ProductCategoryForm = z.infer<typeof productCategorySchema>;
+
+export const productSchema = z.object({
+  products: z.array(
+    z.object({
+      name: z.string().min(1, "Product name is required"),
+      price: z.coerce.number().min(1, "Price must be greater than 0"),
+      description: z.string().optional(),
+      category: z.string().min(1, "Category is required"),
+      variants: z.array(
+        z.object({
+          id: z.string().uuid("ID must be a valid UUID"),
+          color: z.string().min(1, "Color is required"),
+          size: z.string().min(1, "Size is required"),
+          quantity: z.coerce.number().min(0, "Quantity cannot be negative"),
+          images: z.array(
+            z
+              .instanceof(File)
+              .refine((file) => !!file, { message: "File is required" })
+              .refine(
+                (file) =>
+                  ["image/jpeg", "image/png", "image/jpg"].includes(
+                    file.type
+                  ) && file.size <= 12 * 1024 * 1024, // 12MB limit
+                { message: "File must be a valid image and less than 12MB." }
+              )
+          ),
+          publicUrl: z.array(z.string()).optional(),
+        })
+      ),
+    })
+  ),
+});
+
+export type ProductFormType = z.infer<typeof productSchema>;
+
+export const productVariantSchema = z.object({
+  product_variant_color: z.string().uuid(),
+  product_variant_id: z.string(),
+  product_variant_product_id: z.string(),
+  product_variant_quantity: z.number(),
+  product_variant_size: z.string(),
+  product_variant_slug: z.string(),
+  variant_sample_images: z.array(
+    z.object({
+      variant_sample_image_image_url: z.string(),
+      variant_sample_image_product_variant_id: z.string(),
+    })
+  ),
+});
+
+export const productCreateSchema = z.object({
+  product_category_id: z.string(),
+  product_description: z.string(),
+  product_id: z.number(),
+  product_name: z.string(),
+  product_price: z.number(),
+  product_sale_percentage: z.number(),
+  product_slug: z.string(),
+  product_team_id: z.string(),
+  product_variants: z.array(productVariantSchema),
+});
+
+export type typeProductCreateSchema = z.infer<typeof productCreateSchema>;

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { RegisterFormValues, registerSchema } from "@/lib/zod";
 import { authService } from "@/services/auth";
 import { createClient } from "@/utils/supabase/client";
@@ -18,11 +17,11 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const RegisterModal = () => {
   const [open, setOpen] = useState(false);
   const supabase = createClient();
-  const { toast } = useToast();
   const router = useRouter();
   const {
     control,
@@ -38,10 +37,7 @@ const RegisterModal = () => {
       const validatedData = registerSchema.safeParse(data);
 
       if (!validatedData.success) {
-        toast({
-          title: "Invalid data",
-          description: validatedData.error.message,
-        });
+        toast.error(validatedData.error.message);
         return;
       }
       const { error } = await supabase.auth.signUp({
@@ -50,10 +46,7 @@ const RegisterModal = () => {
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-        });
+        toast.error(error.message);
         return;
       }
 
@@ -61,17 +54,15 @@ const RegisterModal = () => {
         ...validatedData.data,
       });
 
-      toast({
-        title: "Account created successfully",
-      });
+      toast.success("Account created successfully");
 
       router.push("/account");
     } catch (error) {
-      console.log(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-      });
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     }
   };
 
@@ -98,7 +89,12 @@ const RegisterModal = () => {
               name="firstName"
               control={control}
               render={({ field }) => (
-                <Input id="firstName" placeholder="John" {...field} />
+                <Input
+                  id="firstName"
+                  placeholder="John"
+                  {...field}
+                  value={field.value}
+                />
               )}
             />
             {errors.firstName && (
@@ -113,7 +109,12 @@ const RegisterModal = () => {
               name="lastName"
               control={control}
               render={({ field }) => (
-                <Input id="lastName" placeholder="Doe" {...field} />
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  {...field}
+                  value={field.value}
+                />
               )}
             />
             {errors.lastName && (
@@ -133,6 +134,7 @@ const RegisterModal = () => {
                   type="email"
                   placeholder="m@example.com"
                   {...field}
+                  value={field.value}
                 />
               )}
             />
@@ -153,6 +155,7 @@ const RegisterModal = () => {
                   type="password"
                   placeholder="••••••••"
                   {...field}
+                  value={field.value}
                 />
               )}
             />

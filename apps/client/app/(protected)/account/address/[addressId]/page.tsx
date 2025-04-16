@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma/prisma";
 import { protectionUserMiddleware } from "@/utils/protectionMiddleware";
 import { AddressCreateFormData } from "@packages/shared";
 
-const page = async (params: Promise<{ addressId: string }>) => {
+const page = async ({ params }: { params: Promise<{ addressId: string }> }) => {
   const { addressId } = await params;
 
   await protectionUserMiddleware();

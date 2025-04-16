@@ -1,8 +1,7 @@
 import { Providers } from "@/components/LayoutProviders/RootLayoutProvider";
-import { jwtDecode } from "jwt-decode";
+import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { cookies } from "next/headers";
 import React from "react";
 import "./globals.css";
 
@@ -23,27 +22,19 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const cookieStore = await cookies();
-  const user = cookieStore.get("auth_token");
+}: Readonly<{ children: React.ReactNode }>) {
+  const supabase = await createClient();
 
-  const decodedToken = jwtDecode(user?.value || "") as {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    avatar: string;
-    role: string;
-  };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <html suppressHydrationWarning lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers currentUser={decodedToken}>{children}</Providers>
+        <Providers user={user}>{children}</Providers>
       </body>
     </html>
   );

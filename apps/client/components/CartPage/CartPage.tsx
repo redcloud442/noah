@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/lib/store";
-import useUserStore from "@/lib/userStore";
+import useUserDataStore from "@/lib/userDataStore";
 import { generateCheckoutNumber } from "@/lib/utils";
 import { cartService } from "@/services/cart";
 import { Product } from "@/utils/types";
@@ -12,11 +12,12 @@ import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Skeleton } from "../ui/skeleton";
 
 const CartPage = () => {
   const { cart, setCart } = useCartStore();
-  const { user } = useUserStore();
+  const { userData } = useUserDataStore();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +26,7 @@ const CartPage = () => {
     const handleFetchCart = async () => {
       try {
         setIsLoading(true);
-        if (user.id) {
+        if (userData) {
           const cart = await cartService.get();
           setCart(cart);
         } else {
@@ -41,10 +42,10 @@ const CartPage = () => {
       }
     };
     handleFetchCart();
-  }, [setCart, user.id]);
+  }, [setCart, userData]);
 
   const handleRemoveItem = async (cartId: string) => {
-    if (user.id) {
+    if (userData) {
       const previousCart = cart;
 
       // Optimistically update the UI
@@ -56,6 +57,11 @@ const CartPage = () => {
       try {
         await cartService.delete(cartId);
       } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Error deleting item");
+        }
         setCart(previousCart);
       }
     } else {
@@ -78,7 +84,7 @@ const CartPage = () => {
   };
 
   const updateQuantity = async (cartId: string, newQuantity: number) => {
-    if (user.id) {
+    if (userData) {
       // Save previous state in case of rollback
       const previousCart = cart;
 
@@ -95,6 +101,11 @@ const CartPage = () => {
         // Perform the actual API update
         await cartService.update(cartId, newQuantity);
       } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Error updating quantity");
+        }
         setCart(previousCart);
       }
     } else {

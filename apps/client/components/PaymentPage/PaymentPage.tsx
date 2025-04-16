@@ -72,7 +72,6 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
           payment_type: data.payment_type as "GCash" | "GrabPay" | "PayMaya",
         };
         const result = await paymentService.createPaymentMethod(eWalletPayload);
-        console.log(result);
 
         if (result.data.nextAction.redirect.url) {
           router.push(result.data.nextAction.redirect.url);

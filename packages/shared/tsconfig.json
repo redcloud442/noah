@@ -6,7 +6,10 @@
     "declaration": true,
     "skipLibCheck": true,
     "strict": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "paths": {
+      "@workspaces/shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*"]
 }

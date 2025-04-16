@@ -1,10 +1,9 @@
-import AdminDashboardPage from "@/components/AdminDashboardPage/AdminDashboardPage";
 import { protectionAdminMiddleware } from "@/utils/protectionMiddleware";
 
 const Page = async () => {
   await protectionAdminMiddleware();
 
-  return <AdminDashboardPage />;
+  return <div>Admin Dashboard</div>;
 };
 
 export default Page;

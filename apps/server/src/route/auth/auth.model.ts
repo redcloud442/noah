@@ -1,6 +1,7 @@
 import { sign, verify } from "hono/jwt";
 import { envConfig } from "../../env.js";
 import prisma from "../../utils/prisma.js";
+import { supabaseClient } from "../../utils/supabase.js";
 import type { Product } from "../../utils/types.js";
 
 const JWT_SECRET = envConfig.JWT_SECRET;
@@ -12,55 +13,55 @@ export const authLoginModel = async (params: {
   userId: string;
   cart?: Product[];
 }) => {
-  const { email, firstName, lastName, userId, cart } = params;
+  const { email, cart } = params;
+
+  let redirectTo = "/account/orders";
 
   let userData = await prisma.user_table.findUnique({
     where: {
       user_email: email,
     },
+    select: {
+      user_id: true,
+      user_email: true,
+      user_first_name: true,
+      user_last_name: true,
+      team_member_table: {
+        select: {
+          team_member_id: true,
+          team_member_role: true,
+          team_member_team_id: true,
+          team_member_team: {
+            select: {
+              team_id: true,
+              team_name: true,
+            },
+          },
+        },
+      },
+    },
   });
-
-  if (!userData && firstName && lastName && userId) {
-    userData = await prisma.user_table.create({
-      data: {
-        user_id: userId,
-        user_email: email,
-        user_first_name: firstName,
-        user_last_name: lastName,
-        user_group: {
-          connect: {
-            user_group_id: "79b0d3b5-f110-4874-a9b8-72777fd4257a",
-          },
-        },
-      },
-      select: {
-        user_id: true,
-        user_email: true,
-        user_first_name: true,
-        user_last_name: true,
-        user_group: {
-          select: {
-            user_group_id: true,
-            user_group_name: true,
-          },
-        },
-        user_created_at: true,
-        user_updated_at: true,
-        user_profile_picture: true,
-        user_group_id: true,
-      },
-    });
-  }
 
   if (!userData) {
     throw new Error("User not found");
   }
 
-  const userGroup = await prisma.user_group_table.findUnique({
-    where: {
-      user_group_id: userData.user_group_id,
-    },
-  });
+  if (
+    !userData.team_member_table[0].team_member_role.includes("ADMIN") &&
+    !userData.team_member_table[0].team_member_role.includes("MEMBER")
+  ) {
+    throw new Error("User not found");
+  }
+
+  if (userData.team_member_table[0].team_member_role === "ADMIN") {
+    redirectTo = `/${userData.team_member_table[0].team_member_team.team_name.toLowerCase()}/admin`;
+  } else {
+    redirectTo = "/account/orders";
+  }
+
+  if (!userData) {
+    throw new Error("User not found");
+  }
 
   if (cart && cart.length > 0) {
     for (const item of cart) {
@@ -86,23 +87,9 @@ export const authLoginModel = async (params: {
     }
   }
 
-  const customPayload = {
-    id: userData.user_id,
-    email: userData.user_email,
-    firstName: userData.user_first_name,
-    lastName: userData.user_last_name,
-    avatar: userData.user_profile_picture,
-    role: userGroup?.user_group_name,
-  };
-
-  const newToken = await sign(customPayload, JWT_SECRET);
-
   return {
     message: "Login successful",
-    token: newToken,
-    redirectTo: `${
-      userGroup?.user_group_name === "ADMIN" ? "/admin" : "/account/orders"
-    }`,
+    redirectTo: redirectTo,
   };
 };
 
@@ -122,9 +109,11 @@ export const authRegisterModel = async (params: {
         user_email: email,
         user_first_name: firstName,
         user_last_name: lastName,
-        user_group: {
-          connect: {
-            user_group_id: "79b0d3b5-f110-4874-a9b8-72777fd4257a",
+        team_member_table: {
+          create: {
+            team_member_role: "MEMBER",
+            team_member_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
+            team_member_active_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
           },
         },
       },
@@ -133,11 +122,11 @@ export const authRegisterModel = async (params: {
         user_email: true,
         user_first_name: true,
         user_last_name: true,
-        user_profile_picture: true,
-        user_group: {
+        team_member_table: {
           select: {
-            user_group_id: true,
-            user_group_name: true,
+            team_member_id: true,
+            team_member_role: true,
+            team_member_team_id: true,
           },
         },
       },
@@ -170,20 +159,19 @@ export const authRegisterModel = async (params: {
     }
   }
 
-  const customPayload = {
-    id: user.user_id,
-    email: user.user_email,
-    firstName: user.user_first_name,
-    lastName: user.user_last_name,
-    avatar: user.user_profile_picture,
-    role: user.user_group.user_group_name,
-  };
-
-  const newToken = await sign(customPayload, JWT_SECRET);
+  await supabaseClient.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      role: "MEMBER",
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      activeTeamId: "16dcbf9a-1904-43f7-a98a-060f6903661d",
+    },
+  });
 
   return {
     message: "Register successful",
-    token: newToken,
+    redirectTo: "/account/orders",
   };
 };
 

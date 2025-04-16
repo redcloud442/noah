@@ -37,15 +37,28 @@ const FloatingLabel = React.forwardRef<
 });
 FloatingLabel.displayName = "FloatingLabel";
 
-type FloatingLabelInputProps = InputProps & { label?: string };
+type FloatingLabelInputProps = InputProps & {
+  label?: string;
+  leftIcon?: React.ReactNode;
+};
 
 const FloatingLabelInput = React.forwardRef<
   React.ElementRef<typeof FloatingInput>,
   React.PropsWithoutRef<FloatingLabelInputProps>
->(({ id, label, ...props }, ref) => {
+>(({ id, label, leftIcon, className, ...props }, ref) => {
   return (
     <div className="relative">
-      <FloatingInput ref={ref} id={id} {...props} />
+      {leftIcon && (
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+          {leftIcon}
+        </div>
+      )}
+      <FloatingInput
+        ref={ref}
+        id={id}
+        className={`${leftIcon ? "pl-10" : "pl-3"} ${className ?? ""}`} // add padding for icon space
+        {...props}
+      />
       <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
     </div>
   );
