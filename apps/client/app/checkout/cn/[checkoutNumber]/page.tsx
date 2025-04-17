@@ -10,6 +10,7 @@ const page = async ({
 }) => {
   const supabase = await createClient();
   const user = await supabase.auth.getUser();
+
   const { checkoutNumber } = await params;
 
   if (!user.data.user) {
