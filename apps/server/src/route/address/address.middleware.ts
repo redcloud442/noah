@@ -1,6 +1,6 @@
-import { addressCreateSchema, orderGetSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
 import { redis } from "../../utils/redis.js";
+import { addressCreateSchema, orderGetSchema } from "../../utils/schema.js";
 
 export const addressGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");

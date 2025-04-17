@@ -1,4 +1,3 @@
-import { productCollectionSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
 import { adminAuthProtection } from "../../middleware/auth.middleware.js";
 import {
@@ -8,6 +7,7 @@ import {
 import { redis } from "../../utils/redis.js";
 import {
   productCategorySchema,
+  productCollectionSchema,
   productGetAllProductSchema,
 } from "../../utils/schema.js";
 

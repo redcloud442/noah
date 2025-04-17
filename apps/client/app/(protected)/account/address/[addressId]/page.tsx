@@ -1,7 +1,7 @@
 import AddressPage from "@/components/AccountPage/TabContents/AddressPage/AddressPage";
 import prisma from "@/utils/prisma/prisma";
 import { protectionUserMiddleware } from "@/utils/protectionMiddleware";
-import { AddressCreateFormData } from "@packages/shared";
+import { AddressCreateFormData } from "@/utils/schema";
 
 const page = async ({ params }: { params: Promise<{ addressId: string }> }) => {
   const { addressId } = await params;

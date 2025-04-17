@@ -1,7 +1,7 @@
-import { orderGetSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
 import { orderGetListSchema } from "../../schema/schema.js";
 import { redis } from "../../utils/redis.js";
+import { orderGetSchema } from "../../utils/schema.js";
 
 export const orderGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");

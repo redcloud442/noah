@@ -1,5 +1,5 @@
-import type { AddressCreateFormData } from "@packages/shared";
 import prisma from "../../utils/prisma.js";
+import type { AddressCreateFormData } from "../../utils/schema.js";
 
 export const addressGetModel = async (params: {
   take: number;

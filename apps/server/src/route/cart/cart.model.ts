@@ -11,6 +11,7 @@ export const cartGetModel = async (user: any) => {
         include: {
           product_variant_product: true,
           variant_sample_images: true,
+          variant_sizes: true,
         },
       },
     },
@@ -25,10 +26,14 @@ export const cartGetModel = async (user: any) => {
       item.cart_product_variant.product_variant_product.product_price,
     product_quantity: item.cart_quantity,
     product_variant_id: item.cart_product_variant.product_variant_id,
-    product_variant_size: item.cart_product_variant.product_variant_size,
+    product_variant_size: item.cart_product_variant.variant_sizes.map(
+      (size) => size.variant_size_value
+    ),
     product_variant_color: item.cart_product_variant.product_variant_color,
-    product_variant_quantity:
-      item.cart_product_variant.product_variant_quantity,
+    product_variant_quantity: item.cart_product_variant.variant_sizes.reduce(
+      (acc, size) => acc + size.variant_size_quantity,
+      0
+    ),
     product_variant_image:
       item.cart_product_variant.variant_sample_images.length > 0
         ? item.cart_product_variant.variant_sample_images[0]

@@ -1,11 +1,8 @@
-import {
-  ProductFormType,
-  typeProductCreateSchema,
-} from "@packages/shared/src/schema/schema";
 import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { ProductFormType, typeProductCreateSchema } from "./schema";
 
 export const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en-US", {
@@ -218,61 +215,87 @@ export const formattedCreateProductResponse = async (
   const productId = uuidv4();
 
   const formattedProducts = await Promise.all(
-    product.products.map(async (prod) => {
-      const product_variants = await Promise.all(
-        prod.variants.map(async (variant) => {
-          const variantId = uuidv4();
-          const imageUrls: string[] = [];
+    product.products.map(
+      async (prod: {
+        name: string;
+        price: number;
+        description: string;
+        category: string;
+        variants: {
+          id: string;
+          color: string;
+          sizesWithQuantities: { size: string; quantity: number }[];
+          images: File[];
+          publicUrl?: string[];
+          isDeleted?: boolean;
+        }[];
+      }) => {
+        const product_variants = await Promise.all(
+          prod.variants.map(
+            async (variant: {
+              id: string;
+              color: string;
+              sizesWithQuantities: { size: string; quantity: number }[];
+              images: File[];
+              publicUrl?: string[];
+              isDeleted?: boolean;
+            }) => {
+              const variantId = uuidv4();
+              const imageUrls: string[] = [];
 
-          for (const image of variant.images ?? []) {
-            if (!image) continue;
-            const filePath = `uploads/${Date.now()}_${image.name}`;
+              for (const image of variant.images ?? []) {
+                if (!image) continue;
+                const filePath = `uploads/${Date.now()}_${image.name}`;
 
-            const { error: uploadError } = await supabaseClient.storage
-              .from("PRODUCT_IMAGE")
-              .upload(filePath, image, { upsert: true });
+                const { error: uploadError } = await supabaseClient.storage
+                  .from("PRODUCT_IMAGE")
+                  .upload(filePath, image, { upsert: true });
 
-            if (uploadError) throw new Error(uploadError.message);
+                if (uploadError) throw new Error(uploadError.message);
 
-            const publicUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+                const publicUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
 
-            imageUrls.push(publicUrl);
-          }
+                imageUrls.push(publicUrl);
+              }
 
-          return {
-            product_variant_id: variantId,
-            product_variant_product_id: productId,
-            product_variant_color: variant.color,
-            product_variant_slug: slugifyVariant(
-              slugify(prod.name),
-              slugify(variant.color)
-            ),
-            variant_sample_images: imageUrls.map((url) => ({
-              variant_sample_image_image_url: url,
-              variant_sample_image_product_variant_id: variantId,
-            })),
-            variant_sizes: variant.sizesWithQuantities.map((sizeObj) => ({
-              variant_size_id: uuidv4(),
-              variant_size_variant_id: variantId,
-              variant_size_value: sizeObj.size,
-              variant_size_quantity: sizeObj.quantity,
-            })),
-          };
-        })
-      );
+              return {
+                product_variant_id: variantId,
+                product_variant_product_id: productId,
+                product_variant_color: variant.color,
+                product_variant_slug: slugifyVariant(
+                  slugify(prod.name),
+                  slugify(variant.color)
+                ),
+                variant_sample_images: imageUrls.map((url) => ({
+                  variant_sample_image_image_url: url,
+                  variant_sample_image_product_variant_id: variantId,
+                })),
+                variant_sizes: variant.sizesWithQuantities.map(
+                  (sizeObj: { size: string; quantity: number }) => ({
+                    variant_size_id: uuidv4(),
+                    variant_size_variant_id: variantId,
+                    variant_size_value: sizeObj.size,
+                    variant_size_quantity: sizeObj.quantity,
+                  })
+                ),
+              };
+            }
+          )
+        );
 
-      return {
-        product_id: productId,
-        product_name: prod.name,
-        product_slug: slugify(prod.name),
-        product_description: prod.description,
-        product_price: prod.price,
-        product_sale_percentage: 0,
-        product_category_id: prod.category,
-        product_team_id: teamId,
-        product_variants,
-      };
-    })
+        return {
+          product_id: productId,
+          product_name: prod.name,
+          product_slug: slugify(prod.name),
+          product_description: prod.description,
+          product_price: prod.price,
+          product_sale_percentage: 0,
+          product_category_id: prod.category,
+          product_team_id: teamId,
+          product_variants,
+        };
+      }
+    )
   );
 
   return {
@@ -324,12 +347,14 @@ export const formattedUpdateProductResponse = async (
               variant_sample_image_image_url: url,
               variant_sample_image_product_variant_id: variant.id,
             })),
-            variant_sizes: variant.sizesWithQuantities.map((sizeObj) => ({
-              variant_size_id: uuidv4(),
-              variant_size_variant_id: variant.id,
-              variant_size_value: sizeObj.size,
-              variant_size_quantity: sizeObj.quantity,
-            })),
+            variant_sizes: variant.sizesWithQuantities.map(
+              (sizeObj: { size: string; quantity: number }) => ({
+                variant_size_id: uuidv4(),
+                variant_size_variant_id: variant.id,
+                variant_size_value: sizeObj.size,
+                variant_size_quantity: sizeObj.quantity,
+              })
+            ),
           };
         })
       );

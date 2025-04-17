@@ -1,10 +1,10 @@
-import { checkoutSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
 import { deleteCookie, getCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
 import { envConfig } from "../../env.js";
 import { loginSchema, registerSchema } from "../../schema/schema.js";
 import { redis } from "../../utils/redis.js";
+import { checkoutSchema } from "../../utils/schema.js";
 
 const JWT_SECRET = envConfig.JWT_SECRET;
 

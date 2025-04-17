@@ -129,21 +129,19 @@ export const productSchema = z.object({
               quantity: z.number().min(1, "Quantity is required"),
             })
           ),
-          images: z
-            .array(
-              z
-                .instanceof(File)
-                .optional()
-                .refine((file) => !!file, { message: "File is required" })
-                .refine(
-                  (file) =>
-                    ["image/jpeg", "image/png", "image/jpg"].includes(
-                      file.type
-                    ) && file.size <= 12 * 1024 * 1024, // 12MB limit
-                  { message: "File must be a valid image and less than 12MB." }
-                )
-            )
-            .optional(),
+          images: z.array(
+            z
+              .instanceof(File)
+              .optional()
+              .refine((file) => !!file, { message: "File is required" })
+              .refine(
+                (file) =>
+                  ["image/jpeg", "image/png", "image/jpg"].includes(
+                    file.type
+                  ) && file.size <= 12 * 1024 * 1024, // 12MB limit
+                { message: "File must be a valid image and less than 12MB." }
+              )
+          ),
           publicUrl: z.array(z.string()).optional(),
           isDeleted: z.boolean().optional(),
         })
