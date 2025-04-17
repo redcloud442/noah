@@ -44,24 +44,12 @@ export default async function AdminLayout({
     return redirect("/500");
   }
 
-  if (
-    teams.some(
-      (team: {
-        team_member_team: {
-          team_name: string;
-        };
-      }) => team.team_member_team.team_name === teamName
-    )
-  ) {
+  if (teams.some((team) => team.team_member_team.team_name === teamName)) {
     return redirect("/500");
   }
 
   const activeTeam = teams.find(
-    (team: {
-      team_member_team: {
-        team_id: string;
-      };
-    }) => team.team_member_team.team_id === user.user_metadata.activeTeamId
+    (team) => team.team_member_team.team_id === user.user_metadata.activeTeamId
   );
 
   if (!activeTeam) {
@@ -71,10 +59,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar
-        teams={teams.map(
-          (team: { team_member_team: { team_name: string } }) =>
-            team.team_member_team
-        )}
+        teams={teams.map((team) => team.team_member_team)}
         activeTeam={activeTeam.team_member_team}
       />
       <SidebarSeparator>{children}</SidebarSeparator>

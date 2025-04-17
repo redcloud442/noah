@@ -154,6 +154,12 @@ const ProductPage = () => {
             <RefreshCcwIcon className="w-4 h-4" />
           </Button>
         </form>
+        <Button
+          variant="secondary"
+          onClick={() => router.push(`/${teamName}/admin/product/create`)}
+        >
+          + Add Product
+        </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {isLoading

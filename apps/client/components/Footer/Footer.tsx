@@ -1,6 +1,6 @@
 import { siteConfig } from "@/components/config/site";
 import Link from "next/link";
-import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
@@ -11,7 +11,7 @@ export const Footer = () => {
         {/* Brand Section */}
         <div className="flex flex-col space-y-4 text-center">
           <div className="text-center md:text-left">
-            <h1 className="text-2xl font-bold">Noire</h1>
+            <h1 className="text-2xl font-bold">Noir</h1>
             <p className="mt-2 text-sm text-white/90">
               Elevate your style with Noire – where luxury meets fashion.
             </p>
@@ -59,12 +59,8 @@ export const Footer = () => {
 
         {/* Social Media Icons */}
         <div className="flex space-x-4">
-          <Link
-            href={siteConfig.links.twitter}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <FaTwitter className="w-6 h-6 hover:text-gray-400" />
+          <Link href={siteConfig.links.tiktok} target="_blank" rel="noreferrer">
+            <FaTiktok className="w-6 h-6 hover:text-gray-400" />
           </Link>
           <Link
             href={siteConfig.links.facebook}

@@ -60,7 +60,7 @@ export const productVariantSchema = z.object({
   product_variant_id: z.string(),
   product_variant_product_id: z.string().uuid(),
   product_variant_slug: z.string(),
-  product_variant_is_deleted: z.boolean(),
+  product_variant_is_deleted: z.boolean().default(false),
   variant_sample_images: z.array(
     z.object({
       variant_sample_image_image_url: z.string(),

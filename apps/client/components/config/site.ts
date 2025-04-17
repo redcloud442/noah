@@ -5,10 +5,9 @@ export const siteConfig = {
   description:
     "Noire is a luxury brand that offers a range of products from clothing to accessories.",
   links: {
-    twitter: "https://www.facebook.com/NoirCorpPH",
-    facebook: "https://www.facebook.com/NoirCorpPH",
-    instagram: "https://www.facebook.com/NoirCorpPH",
-    linkedin: "https://www.facebook.com/NoirCorpPH",
+    facebook: "https://www.facebook.com/share/16QBmPag2r/?mibextid=wwXIfr",
+    instagram: "https://www.instagram.com/noir__ph?igsh=dDE3Y2hxc2MyaW4w",
+    tiktok: "https://www.tiktok.com/@noirclothingph?_t=ZS-8vbcZj09FrT&_r=1",
   },
 };
 
