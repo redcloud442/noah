@@ -1,16 +1,19 @@
+"use client";
+
 import Image from "next/image";
 
 const SoloHighlight = () => {
   return (
-    <div className="relative flex justify-center items-center w-full bg-white">
-      <div className="w-full h-[300px] sm:h-[600px] lg:h-[1500px] overflow-hidden m-20 px-6">
+    <div className="relative flex justify-center items-center w-full bg-white border-t border-gray-200">
+      <div className="relative w-full h-[500px] m-5 lg:h-[2400px] px-4 md:m-20">
         <Image
           src="/assets/highlight/noire-10172.jpg"
-          alt="Hero Image"
-          width={1700}
-          height={1200}
+          alt="Highlight"
+          fill
+          priority
           quality={80}
-          className="object-cover -translate-y-10 sm:-translate-y-40 shadow-lg"
+          className="object-cover object-top rounded shadow-lg"
+          sizes="(max-width: 768px) 100vw, 80vw"
         />
       </div>
     </div>

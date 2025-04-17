@@ -5,10 +5,8 @@ import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 const HighlightSection = () => {
   const router = useRouter();
   return (
-    <div className="w-full py-10  bg-zinc-950 space-y-10">
-      <h1 className="text-4xl text-center font-bold">
-        Keep in touch with us through our social media
-      </h1>
+    <div className="w-full py-10  bg-zinc-950 space-y-10 overflow-hidden">
+      <h1 className="text-4xl text-center font-bold"></h1>
       <div className="flex w-full animate-infinite-scroll space-x-16 whitespace-nowrap">
         {[...Array(3)].map((_, i) => (
           <ul
@@ -20,19 +18,19 @@ const HighlightSection = () => {
               onClick={() => router.push("https://www.facebook.com/noire.ph")}
               className="flex items-center gap-10 cursor-pointer"
             >
-              <FaFacebook size={50} /> Facebook
+              <FaFacebook size={40} /> Facebook
             </li>
             <li
               onClick={() => router.push("https://www.instagram.com/noire.ph")}
               className="flex items-center gap-10 cursor-pointer"
             >
-              <FaInstagram size={50} /> Instagram
+              <FaInstagram size={40} /> Instagram
             </li>
             <li
               onClick={() => router.push("https://www.tiktok.com/@noire.ph")}
               className="flex items-center gap-10 cursor-pointer"
             >
-              <FaTiktok size={50} /> Tiktok
+              <FaTiktok size={40} /> Tiktok
             </li>
           </ul>
         ))}

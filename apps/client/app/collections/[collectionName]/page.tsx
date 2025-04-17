@@ -31,6 +31,9 @@ const page = async ({
     },
     include: {
       product_variants: {
+        where: {
+          product_variant_is_deleted: false,
+        },
         select: {
           product_variant_id: true,
           product_variant_color: true,

@@ -91,6 +91,8 @@ export const productGetAllProductController = async (c: Context) => {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return c.json({ message: "Internal server error" }, 500);
+    } else if (error instanceof Error) {
+      return c.json({ message: "Internal server error" }, 500);
     }
   }
 };

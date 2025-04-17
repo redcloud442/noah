@@ -7,28 +7,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import {
-  product_table,
-  product_variant_table,
-  variant_sample_image_table,
-  variant_size_table,
-} from "@prisma/client";
+import { ProductType, ProductVariantType } from "@/utils/types";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
 type Props = {
-  product: product_table & {
-    product_variants: (product_variant_table & {
-      variant_sample_images: variant_sample_image_table[];
-      variant_sizes: variant_size_table[];
-    })[];
-  };
-  variantInfo: product_variant_table & {
-    variant_sizes: variant_size_table[];
-    variant_sample_images: variant_sample_image_table[];
-  };
+  product: ProductType;
+  variantInfo: ProductVariantType;
 };
 
 const ProductSlugPage = ({ product, variantInfo }: Props) => {
@@ -83,15 +70,11 @@ const ProductSlugPage = ({ product, variantInfo }: Props) => {
       </div>
 
       <div className="sticky top-0 self-start">
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-bold uppercase">
           {product.product_name} - {variantInfo.product_variant_color}
         </h1>
         <p className="text-xl text-white/70 mt-2">
-          ₱{" "}
-          {product.product_price.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
+          ₱ {product.product_price.toLocaleString()}
         </p>
 
         <div className="mt-4">

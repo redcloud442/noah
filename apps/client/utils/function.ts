@@ -107,6 +107,9 @@ export const findProductBySlug = async (slug: string, prisma: PrismaClient) => {
     },
     include: {
       product_variants: {
+        where: {
+          product_variant_is_deleted: false,
+        },
         select: {
           product_variant_id: true,
           product_variant_product_id: true,
@@ -288,7 +291,6 @@ export const formattedUpdateProductResponse = async (
     product.products.map(async (prod) => {
       const product_variants = await Promise.all(
         prod.variants.map(async (variant) => {
-          console.log(variant, "variant");
           const variantId = variant.id || uuidv4();
           const imageUrls: string[] = [];
           if (variant.images && variant.images.length > 0) {

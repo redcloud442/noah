@@ -8,6 +8,9 @@ export default async function Home() {
     },
     include: {
       product_variants: {
+        where: {
+          product_variant_is_deleted: false,
+        },
         include: {
           variant_sample_images: true,
           variant_sizes: true,

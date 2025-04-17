@@ -90,7 +90,7 @@ export const NavigationBar = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-50 flex justify-evenly items-center transition-all duration-300 ${
+      className={` hidden fixed top-0 left-0 right-0 z-50 md:flex justify-evenly items-center transition-all duration-300 ${
         isScrolled ? "bg-black/60" : "bg-transparent"
       }`}
     >

@@ -11,6 +11,7 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Footer } from "../Footer/Footer";
 import { NavigationBar } from "../NavigationBar/NavigationBar";
+import { MobileNavigationBar } from "../NavigationBar/NavigationBarSmallScreen";
 import { Toaster } from "../ui/toaster";
 type RootLayoutProviderProps = {
   children: React.ReactNode;
@@ -72,6 +73,7 @@ export function Providers({
         ) : (
           <>
             <NavigationBar collections={collections} />
+            <MobileNavigationBar collections={collections} />
             <main>{children}</main>
             <Footer />
             <Toaster />

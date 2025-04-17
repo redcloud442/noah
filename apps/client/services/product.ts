@@ -1,7 +1,4 @@
-import {
-  ProductCategoryForm,
-  type typeProductCreateSchema,
-} from "@packages/shared/src/schema/schema";
+import { ProductCategoryForm, typeProductCreateSchema } from "@/utils/schema";
 import { product_category_table } from "@prisma/client";
 import axios from "axios";
 

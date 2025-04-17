@@ -3,7 +3,7 @@
 import useUserDataStore from "@/lib/userDataStore";
 import { useProductQuery } from "@/query/collectionQuery";
 import { createClient } from "@/utils/supabase/client";
-import { ProductType } from "@/utils/types";
+import { VariantProductType } from "@/utils/types";
 import { product_category_table } from "@prisma/client";
 import { RefreshCcwIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
@@ -11,7 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import CollectionContent from "../CollectionSlugPage/CollectionContent";
+import CollectionVariantContent from "../CollectionSlugPage/CollectionVariantContent";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardHeader } from "../ui/card";
@@ -155,7 +155,7 @@ const ProductPage = () => {
           </Button>
         </form>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {isLoading
           ? Array.from({ length: 8 }).map((_, index) => (
               <Card key={index} className="shadow-md">
@@ -168,25 +168,27 @@ const ProductPage = () => {
                 </div>
               </Card>
             ))
-          : collections.map((product: ProductType) => (
+          : collections.map((product: VariantProductType) => (
               <Card
-                key={product.product_id}
+                key={product.product_variant_id}
                 className="shadow-md hover:shadow-xl transition cursor-pointer"
                 onClick={() =>
                   router.push(
-                    `/${teamName}/admin/product/${product.product_variants[0].product_variant_slug}`
+                    `/${teamName}/admin/product/${product.product_variant_slug}`
                   )
                 }
               >
                 <CardHeader className="relative">
                   <div className="absolute top-2 right-2 z-50 flex flex-col items-end gap-1">
-                    {product.product_created_at &&
+                    {product.product_variant_product?.product_created_at &&
                       new Date().getTime() -
-                        new Date(product.product_created_at).getTime() <
+                        new Date(
+                          product.product_variant_product?.product_created_at
+                        ).getTime() <
                         7 * 24 * 60 * 60 * 1000 && (
                         <Badge className="bg-green-500 text-white">NEW!</Badge>
                       )}
-                    {product.product_variants?.[0]?.variant_sizes.some(
+                    {product.variant_sizes.some(
                       (size) => size.variant_size_quantity === 0
                     ) && (
                       <Badge className="bg-gray-500 text-white">SOLD OUT</Badge>
@@ -194,15 +196,14 @@ const ProductPage = () => {
                   </div>
 
                   <div className="relative w-full bg-gray-200 rounded-md overflow-hidden">
-                    {product.product_variants?.[0]?.variant_sample_images?.[0]
+                    {product.variant_sample_images?.[0]
                       ?.variant_sample_image_image_url ? (
                       <Image
                         src={
-                          product.product_variants?.[0]
-                            ?.variant_sample_images?.[0]
+                          product.variant_sample_images?.[0]
                             ?.variant_sample_image_image_url
                         }
-                        alt={product.product_name}
+                        alt={product.product_variant_product.product_name}
                         width={600}
                         height={400}
                         className="object-cover w-full h-auto"
@@ -214,7 +215,7 @@ const ProductPage = () => {
                     )}
                   </div>
                 </CardHeader>
-                <CollectionContent product={product} />
+                <CollectionVariantContent product={product} />
               </Card>
             ))}
       </div>

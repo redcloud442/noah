@@ -23,7 +23,7 @@ export const Footer = () => {
               Get the latest updates, promotions, and trends directly to your
               inbox.
             </p>
-            <form className="flex flex-col sm:flex-row items-center gap-3">
+            <form className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Input
                 type="email"
                 placeholder="Enter your email"

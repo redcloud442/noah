@@ -34,7 +34,7 @@ const HeroSection = () => {
   }, [api]);
 
   return (
-    <div className="relative w-full mx-auto sm:min-h-screen sm:h-full overflow-hidden">
+    <div className="relative w-full mx-auto sm:min-h-screen sm:h-[120vh] overflow-hidden">
       <Carousel
         className="w-full min-h-screen h-full"
         plugins={[plugin.current]}
@@ -42,11 +42,14 @@ const HeroSection = () => {
       >
         <CarouselContent className="flex [&>div]:w-full">
           {images.map((image, index) => (
-            <CarouselItem className="relative min-h-screen w-full" key={index}>
+            <CarouselItem
+              className="relative min-h-screen h-[120vh] w-full"
+              key={index}
+            >
               <Image
                 src={image}
                 alt="Hero"
-                className=" object-cover object-top min-h-screen h-full"
+                className=" object-cover object-top min-h-screen h-[120vh]"
                 priority={index === activeSlide}
                 fill
               />
@@ -59,8 +62,8 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-black opacity-50 z-10" />
 
       {/* Text Content */}
-      <div className="absolute bottom-20 inset-0 flex items-end justify-center text-white text-2xl sm:text-3xl lg:text-4xl font-bold z-20">
-        <div className="flex flex-col items-center gap-4">
+      <div className="absolute bottom-56 inset-0 flex items-end justify-center text-white text-2xl sm:text-3xl lg:text-4xl font-bold z-20">
+        <div className="flex flex-col items-center text-center gap-4">
           <h1>Discover the latest trends in Noire Fashion</h1>
           <Link href="/collections">
             <Button

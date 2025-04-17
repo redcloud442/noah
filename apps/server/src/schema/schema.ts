@@ -117,3 +117,18 @@ export const orderGetListSchema = z.object({
 });
 
 export type typeOrderGetListSchema = z.infer<typeof orderGetListSchema>;
+
+export const userPostSchema = z.object({
+  search: z.string().optional(),
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+  sortDirection: z.string().optional(),
+  columnAccessor: z.string().optional(),
+  take: z.number(),
+  skip: z.number(),
+  teamId: z.string().uuid(),
+});
+
+export type typeUserPostSchema = z.infer<typeof userPostSchema>;

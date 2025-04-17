@@ -3,6 +3,8 @@ import {
   product_table,
   product_variant_table,
   team_group_member_table,
+  team_member_table,
+  user_table,
   variant_sample_image_table,
   variant_size_table,
 } from "@prisma/client";
@@ -55,6 +57,12 @@ export type ProductType = product_table & {
   })[];
 };
 
+export type VariantProductType = product_variant_table & {
+  variant_sizes: variant_size_table[];
+  product_variant_product: product_table;
+  variant_sample_images: variant_sample_image_table[];
+};
+
 export type ProductTypeData = {
   product_id: string;
   product_name: string;
@@ -83,6 +91,12 @@ export type ProductTypeData = {
 export type OrderType = order_table & {
   user_email: string;
   team_name: string;
+};
+
+export type UserType = user_table & {
+  team_member_table: team_member_table[];
+  order_count: number;
+  order_purchased_amount: number;
 };
 
 export type ProductVariantType = product_variant_table & {

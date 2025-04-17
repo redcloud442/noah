@@ -6,9 +6,9 @@ import { redirect } from "next/navigation";
 const ProductPage = async ({
   params,
 }: {
-  params: Promise<{ productSlug: string }>;
+  params: Promise<{ productSlug: string; teamName: string }>;
 }) => {
-  const { productSlug } = await params;
+  const { productSlug, teamName } = await params;
   const generateSlug = slugify(productSlug);
 
   const { product, variantInfo } = await findProductBySlug(
@@ -17,7 +17,7 @@ const ProductPage = async ({
   );
 
   if (!product || !variantInfo) {
-    return redirect("/admin/product");
+    return redirect(`/${teamName}/admin/product`);
   }
 
   return <ProductSlugPage variantInfo={variantInfo} product={product} />;

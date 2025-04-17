@@ -343,62 +343,73 @@ export const productGetAllProductModel = async (params: {
 }) => {
   const { take, skip, search, teamId, category } = params;
 
-  const filter: Prisma.product_tableWhereInput = {};
+  const filter: Prisma.product_variant_tableWhereInput = {};
   const offset = (skip - 1) * take;
 
   if (search) {
-    filter.product_name = {
-      contains: search,
-      mode: "insensitive",
+    filter.product_variant_product = {
+      product_name: {
+        contains: search,
+        mode: "insensitive",
+      },
     };
   }
 
   if (teamId) {
-    filter.product_team_id = teamId;
+    filter.product_variant_product = {
+      product_team_id: teamId,
+    };
+
+    filter.product_variant_is_deleted = {
+      equals: false,
+    };
   }
 
   if (category) {
-    filter.product_category_id = category;
+    filter.product_variant_product = {
+      product_category_id: category,
+    };
   }
 
-  const products = await prisma.product_table.findMany({
+  const products = await prisma.product_variant_table.findMany({
     where: filter,
     select: {
-      product_id: true,
-      product_name: true,
-      product_price: true,
-      product_sale_percentage: true,
-      product_created_at: true,
-      product_description: true,
-      product_slug: true,
-      product_variants: {
+      product_variant_id: true,
+      product_variant_color: true,
+      product_variant_slug: true,
+      product_variant_product: {
         select: {
-          product_variant_id: true,
-          product_variant_color: true,
-          product_variant_slug: true,
-          variant_sizes: {
-            select: {
-              variant_size_id: true,
-              variant_size_value: true,
-              variant_size_quantity: true,
-            },
-          },
-          variant_sample_images: {
-            select: {
-              variant_sample_image_image_url: true,
-            },
-          },
+          product_id: true,
+          product_name: true,
+          product_price: true,
+          product_sale_percentage: true,
+          product_created_at: true,
         },
+      },
+      variant_sizes: {
+        select: {
+          variant_size_id: true,
+          variant_size_value: true,
+          variant_size_quantity: true,
+        },
+      },
+      variant_sample_images: {
+        select: {
+          variant_sample_image_image_url: true,
+        },
+        take: 1,
       },
     },
     orderBy: {
-      product_created_at: "desc",
+      product_variant_product: {
+        product_created_at: "desc",
+      },
     },
     take,
     skip: offset,
   });
 
-  const count = await prisma.product_table.count({
+  const count = await prisma.product_variant_table.count({
     where: filter,
   });
 

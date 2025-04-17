@@ -147,7 +147,7 @@ const CartPage = () => {
 
       <div className="max-w-7xl mx-auto flex flex-col items-start  lg:flex-row space-y-6 lg:space-y-0 lg:space-x-8">
         {/* Left Section - Cart Items */}
-        <div className="flex-1 bg-white shadow-md rounded-lg p-6">
+        <div className="flex-1 bg-white shadow-md rounded-lg p-6 w-full">
           <h2 className="text-2xl font-bold mb-4">Cart Items</h2>
           {cart.products.length === 0 ? (
             <p className="text-gray-600 text-center">Your cart is empty.</p>
@@ -250,58 +250,62 @@ const CartPage = () => {
         </div>
 
         {/* Right Section - Order Summary */}
-        <div className="w-full lg:w-1/3 bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
-          <Separator />
-          <div className="space-y-3 py-4">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium">
-                ₱{" "}
-                {cart.products
-                  .reduce(
-                    (total, product) =>
-                      total + product.product_price * product.product_quantity,
-                    0
-                  )
-                  .toLocaleString()}
-              </span>
+        {cart.products.length > 0 && (
+          <div className="w-full lg:w-1/3 bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+            <Separator />
+            <div className="space-y-3 py-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">
+                  ₱{" "}
+                  {cart.products
+                    .reduce(
+                      (total, product) =>
+                        total +
+                        product.product_price * product.product_quantity,
+                      0
+                    )
+                    .toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between"></div>
+              <div className="flex justify-between font-bold text-lg">
+                <span>Total</span>
+                <span>
+                  ₱{" "}
+                  {cart.products
+                    .reduce(
+                      (total, product) =>
+                        total +
+                        product.product_price * product.product_quantity,
+                      0
+                    )
+                    .toLocaleString()}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between"></div>
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>
-                ₱{" "}
-                {cart.products
-                  .reduce(
-                    (total, product) =>
-                      total + product.product_price * product.product_quantity,
-                    0
-                  )
-                  .toLocaleString()}
-              </span>
-            </div>
+
+            <Separator />
+
+            {/* Checkout Button */}
+            <Button
+              onClick={handleCheckout}
+              className="w-full mt-4"
+              disabled={submitting}
+              variant="secondary"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Proceeding to Checkout
+                </>
+              ) : (
+                "Proceed to Checkout"
+              )}
+            </Button>
           </div>
-
-          <Separator />
-
-          {/* Checkout Button */}
-          <Button
-            onClick={handleCheckout}
-            className="w-full mt-4"
-            disabled={submitting}
-            variant="secondary"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Proceeding to Checkout
-              </>
-            ) : (
-              "Proceed to Checkout"
-            )}
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   );
