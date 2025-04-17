@@ -71,7 +71,10 @@ export default async function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar
-        teams={teams.map((team) => team.team_member_team)}
+        teams={teams.map(
+          (team: { team_member_team: { team_name: string } }) =>
+            team.team_member_team
+        )}
         activeTeam={activeTeam.team_member_team}
       />
       <SidebarSeparator>{children}</SidebarSeparator>
