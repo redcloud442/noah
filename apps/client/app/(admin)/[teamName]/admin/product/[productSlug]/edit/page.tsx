@@ -26,40 +26,42 @@ const page = async ({
         price: product.product_price,
         description: product.product_description || "",
         category: product.product_category_id,
-        variants: product.product_variants.map((variant) => ({
-          id: variant.product_variant_id,
-          color: variant.product_variant_color,
-          sizesWithQuantities: variant.variant_sizes.map((size) => ({
-            size: size.variant_size_value,
-            quantity: size.variant_size_quantity,
-          })),
-          images: variant.variant_sample_images.map(
-            (image) => image.variant_sample_image_image_url
-          ),
-          publicUrl:
-            variant.variant_sample_images.map(
-              (image) => image.variant_sample_image_image_url
-            ) || [],
-        })),
+        variants: product.product_variants.map(
+          (variant: {
+            product_variant_id: string;
+            product_variant_color: string;
+            variant_sizes: {
+              variant_size_value: string;
+              variant_size_quantity: number;
+            }[];
+            variant_sample_images: { variant_sample_image_image_url: string }[];
+          }) => ({
+            id: variant.product_variant_id,
+            color: variant.product_variant_color,
+            sizesWithQuantities: variant.variant_sizes.map(
+              (size: {
+                variant_size_value: string;
+                variant_size_quantity: number;
+              }) => ({
+                size: size.variant_size_value,
+                quantity: size.variant_size_quantity,
+              })
+            ),
+            images: [],
+            publicUrl:
+              variant.variant_sample_images.map(
+                (image) => image.variant_sample_image_image_url
+              ) || [],
+          })
+        ),
       },
     ],
   };
 
-  console.log(formattedVariantInfo);
-
   return (
     <EditProductPage
       productId={product.product_id}
-      formattedVariantInfo={{
-        products: formattedVariantInfo.products.map((product) => ({
-          ...product,
-          variants: product.variants.map((variant) => ({
-            ...variant,
-            images: [],
-            publicUrl: variant.publicUrl,
-          })),
-        })),
-      }}
+      formattedVariantInfo={formattedVariantInfo}
     />
   );
 };
