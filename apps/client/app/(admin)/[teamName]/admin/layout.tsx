@@ -44,7 +44,15 @@ export default async function AdminLayout({
     return redirect("/500");
   }
 
-  if (teams.some((team) => team.team_member_team.team_name === teamName)) {
+  if (
+    teams.some(
+      (team: {
+        team_member_team: {
+          team_name: string;
+        };
+      }) => team.team_member_team.team_name === teamName
+    )
+  ) {
     return redirect("/500");
   }
 
