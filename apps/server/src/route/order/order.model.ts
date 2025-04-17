@@ -83,6 +83,7 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
       order_item_id: item.order_item_id,
       order_item_quantity: item.quantity,
       order_item_price: item.price,
+      order_item_color: item.product_variant.product_variant_color,
       product_variant_id: item.product_variant.product_variant_id,
       product_variant_color: item.product_variant.product_variant_color,
       product_variant_name:

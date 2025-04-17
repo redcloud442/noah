@@ -112,7 +112,7 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
   });
 
   const onSubmit = async (data: ProductCategoryForm) => {
-    const file = data.image;
+    const file = data.image as File;
     let imageUrl = "";
     if (file) {
       const filePath = `uploads/${Date.now()}_${file.name}`;
