@@ -57,7 +57,11 @@ export default async function AdminLayout({
   }
 
   const activeTeam = teams.find(
-    (team) => team.team_member_team.team_id === user.user_metadata.activeTeamId
+    (team: {
+      team_member_team: {
+        team_id: string;
+      };
+    }) => team.team_member_team.team_id === user.user_metadata.activeTeamId
   );
 
   if (!activeTeam) {
