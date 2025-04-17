@@ -1,4 +1,4 @@
-import CheckoutPage from "@/components/CheckoutPage/CheckoutPage";
+import CheckOutNumberPage from "@/components/CheckoutOutNumberPage/CheckOutNumberPage";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -24,7 +24,7 @@ const page = async ({
     return redirect("/");
   }
 
-  return <CheckoutPage />;
+  return <CheckOutNumberPage />;
 };
 
 export default page;
