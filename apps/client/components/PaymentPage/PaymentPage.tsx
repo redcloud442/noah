@@ -14,12 +14,13 @@ import { paymentService } from "@/services/payment";
 import {
   cardPaymentSchema,
   PaymentCreatePaymentFormData,
-} from "@packages/shared/src/schema/schema";
+} from "@/utils/schema";
 import { order_table } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FieldErrors, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 type PaymentPageProps = {
@@ -89,7 +90,11 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
         }
       }
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error creating payment method");
+      }
     }
   };
 
@@ -114,8 +119,8 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
   const cardErrors = errors as FieldErrors<z.infer<typeof cardPaymentSchema>>;
 
   return (
-    <div className="text-black">
-      <div className="max-w-4xl mx-auto bg-white p-6 shadow-md rounded-md">
+    <div className="text-black min-h-screen bg-white h-full mt-24 pt-20">
+      <div className="max-w-5xl mx-auto bg-white p-6 shadow-md rounded-md border-2">
         {/* Order Info */}
         <div className="flex justify-between items-center border-b pb-4">
           <h1 className="text-2xl font-bold">Order #{order.order_number}</h1>

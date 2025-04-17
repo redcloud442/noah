@@ -1,7 +1,4 @@
-import {
-  CheckoutFormData,
-  PaymentCreatePaymentFormData,
-} from "@packages/shared";
+import { CheckoutFormData, PaymentCreatePaymentFormData } from "@/utils/schema";
 import {
   PaymentMethodResponse,
   PaymentRedirectResponse,

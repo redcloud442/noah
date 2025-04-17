@@ -15,17 +15,16 @@ import { Textarea } from "@/components/ui/textarea";
 import useUserDataStore from "@/lib/userDataStore";
 import { getCollectionQueryKey } from "@/query/queryKeys";
 import { productService } from "@/services/product";
+import { ProductCategoryForm, productCategorySchema } from "@/utils/schema";
+import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ProductCategoryForm,
-  productCategorySchema,
-} from "@packages/shared/src/schema/schema";
 import { product_category_table } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ImageDropzone } from "./ImageDropzone";
 
 type Props = {
   take: number;
@@ -38,12 +37,14 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
 
   const { userData } = useUserDataStore();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   const {
     register,
     handleSubmit,
     reset,
-
+    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductCategoryForm>({
     resolver: zodResolver(productCategorySchema),
@@ -51,6 +52,8 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
       teamId: "",
     },
   });
+
+  const image = watch("image");
 
   useEffect(() => {
     if (userData?.teamMemberProfile?.team_member_team_id) {
@@ -68,7 +71,7 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
   );
 
   const { mutateAsync } = useMutation({
-    mutationFn: async (data: ProductCategoryForm) => {
+    mutationFn: async (data: ProductCategoryForm & { imageUrl: string }) => {
       const productCategory = await productService.createProductCategory(data);
       return productCategory;
     },
@@ -109,11 +112,35 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
   });
 
   const onSubmit = async (data: ProductCategoryForm) => {
-    await mutateAsync(data);
+    const file = data.image;
+    let imageUrl = "";
+    if (file) {
+      const filePath = `uploads/${Date.now()}_${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("PRODUCT_IMAGE")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const publicUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+
+      imageUrl = publicUrl;
+    }
+
+    await mutateAsync({ ...data, imageUrl });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open);
+        if (!open) {
+          reset();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="secondary">
           <PlusIcon className="w-4 h-4 mr-2" />
@@ -148,6 +175,28 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
               <p className="text-sm text-red-500">
                 {errors.productCategoryDescription.message}
               </p>
+            )}
+          </div>
+
+          <div>
+            <Controller
+              control={control}
+              name={`image`}
+              render={({ field }) => (
+                <ImageDropzone
+                  onDropImages={(files) => {
+                    field.onChange(files);
+                  }}
+                />
+              )}
+            />
+            {image && (
+              <p className="text-sm text-center text-green-500">
+                File Uploaded Successfully
+              </p>
+            )}
+            {errors.image && (
+              <p className="text-sm text-red-500">{errors.image.message}</p>
             )}
           </div>
 

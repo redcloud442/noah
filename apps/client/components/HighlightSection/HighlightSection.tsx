@@ -1,8 +1,41 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+
 const HighlightSection = () => {
+  const router = useRouter();
   return (
-    <div className="relative flex flex-col gap-4 justify-center items-center w-full h-[300px] bg-white overflow-hidden">
-      <div className="flex flex-col items-center justify-center text-white text-3xl sm:text-5xl font-bold space-y-6">
-        <div className="text-black">Fresh Drops</div>
+    <div className="w-full py-10  bg-zinc-950 space-y-10">
+      <h1 className="text-4xl text-center font-bold">
+        Keep in touch with us through our social media
+      </h1>
+      <div className="flex w-full animate-infinite-scroll space-x-16 whitespace-nowrap">
+        {[...Array(3)].map((_, i) => (
+          <ul
+            key={i}
+            className="flex items-center space-x-16 text-4xl text-gray-300"
+            aria-hidden={i === 1}
+          >
+            <li
+              onClick={() => router.push("https://www.facebook.com/noire.ph")}
+              className="flex items-center gap-10 cursor-pointer"
+            >
+              <FaFacebook size={50} /> Facebook
+            </li>
+            <li
+              onClick={() => router.push("https://www.instagram.com/noire.ph")}
+              className="flex items-center gap-10 cursor-pointer"
+            >
+              <FaInstagram size={50} /> Instagram
+            </li>
+            <li
+              onClick={() => router.push("https://www.tiktok.com/@noire.ph")}
+              className="flex items-center gap-10 cursor-pointer"
+            >
+              <FaTiktok size={50} /> Tiktok
+            </li>
+          </ul>
+        ))}
       </div>
     </div>
   );

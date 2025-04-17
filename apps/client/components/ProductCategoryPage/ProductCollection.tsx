@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
 
 type ProductCollectionProps = {
@@ -13,9 +13,10 @@ type ProductCollectionProps = {
 
 const ProductCollection = ({ collections }: ProductCollectionProps) => {
   const router = useRouter();
+  const { teamName } = useParams();
 
   const handleOnClick = (collectionSlug: string) => {
-    router.push(`collections/${collectionSlug}`);
+    router.push(`/${teamName}/admin/product/collections/${collectionSlug}`);
   };
 
   return (

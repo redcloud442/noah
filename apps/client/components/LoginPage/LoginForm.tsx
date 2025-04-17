@@ -72,7 +72,11 @@ export const LoginForm = ({
         },
       });
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error signing in with Google");
+      }
     }
   };
 
@@ -85,7 +89,11 @@ export const LoginForm = ({
         },
       });
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error signing in with Facebook");
+      }
     }
   };
 

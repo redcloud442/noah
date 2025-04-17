@@ -5,6 +5,7 @@ import {
   productGetAllProductController,
   productGetController,
   productVariantCreateController,
+  productVariantUpdateController,
 } from "./product.controller.js";
 import {
   productCollectionMiddleware,
@@ -12,6 +13,7 @@ import {
   productCollectionsPostMiddleware,
   productCreateMiddleware,
   productGetAllProductMiddleware,
+  productUpdateMiddleware,
 } from "./product.middleware.js";
 
 const product = new Hono();
@@ -25,6 +27,8 @@ product.post(
 );
 
 product.post("/", productCreateMiddleware, productVariantCreateController);
+
+product.put("/", productUpdateMiddleware, productVariantUpdateController);
 
 product.post(
   "/all-product",

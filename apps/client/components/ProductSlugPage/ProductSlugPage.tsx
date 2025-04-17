@@ -11,38 +11,38 @@ import {
   product_table,
   product_variant_table,
   variant_sample_image_table,
+  variant_size_table,
 } from "@prisma/client";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 
 type Props = {
   product: product_table & {
     product_variants: (product_variant_table & {
       variant_sample_images: variant_sample_image_table[];
+      variant_sizes: variant_size_table[];
     })[];
+  };
+  variantInfo: product_variant_table & {
+    variant_sizes: variant_size_table[];
+    variant_sample_images: variant_sample_image_table[];
   };
 };
 
-const ProductSlugPage = ({ product }: Props) => {
-  const router = useRouter();
+const ProductSlugPage = ({ product, variantInfo }: Props) => {
   const { teamName } = useParams();
 
   const [selectedSize, setSelectedSize] = useState(
-    product.product_variants[0]?.product_variant_size
+    product.product_variants[0]?.variant_sizes[0].variant_size_value
   );
 
-  const allImages =
-    product.product_variants.flatMap((v) => v.variant_sample_images) || [];
+  const allImages = variantInfo.variant_sample_images || [];
 
   const [selectedImage, setSelectedImage] = useState(
     allImages?.[0]?.variant_sample_image_image_url || "/placeholder.png"
   );
-
-  const handleClick = async (slug: string | null) => {
-    router.replace(`/${teamName}/admin/product/${slug}`);
-    router.refresh();
-  };
 
   return (
     <div className="py-8 grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -61,17 +61,21 @@ const ProductSlugPage = ({ product }: Props) => {
           {allImages.map((image, idx) => (
             <div
               key={idx}
-              className="border rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-black transition"
+              className="group relative border rounded overflow-hidden cursor-pointer hover:ring-2 hover:ring-black transition"
               onMouseEnter={() =>
                 setSelectedImage(image.variant_sample_image_image_url)
               }
             >
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/40 hover:opacity-0 opacity-100 transition-opacity duration-300 z-10" />
+
+              {/* Image */}
               <Image
                 src={image.variant_sample_image_image_url}
                 alt="Thumbnail"
                 width={250}
                 height={250}
-                className="object-cover w-full h-full hover:scale-105 hover:bg-gray-900/50 transition duration-300"
+                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
               />
             </div>
           ))}
@@ -79,7 +83,9 @@ const ProductSlugPage = ({ product }: Props) => {
       </div>
 
       <div className="sticky top-0 self-start">
-        <h1 className="text-3xl font-bold">{product.product_name}</h1>
+        <h1 className="text-3xl font-bold">
+          {product.product_name} - {variantInfo.product_variant_color}
+        </h1>
         <p className="text-xl text-white/70 mt-2">
           ₱{" "}
           {product.product_price.toLocaleString("en-US", {
@@ -92,26 +98,30 @@ const ProductSlugPage = ({ product }: Props) => {
           <h3 className="text-sm font-semibold">Select Color:</h3>
           <div className="flex gap-2 mt-2">
             {product.product_variants.map((variant) => (
-              <Button
+              <Link
                 key={variant.product_variant_id}
-                onClick={() => handleClick(variant.product_variant_slug)}
-                variant="ghost"
-                className={`w-14 h-14 border ${
-                  selectedSize === variant.product_variant_size
-                    ? "border-black"
-                    : "border-gray-300"
-                }`}
+                href={`/${teamName}/admin/product/${variant.product_variant_slug}`}
               >
-                <Image
-                  src={
-                    variant.variant_sample_images[0]
-                      ?.variant_sample_image_image_url || "/placeholder.png"
-                  }
-                  alt={variant.product_variant_color}
-                  width={35}
-                  height={35}
-                />
-              </Button>
+                <Button
+                  variant="ghost"
+                  className={`w-16 h-16 border ${
+                    variant.product_variant_id ===
+                    variantInfo.product_variant_id
+                      ? "border-gray-300"
+                      : "border-black"
+                  }`}
+                >
+                  <Image
+                    src={
+                      variant.variant_sample_images[0]
+                        ?.variant_sample_image_image_url || "/placeholder.png"
+                    }
+                    alt={variant.product_variant_color}
+                    width={50}
+                    height={50}
+                  />
+                </Button>
+              </Link>
             ))}
           </div>
         </div>
@@ -120,17 +130,17 @@ const ProductSlugPage = ({ product }: Props) => {
         <div className="mt-4">
           <h3 className="text-sm font-semibold">Size:</h3>
           <div className="flex gap-3 mt-2">
-            {product.product_variants.map((variant) => (
+            {variantInfo.variant_sizes.map((variant) => (
               <Button
-                key={variant.product_variant_id}
-                onClick={() => setSelectedSize(variant.product_variant_size)}
+                key={variant.variant_size_id}
+                onClick={() => setSelectedSize(variant.variant_size_value)}
                 className={`px-4 py-2 border rounded-md ${
-                  selectedSize === variant.product_variant_size
-                    ? "border-black"
-                    : "border-gray-300"
+                  selectedSize === variant.variant_size_value
+                    ? "scale-110 bg-gray-400"
+                    : ""
                 }`}
               >
-                {variant.product_variant_size}
+                {variant.variant_size_value}
               </Button>
             ))}
           </div>
@@ -141,7 +151,11 @@ const ProductSlugPage = ({ product }: Props) => {
           <h3 className="text-sm font-semibold">Quantity:</h3>
           <div className="flex items-center border p-1 rounded-md">
             <span className="px-4">
-              {product.product_variants[0].product_variant_quantity}
+              {
+                variantInfo.variant_sizes.find(
+                  (variant) => variant.variant_size_value === selectedSize
+                )?.variant_size_quantity
+              }
             </span>
           </div>
         </div>

@@ -1,10 +1,10 @@
-import type {
-  CheckoutFormData,
-  PaymentCreatePaymentFormData,
-} from "@packages/shared";
 import type { user_table } from "@prisma/client";
 import axios from "axios";
 import prisma from "../../utils/prisma.js";
+import type {
+  CheckoutFormData,
+  PaymentCreatePaymentFormData,
+} from "../../utils/schema.js";
 
 export const createPaymentIntent = async (
   params: CheckoutFormData,
@@ -35,14 +35,21 @@ export const createPaymentIntent = async (
     },
     select: {
       product_variant_id: true,
-      product_variant_quantity: true,
+      variant_sizes: {
+        select: {
+          variant_size_quantity: true,
+        },
+      },
     },
   });
 
   const productStockMap = new Map(
     existingProducts.map((product) => [
       product.product_variant_id,
-      product.product_variant_quantity,
+      product.variant_sizes.reduce(
+        (total, size) => total + size.variant_size_quantity,
+        0
+      ),
     ])
   );
 
@@ -122,10 +129,27 @@ export const createPaymentIntent = async (
         product_variant_id: variant.product_variant_id,
         quantity: variant.product_variant_quantity,
         price: variant.product_variant_price,
+        size: variant.product_variant_size,
+        color: variant.product_variant_color,
       })),
     });
 
     if (user.id) {
+      await tx.variant_size_table.updateMany({
+        where: {
+          variant_size_variant_id: {
+            in: productVariant.map((variant) => variant.product_variant_id),
+          },
+        },
+        data: {
+          variant_size_quantity: {
+            decrement: productVariant.reduce(
+              (total, variant) => total + variant.product_variant_quantity,
+              0
+            ),
+          },
+        },
+      });
       await tx.cart_table.deleteMany({
         where: {
           cart_product_variant_id: {
@@ -173,7 +197,8 @@ export const createPaymentMethod = async (
 
     let expiry_year, expiry_month;
     if (payment_details?.card.card_expiry) {
-      [expiry_year, expiry_month] = payment_details.card.card_expiry.split("/");
+      [expiry_month, expiry_year] = payment_details.card.card_expiry.split("/");
+
       if (!expiry_year || !expiry_month) {
         throw new Error("Invalid card expiry format. Expected YYYY-MM");
       }
@@ -192,8 +217,8 @@ export const createPaymentMethod = async (
                 ? {
                     card: {
                       number: payment_details?.card.card_number,
-                      expiry_month,
                       expiry_year,
+                      expiry_month,
                       cvv: payment_details?.card.card_cvv,
                     },
                   }
@@ -259,6 +284,7 @@ export const createPaymentMethod = async (
       nextAction: attachPaymentMethod.data.data.attributes.next_action,
     };
   } catch (error) {
+    console.log(error);
     throw new Error("Payment process failed");
   }
 };

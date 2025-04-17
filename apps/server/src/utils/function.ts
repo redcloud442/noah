@@ -8,3 +8,10 @@ export const getClientIP = (request: Request) =>
   request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
   request.headers.get("cf-connecting-ip") ||
   "unknown";
+
+export const slugifyVariant = (name: string) => {
+  return `${name}`
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
+};

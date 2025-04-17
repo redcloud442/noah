@@ -1,4 +1,5 @@
 import { Providers } from "@/components/LayoutProviders/RootLayoutProvider";
+import prisma from "@/utils/prisma/prisma";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -29,12 +30,24 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const collections = await prisma.product_category_table.findMany({
+    select: {
+      product_category_id: true,
+      product_category_name: true,
+      product_category_description: true,
+      product_category_image: true,
+      product_category_slug: true,
+    },
+  });
+
   return (
     <html suppressHydrationWarning lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <Providers user={user}>{children}</Providers>
+        <Providers collections={collections} user={user}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

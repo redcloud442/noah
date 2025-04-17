@@ -1,5 +1,9 @@
 import type { Context } from "hono";
-import { orderGetItemsModel, orderGetModel } from "./order.model.js";
+import {
+  orderGetItemsModel,
+  orderGetListModel,
+  orderGetModel,
+} from "./order.model.js";
 
 export const orderGetController = async (c: Context) => {
   try {
@@ -21,6 +25,18 @@ export const orderGetItemsController = async (c: Context) => {
     });
 
     return c.json(orderItems, 200);
+  } catch (error) {
+    return c.json({ message: "Internal server error" }, 500);
+  }
+};
+
+export const orderGetListController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const orders = await orderGetListModel({ ...params });
+
+    return c.json(orders);
   } catch (error) {
     return c.json({ message: "Internal server error" }, 500);
   }

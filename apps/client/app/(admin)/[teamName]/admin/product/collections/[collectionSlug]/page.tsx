@@ -15,7 +15,7 @@ const CollectionPage = async ({
 
   await protectionAdminMiddleware();
 
-  const products = await findCollectionBySlug(generateSlug, prisma);
+  const products = await findCollectionBySlug(generateSlug, prisma, teamName);
 
   if (!products.length) {
     return (

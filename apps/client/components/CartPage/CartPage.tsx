@@ -18,7 +18,9 @@ import { Skeleton } from "../ui/skeleton";
 const CartPage = () => {
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
+
   const router = useRouter();
+
   const [isLoading, setIsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +40,11 @@ const CartPage = () => {
         }
         setIsLoading(false);
       } catch (error) {
-        console.error(error);
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Error fetching cart");
+        }
       }
     };
     handleFetchCart();
@@ -48,7 +54,6 @@ const CartPage = () => {
     if (userData) {
       const previousCart = cart;
 
-      // Optimistically update the UI
       setCart({
         ...cart,
         products: cart.products.filter((item) => item.cart_id !== cartId),
@@ -158,7 +163,7 @@ const CartPage = () => {
                 cart.products.map((product) => (
                   <Card
                     key={product.cart_id}
-                    className="relative p-4 flex bg-white text-black items-center space-x-2"
+                    className="relative p-4 flex bg-white text-black items-center space-x-2 space-y-4"
                   >
                     {/* Trash Icon in the Upper Right */}
                     <Button
@@ -182,7 +187,7 @@ const CartPage = () => {
                         height={80}
                         className="w-20 h-20 hidden sm:block object-contain rounded-md"
                       />
-                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      <div className="absolute -top-2 -right-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                         {product.product_quantity}
                       </div>
                     </div>
@@ -190,7 +195,7 @@ const CartPage = () => {
                     {/* Product Details */}
                     <div className="flex-1">
                       <p className="font-semibold text-lg">
-                        {product.product_name}
+                        {product.product_name} - {product.product_variant_color}
                       </p>
                       <p className="text-gray-500 text-sm">
                         Size: {product.product_variant_size}
@@ -209,8 +214,7 @@ const CartPage = () => {
                     {/* Quantity Controls */}
                     <div className="flex items-center space-x-2">
                       <Button
-                        variant="outline"
-                        size="icon"
+                        variant="ghost"
                         className="bg-white text-black"
                         disabled={product.product_quantity <= 1}
                         onClick={() =>
@@ -226,8 +230,7 @@ const CartPage = () => {
                         {product.product_quantity}
                       </span>
                       <Button
-                        variant="outline"
-                        size="icon"
+                        variant="ghost"
                         className="bg-white text-black"
                         onClick={() =>
                           updateQuantity(
@@ -254,7 +257,7 @@ const CartPage = () => {
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal</span>
               <span className="font-medium">
-                ₱
+                ₱{" "}
                 {cart.products
                   .reduce(
                     (total, product) =>
@@ -268,7 +271,7 @@ const CartPage = () => {
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>
-                ₱
+                ₱{" "}
                 {cart.products
                   .reduce(
                     (total, product) =>

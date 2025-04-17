@@ -160,6 +160,8 @@ model order_item_table {
   product_variant_id String    @db.Uuid
   quantity           Int
   price             Float?
+  size             String?
+  color             String?
 
   order             order_table @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
   product_variant   product_variant_table @relation(fields: [product_variant_id], references: [product_variant_id], onDelete: Cascade)
@@ -190,9 +192,11 @@ model product_category_table {
   product_category_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   product_category_name String
   product_category_description String
+  product_category_image String?
   product_category_created_at DateTime @default(now()) @db.Timestamptz(3)
   product_category_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   product_category_team_id String @db.Uuid
+  product_category_slug String
 
   products product_table[]
   product_category_team team_table @relation(fields: [product_category_team_id], references: [team_id], onDelete: Cascade)
@@ -203,15 +207,27 @@ model product_variant_table {
   product_variant_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   product_variant_product_id String @db.Uuid
   product_variant_color String
-  product_variant_size String
   product_variant_slug String?
-  product_variant_quantity Int @default(0)  // Tracks available inventory
+  product_variant_is_deleted Boolean @default(false)
 
   product_variant_product product_table @relation(fields: [product_variant_product_id], references: [product_id], onDelete: Cascade)
   cart_items cart_table[]
   variant_sample_images variant_sample_image_table[]
-  @@schema("product_schema")
+  variant_sizes variant_size_table[] // 👈 NEW
   order_item_table order_item_table[]
+
+  @@schema("product_schema")
+}
+
+model variant_size_table {
+  variant_size_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  variant_size_variant_id String @db.Uuid
+  variant_size_value String
+  variant_size_quantity Int @default(0)
+
+  variant product_variant_table @relation(fields: [variant_size_variant_id], references: [product_variant_id], onDelete: Cascade)
+
+  @@schema("product_schema")
 }
 
 model variant_sample_image_table {

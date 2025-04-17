@@ -13,12 +13,11 @@ import { productService } from "@/services/product";
 import { formattedCreateProductResponse } from "@/utils/function";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ProductFormType,
-  productSchema,
-} from "@packages/shared/src/schema/schema";
+
+import { ProductFormType, productSchema } from "@/utils/schema";
 import { product_category_table } from "@prisma/client";
 import { PhilippinePeso, PlusCircle, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -28,6 +27,8 @@ import { ProductVariants } from "./ProductVariants";
 
 const CreateProductPage = () => {
   const supabaseClient = createClient();
+  const router = useRouter();
+
   const { userData } = useUserDataStore();
   const [categories, setCategories] = useState<product_category_table[]>([]);
 
@@ -46,7 +47,12 @@ const CreateProductPage = () => {
           description: "",
           category: "",
           variants: [
-            { id: uuidv4(), color: "", size: "", quantity: 0, images: [] },
+            {
+              id: uuidv4(),
+              color: "",
+              sizesWithQuantities: [],
+              images: [],
+            },
           ],
         },
       ],
@@ -98,6 +104,9 @@ const CreateProductPage = () => {
       await productService.createProduct(formattedProducts);
 
       toast.success("Product created successfully");
+      router.push(
+        `/${userData?.teamMemberProfile.team_member_team.toLocaleLowerCase()}/admin/product`
+      );
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -114,7 +123,12 @@ const CreateProductPage = () => {
       description: "",
       category: "",
       variants: [
-        { id: uuidv4(), color: "", size: "", quantity: 0, images: [] },
+        {
+          id: uuidv4(),
+          color: "",
+          sizesWithQuantities: [],
+          images: [],
+        },
       ],
     });
   };

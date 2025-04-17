@@ -59,13 +59,20 @@ export const productVariantSchema = z.object({
   product_variant_color: z.string(),
   product_variant_id: z.string(),
   product_variant_product_id: z.string().uuid(),
-  product_variant_quantity: z.number(),
-  product_variant_size: z.string(),
   product_variant_slug: z.string(),
+  product_variant_is_deleted: z.boolean(),
   variant_sample_images: z.array(
     z.object({
       variant_sample_image_image_url: z.string(),
       variant_sample_image_product_variant_id: z.string(),
+    })
+  ),
+  variant_sizes: z.array(
+    z.object({
+      variant_size_id: z.string(),
+      variant_size_value: z.string(),
+      variant_size_quantity: z.number(),
+      variant_size_variant_id: z.string(),
     })
   ),
 });
@@ -97,3 +104,16 @@ export const productCollectionSlugSchema = z.object({
 export type typeProductCollectionSlugSchema = z.infer<
   typeof productCollectionSlugSchema
 >;
+
+export const orderGetListSchema = z.object({
+  take: z.number(),
+  skip: z.number(),
+  search: z.string().optional(),
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+  teamId: z.string().uuid(),
+});
+
+export type typeOrderGetListSchema = z.infer<typeof orderGetListSchema>;

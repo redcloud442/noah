@@ -1,4 +1,4 @@
-import { AddressCreateFormData } from "@packages/shared";
+import { AddressCreateFormData } from "@/utils/schema";
 import { user_address_table } from "@prisma/client";
 import { apiClient } from "./axios";
 

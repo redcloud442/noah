@@ -61,7 +61,7 @@ export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
           },
           {
             title: "Reseller",
-            url: `/${activeTeamName}/admin/reseller`,
+            url: `/${activeTeamName}/admin/user/reseller`,
             icon: UserCheckIcon,
           },
         ],

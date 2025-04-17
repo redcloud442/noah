@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         hostname: "umypvsozlsjtjfsakqxg.supabase.co",
         protocol: "https",
       },
+      {
+        hostname: "undraw.co",
+        protocol: "https",
+      },
     ],
   },
   async rewrites() {

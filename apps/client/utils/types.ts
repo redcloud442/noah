@@ -1,8 +1,10 @@
 import {
+  order_table,
   product_table,
   product_variant_table,
   team_group_member_table,
   variant_sample_image_table,
+  variant_size_table,
 } from "@prisma/client";
 
 export type Product = {
@@ -46,10 +48,44 @@ export type teamMemberProfile = {
   team_member_team_group: team_group_member_table[];
 };
 
-export type ProductType = {
-  product_table: product_table & {
-    product_variants: (product_variant_table & {
-      variant_sample_images: variant_sample_image_table[];
-    })[];
-  };
+export type ProductType = product_table & {
+  product_variants: (product_variant_table & {
+    variant_sizes: variant_size_table[];
+    variant_sample_images: variant_sample_image_table[];
+  })[];
+};
+
+export type ProductTypeData = {
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  product_created_at: Date;
+  product_category_id: string;
+  product_team_id: string;
+  product_description: string;
+  product_price: number;
+  product_sale_percentage: number;
+  product_variants: {
+    product_variant_id: string;
+    product_variant_product_id: string;
+    product_variant_color: string;
+    product_variant_size: string;
+    product_variant_quantity: number;
+    product_variant_slug: string;
+    variant_sample_images: {
+      variant_sample_image_id: string;
+      variant_sample_image_image_url: string;
+      variant_sample_image_product_variant_id: string;
+    }[];
+  }[];
+};
+
+export type OrderType = order_table & {
+  user_email: string;
+  team_name: string;
+};
+
+export type ProductVariantType = product_variant_table & {
+  variant_sizes: variant_size_table[];
+  variant_sample_images: variant_sample_image_table[];
 };

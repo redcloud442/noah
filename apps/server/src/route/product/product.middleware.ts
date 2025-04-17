@@ -1,7 +1,4 @@
-import {
-  productCategorySchema,
-  productCollectionSchema,
-} from "@packages/shared";
+import { productCollectionSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
 import { adminAuthProtection } from "../../middleware/auth.middleware.js";
 import {
@@ -9,7 +6,10 @@ import {
   productCreateSchema,
 } from "../../schema/schema.js";
 import { redis } from "../../utils/redis.js";
-import { productGetAllProductSchema } from "../../utils/schema.js";
+import {
+  productCategorySchema,
+  productGetAllProductSchema,
+} from "../../utils/schema.js";
 
 export const productCollectionMiddleware = async (c: Context, next: Next) => {
   await adminAuthProtection(c);
@@ -32,7 +32,7 @@ export const productCollectionMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validate.data);
 
-  return next();
+  return await next();
 };
 
 export const productCollectionsPostMiddleware = async (
@@ -41,13 +41,14 @@ export const productCollectionsPostMiddleware = async (
 ) => {
   await adminAuthProtection(c);
 
-  const { productCategoryName, productCategoryDescription, teamId } =
+  const { productCategoryName, productCategoryDescription, teamId, imageUrl } =
     await c.req.json();
 
   const validate = productCategorySchema.safeParse({
     productCategoryName,
     productCategoryDescription,
     teamId,
+    imageUrl,
   });
 
   if (!validate.success) {
@@ -56,7 +57,7 @@ export const productCollectionsPostMiddleware = async (
 
   c.set("params", validate.data);
 
-  return next();
+  return await next();
 };
 
 export const productCreateMiddleware = async (c: Context, next: Next) => {
@@ -75,12 +76,38 @@ export const productCreateMiddleware = async (c: Context, next: Next) => {
   const validate = productCreateSchema.safeParse(body);
 
   if (!validate.success) {
+    console.log(validate.error);
     return c.json({ message: "Invalid request" }, 400);
   }
 
   c.set("params", validate.data);
 
-  return next();
+  return await next();
+};
+
+export const productUpdateMiddleware = async (c: Context, next: Next) => {
+  const user = await adminAuthProtection(c);
+
+  const key = `product:${user.id}-update`;
+
+  const isRateLimited = await redis.rateLimit(key, 100, 60);
+
+  if (!isRateLimited) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  const body = await c.req.json();
+
+  const validate = productCreateSchema.safeParse(body);
+
+  if (!validate.success) {
+    console.log(validate.error);
+    return c.json({ message: "Invalid request" }, 400);
+  }
+
+  c.set("params", validate.data);
+
+  return await next();
 };
 
 export const productCollectionSlugMiddleware = async (
@@ -107,7 +134,7 @@ export const productCollectionSlugMiddleware = async (
 
   c.set("params", validate.data);
 
-  return next();
+  return await next();
 };
 
 export const productGetAllProductMiddleware = async (

@@ -1,44 +1,25 @@
-import Image from "next/image";
+import { ProductType } from "@/utils/types";
+import { HoverVariantCard } from "../CollectionNamePage/CollectionNamePage";
 
-const ModelSection = () => {
-  const modelSection = [
-    { id: 1, alt: "Model 1", image: "/assets/model/QR_59794.jpg" },
-    {
-      id: 2,
-      alt: "Model 2 description",
-      image: "/assets/model/noire-10243.jpg",
-    },
-    {
-      id: 3,
-      alt: "Model 4 description",
-      image: "/assets/model/noire-10278.jpg",
-    },
-  ];
+type Variant = {
+  variants: ProductType[];
+};
 
+const ModelSection = ({ variants }: Variant) => {
   return (
     <div className="flex flex-wrap justify-center items-center w-full bg-white gap-4 p-4">
-      {modelSection.map((item) => (
-        <div
-          key={item.id}
-          className="relative overflow-hidden w-full sm:w-[calc(33.33%-1rem)] h-full group"
-        >
-          <Image
-            src={item.image}
-            alt={item.alt}
-            width={800}
-            height={800}
-            className="w-full h-full object-cover"
-          />
-
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-
-          {/* Text Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <span className="text-white text-lg font-semibold">{item.alt}</span>
-          </div>
-        </div>
-      ))}
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        {variants.map((item) =>
+          item.product_variants.map((variant) => (
+            <HoverVariantCard
+              key={variant.product_variant_id}
+              variant={variant}
+              product={item}
+              currentDate={new Date()}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };

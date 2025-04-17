@@ -12,11 +12,12 @@ export const paymentPostController = async (c: Context) => {
 
     const paymentIntent = await createPaymentIntent(params, {
       ...user,
-      user_id: user.user_id ? user.user_id : null,
+      user_id: user.id ? user.id : null,
     });
 
     return c.json(paymentIntent, 200);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Internal Server Error" }, 500);
   }
 };
@@ -28,6 +29,7 @@ export const paymentCreatePaymentController = async (c: Context) => {
 
     return c.json(paymentIntent, 200);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Internal Server Error" }, 500);
   }
 };

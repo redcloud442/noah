@@ -1,5 +1,5 @@
 import { addressService } from "@/services/address";
-import { AddressCreateFormData } from "@packages/shared/src/schema/schema";
+import { AddressCreateFormData } from "@/utils/schema";
 import { user_address_table } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

@@ -19,7 +19,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { toast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { authService } from "@/services/auth";
@@ -31,6 +30,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { IoBagOutline } from "react-icons/io5";
+import { toast } from "sonner";
 
 const ShoppingCartModal = () => {
   const { cart, setCart } = useCartStore();
@@ -53,10 +53,7 @@ const ShoppingCartModal = () => {
         const response = await cartService.get();
 
         if (!response.json) {
-          toast({
-            title: "Error",
-            description: "Error fetching cart",
-          });
+          toast.error("Error fetching cart");
           return;
         }
 
@@ -105,16 +102,14 @@ const ShoppingCartModal = () => {
               ?.product_quantity ?? 0),
         });
       }
-      toast({
-        title: "Item removed from cart",
-      });
+
+      toast.success("Item removed from cart");
     } catch (error) {
-      console.log(error);
-      toast({
-        title: "Error",
-        description: "Error removing item from cart",
-      });
-    } finally {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error removing item from cart");
+      }
     }
   };
 
@@ -126,10 +121,7 @@ const ShoppingCartModal = () => {
     }
 
     if (!checkoutNumber) {
-      toast({
-        title: "Error",
-        description: "Error generating checkout number",
-      });
+      toast.error("Error generating checkout number");
       return;
     }
     router.push(`/checkout/cn/${checkoutNumber}`);

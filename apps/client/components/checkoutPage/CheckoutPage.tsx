@@ -12,8 +12,8 @@ import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { cartService } from "@/services/cart";
 import { paymentService } from "@/services/payment";
+import { CheckoutFormData, paymentSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckoutFormData, paymentSchema } from "@packages/shared";
 import axios from "axios";
 import { Banknote, CreditCard, Loader2, Smartphone } from "lucide-react";
 import Image from "next/image";
@@ -155,6 +155,8 @@ const CheckoutNumberPage = () => {
         product_variant_id: product.product_variant_id,
         product_variant_quantity: product.product_quantity,
         product_variant_price: product.product_price,
+        product_variant_size: product.product_variant_size,
+        product_variant_color: product.product_variant_color,
       }))
     );
   }, [cart, setValue]);
@@ -169,6 +171,8 @@ const CheckoutNumberPage = () => {
           product_variant_id: variant.product_variant_id,
           product_variant_quantity: variant.product_variant_quantity,
           product_variant_price: variant.product_variant_price,
+          product_variant_size: variant.product_variant_size,
+          product_variant_color: variant.product_variant_color,
         })),
       });
 

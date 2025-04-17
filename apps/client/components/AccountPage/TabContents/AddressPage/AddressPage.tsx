@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateAddress, useUpdateAddress } from "@/query/addressQuery";
+import { AddressCreateFormData, addressCreateSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddressCreateFormData, addressCreateSchema } from "@packages/shared";
+
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";

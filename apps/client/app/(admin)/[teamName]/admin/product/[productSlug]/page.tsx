@@ -11,13 +11,16 @@ const ProductPage = async ({
   const { productSlug } = await params;
   const generateSlug = slugify(productSlug);
 
-  const product = await findProductBySlug(generateSlug, prisma);
+  const { product, variantInfo } = await findProductBySlug(
+    generateSlug,
+    prisma
+  );
 
-  if (!product) {
+  if (!product || !variantInfo) {
     return redirect("/admin/product");
   }
 
-  return <ProductSlugPage product={product} />;
+  return <ProductSlugPage variantInfo={variantInfo} product={product} />;
 };
 
 export default ProductPage;

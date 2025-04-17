@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import prisma from "../../utils/prisma.js";
 
 export const orderGetModel = async (params: {
@@ -57,9 +58,7 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
           product_variant: {
             select: {
               product_variant_id: true,
-              product_variant_size: true,
               product_variant_color: true,
-              product_variant_quantity: true,
               product_variant_slug: true,
               variant_sample_images: {
                 select: {
@@ -82,12 +81,10 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
   const formattedOrderItems = orderItems.flatMap((order) =>
     order.order_items.map((item) => ({
       order_item_id: item.order_item_id,
-      quantity: item.quantity,
-      price: item.price,
+      order_item_quantity: item.quantity,
+      order_item_price: item.price,
       product_variant_id: item.product_variant.product_variant_id,
-      product_variant_size: item.product_variant.product_variant_size,
       product_variant_color: item.product_variant.product_variant_color,
-      product_variant_quantity: item.product_variant.product_variant_quantity,
       product_variant_name:
         item.product_variant.product_variant_product.product_name,
       product_variant_image:
@@ -99,4 +96,92 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
   );
 
   return formattedOrderItems;
+};
+
+export const orderGetListModel = async (params: {
+  teamId: string;
+  take: number;
+  search: string;
+  dateFilter: {
+    start: string;
+    end: string;
+  };
+  skip: number;
+}) => {
+  const where: Prisma.order_tableWhereInput = {};
+  const { take, skip, teamId } = params;
+
+  const offset = (skip - 1) * take;
+
+  const { search, dateFilter } = params;
+
+  const startDate = dateFilter.start ? new Date(dateFilter.start) : undefined;
+
+  const formattedStartDate = startDate ? startDate : "";
+
+  const endDate = dateFilter.end ? new Date(dateFilter.end) : undefined;
+
+  const formattedEndDate = endDate ? endDate : "";
+
+  if (search) {
+    where.order_number = {
+      contains: search,
+    };
+  }
+
+  if (formattedStartDate) {
+    where.order_created_at = {
+      gte: formattedStartDate,
+      lte: formattedEndDate,
+    };
+  }
+
+  const orders = await prisma.order_table.findMany({
+    where: {
+      order_team_id: teamId,
+      ...where,
+    },
+    select: {
+      order_id: true,
+      order_number: true,
+      order_total: true,
+      order_status: true,
+      order_created_at: true,
+      order_phone: true,
+      order_payment_method: true,
+      order_team: {
+        select: {
+          team_name: true,
+        },
+      },
+      order_user: {
+        select: {
+          user_email: true,
+        },
+      },
+    },
+    take,
+    skip: offset,
+  });
+
+  const count = await prisma.order_table.count({
+    where: {
+      order_team_id: teamId,
+      ...where,
+    },
+  });
+
+  const formattedOrders = orders.map((order) => ({
+    order_id: order.order_id,
+    order_number: order.order_number,
+    order_total: order.order_total,
+    order_status: order.order_status,
+    order_created_at: order.order_created_at,
+    order_phone: order.order_phone,
+    order_team: order.order_team.team_name,
+    order_user: order.order_user?.user_email,
+    order_payment_method: order.order_payment_method,
+  }));
+
+  return { orders: formattedOrders, count };
 };

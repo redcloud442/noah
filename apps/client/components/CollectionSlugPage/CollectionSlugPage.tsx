@@ -6,11 +6,13 @@ import {
   product_table,
   product_variant_table,
   variant_sample_image_table,
+  variant_size_table,
 } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "../ui/badge";
 import ButtonVariant from "../ui/button-variant";
 import { Card, CardHeader } from "../ui/card";
@@ -20,6 +22,7 @@ type Props = {
   products: (product_table & {
     product_variants: (product_variant_table & {
       variant_sample_images: variant_sample_image_table[];
+      variant_sizes: variant_size_table[];
     })[];
   })[];
   collectionSlug: string;
@@ -73,7 +76,11 @@ const CollectionSlugPage = ({
 
       setProducts((prev) => [...prev, ...data]);
     } catch (e) {
-      console.log(e);
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Error fetching products");
+      }
     }
   };
 
@@ -118,14 +125,14 @@ const CollectionSlugPage = ({
         </ButtonVariant>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {products.map((product) => {
           const imageUrl = getFirstImage(product);
 
           return (
             <Card
               key={product.product_id}
-              className="shadow-md hover:shadow-xl transition"
+              className="shadow-md hover:shadow-xl transition cursor-pointer"
               onClick={() => {
                 router.push(
                   `/${teamName}/admin/product/${product.product_slug}`
@@ -140,8 +147,9 @@ const CollectionSlugPage = ({
                       7 * 24 * 60 * 60 * 1000 && (
                       <Badge className="bg-green-500 text-white">NEW!</Badge>
                     )}
-                  {product.product_variants?.[0]?.product_variant_quantity ===
-                    0 && (
+                  {product.product_variants?.[0]?.variant_sizes.some(
+                    (size) => size.variant_size_quantity === 0
+                  ) && (
                     <Badge className="bg-gray-500 text-white">SOLD OUT</Badge>
                   )}
                 </div>

@@ -54,8 +54,8 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   );
 
   return (
-    <div className="min-h-screen h-auto px-6 bg-gray-100 text-black flex justify-center">
-      <div className="w-full max-w-6xl p-6 rounded-md flex flex-col md:flex-row gap-6 h-auto">
+    <div className="min-h-screen h-auto px-6 text-black ">
+      <div className="w-full p-6 rounded-md flex flex-col xl:flex-row gap-6 h-auto">
         <div className="w-full md:w-1/2 space-y-6 bg-white p-6 rounded-md h-fit">
           <div className="flex justify-between items-center border-b pb-2">
             <h1 className="text-2xl font-bold pb-2">

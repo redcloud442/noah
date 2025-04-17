@@ -1,26 +1,22 @@
-import { paymentCreatePaymentSchema, paymentSchema } from "@packages/shared";
 import type { Context, Next } from "hono";
-import { getCookie } from "hono/cookie";
-import { verify } from "hono/jwt";
 import { redis } from "../../utils/redis.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-strong-secret";
+import {
+  paymentCreatePaymentSchema,
+  paymentSchema,
+} from "../../utils/schema.js";
 
 export const paymentMiddleware = async (c: Context, next: Next) => {
   const userData = c.get("user");
-  const authToken = getCookie(c, "auth_token");
-  let user: { role?: string } | null = null;
 
   if (!userData) {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (userData && authToken) {
-    const decoded = await verify(authToken, JWT_SECRET);
-    const payload = decoded as { role?: string; email?: string; id?: string };
-    user = payload;
-  } else if (userData && !authToken) {
-    user = userData;
+  if (
+    userData.user_metadata.role !== "MEMBER" &&
+    userData.user_metadata.role !== "ADMIN"
+  ) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   const {
@@ -64,11 +60,9 @@ export const paymentMiddleware = async (c: Context, next: Next) => {
 
   const isRateLimited = await redis.rateLimit(key, 100, 60);
 
-  if (isRateLimited) {
+  if (!isRateLimited) {
     return c.json({ message: "Too many requests" }, 429);
   }
-
-  c.set("user", user);
 
   c.set("params", validate.data);
 
@@ -80,16 +74,12 @@ export const paymentCreatePaymentMiddleware = async (
   next: Next
 ) => {
   const userData = c.get("user");
-  const authToken = getCookie(c, "auth_token");
 
-  let user: { role?: string } | null = null;
-
-  if (userData && authToken) {
-    const decoded = await verify(authToken, JWT_SECRET);
-    const payload = decoded as { role?: string; email?: string; id?: string };
-    user = payload;
-  } else if (userData && !authToken) {
-    user = userData;
+  if (
+    userData.user_metadata.role !== "MEMBER" &&
+    userData.user_metadata.role !== "ADMIN"
+  ) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   const { order_number, payment_method, payment_details, payment_type } =
@@ -103,6 +93,7 @@ export const paymentCreatePaymentMiddleware = async (
   });
 
   if (!validate.success) {
+    console.log(validate.error);
     return c.json(
       { message: "Invalid request", errors: validate.error.errors },
       400
@@ -117,8 +108,6 @@ export const paymentCreatePaymentMiddleware = async (
     return c.json({ message: "Too many requests" }, 429);
   }
 
-  c.set("user", user);
-
   c.set("params", validate.data);
 
   await next();
@@ -126,15 +115,12 @@ export const paymentCreatePaymentMiddleware = async (
 
 export const paymentGetMiddleware = async (c: Context, next: Next) => {
   const userData = c.get("user");
-  const authToken = getCookie(c, "auth_token");
-  let user: { role?: string } | null = null;
 
-  if (userData && authToken) {
-    const decoded = await verify(authToken, JWT_SECRET);
-    const payload = decoded as { role?: string; email?: string; id?: string };
-    user = payload;
-  } else if (userData && !authToken) {
-    user = userData;
+  if (
+    userData.user_metadata.role !== "MEMBER" &&
+    userData.user_metadata.role !== "ADMIN"
+  ) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   const { orderNumber } = c.req.param();
@@ -151,8 +137,6 @@ export const paymentGetMiddleware = async (c: Context, next: Next) => {
   if (!isRateLimited) {
     return c.json({ message: "Too many requests" }, 429);
   }
-
-  c.set("user", user);
 
   c.set("params", { paymentIntentId, clientKey, orderNumber });
 

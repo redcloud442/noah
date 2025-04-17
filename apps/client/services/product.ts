@@ -20,7 +20,9 @@ export const productService = {
 
     return data;
   },
-  createProductCategory: async (params: ProductCategoryForm) => {
+  createProductCategory: async (
+    params: ProductCategoryForm & { imageUrl: string }
+  ) => {
     const { data } = await axios.post("/api/v1/product/collections", params);
 
     if (data.error) {
@@ -32,6 +34,16 @@ export const productService = {
 
   createProduct: async (params: typeProductCreateSchema[]) => {
     const { data } = await axios.post("/api/v1/product", params);
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
+
+  updateProduct: async (params: typeProductCreateSchema[]) => {
+    const { data } = await axios.put("/api/v1/product", params);
 
     if (data.error) {
       throw new Error(data.error);

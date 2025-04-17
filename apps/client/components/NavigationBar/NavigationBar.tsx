@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ShoppingCartModal from "../ShoppingCartModal/ShoppingCartModal";
 import { Button } from "../ui/button";
+
 const components: {
   imageSrc: string;
   title: string;
@@ -37,7 +38,19 @@ const components: {
   },
 ];
 
-export const NavigationBar = () => {
+type Collection = {
+  product_category_id: string;
+  product_category_name: string;
+  product_category_image: string | null;
+  product_category_description: string;
+  product_category_slug: string;
+};
+
+export const NavigationBar = ({
+  collections,
+}: {
+  collections: Collection[];
+}) => {
   const { userData, setUserData } = useUserDataStore();
   const supabase = createClient();
   const router = useRouter();
@@ -128,7 +141,18 @@ export const NavigationBar = () => {
 
                 {/* Other items */}
                 <div className="flex flex-col gap-2">
-                  <ListItem
+                  {collections.map((collection) => (
+                    <ListItem
+                      key={collection.product_category_id}
+                      title={collection.product_category_name}
+                      description={collection.product_category_description}
+                      imageSrc={collection.product_category_image || ""}
+                      link={`/collections/${collection.product_category_slug.toLowerCase()}`}
+                      setHoveredItem={setHoveredItem}
+                    />
+                  ))}
+
+                  {/* <ListItem
                     title="Tee"
                     description="Tee that is comfortable and stylish."
                     imageSrc="/assets/model/noire-10278.jpg"
@@ -156,7 +180,7 @@ export const NavigationBar = () => {
                     setHoveredItem={setHoveredItem}
                   >
                     Hoodies that are comfortable and stylish
-                  </ListItem>
+                  </ListItem> */}
                 </div>
               </ul>
             </NavigationMenuContent>
@@ -182,7 +206,7 @@ export const NavigationBar = () => {
             </NavigationMenuContent>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <NavigationMenuTrigger>Featured Products</NavigationMenuTrigger>
+            <NavigationMenuTrigger>Fresh Drops</NavigationMenuTrigger>
             <NavigationMenuContent>
               <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                 {components.map((component) => (
@@ -301,7 +325,14 @@ const ListItem = React.forwardRef<
             )}
             {...props}
           >
-            <div className="text-sm font-medium leading-none">{title}</div>
+            <div className="text-sm font-medium leading-none">
+              {title.slice(0, 1).toUpperCase() + title.slice(1)}
+            </div>
+            {description && (
+              <span className="text-xs text-muted-foreground">
+                {description}
+              </span>
+            )}
             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
               {children}
             </p>

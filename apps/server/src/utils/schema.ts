@@ -24,6 +24,8 @@ export const paymentSchema = z
         product_variant_id: z.string(),
         product_variant_quantity: z.number(),
         product_variant_price: z.number(),
+        product_variant_size: z.string().optional(),
+        product_variant_color: z.string().optional(),
       })
     ),
   })
@@ -97,6 +99,7 @@ export const productCategorySchema = z.object({
   productCategoryName: z.string().min(1, "Product category name is required"),
   productCategoryDescription: z.string().optional(),
   teamId: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export type ProductCategoryForm = z.infer<typeof productCategorySchema>;

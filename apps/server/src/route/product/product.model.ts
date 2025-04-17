@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import type { typeProductCreateSchema } from "../../schema/schema.js";
+import { slugifyVariant } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
 
 export const productCollectionModel = async (params: {
@@ -53,14 +54,18 @@ export const productCreateModel = async (params: {
   productCategoryName: string;
   productCategoryDescription: string;
   teamId: string;
+  imageUrl: string;
 }) => {
-  const { productCategoryName, productCategoryDescription, teamId } = params;
+  const { productCategoryName, productCategoryDescription, teamId, imageUrl } =
+    params;
 
   const productCategory = await prisma.product_category_table.create({
     data: {
       product_category_name: productCategoryName,
       product_category_description: productCategoryDescription,
       product_category_team_id: teamId,
+      product_category_image: imageUrl,
+      product_category_slug: slugifyVariant(productCategoryName),
     },
     select: {
       product_category_id: true,
@@ -69,6 +74,7 @@ export const productCreateModel = async (params: {
       product_category_team_id: true,
       product_category_created_at: true,
       product_category_updated_at: true,
+      product_category_slug: true,
     },
   });
 
@@ -106,20 +112,27 @@ export const productVariantCreateModel = async (
         },
       });
 
-      // Create variants only (flat data, no nested images)
+      // Create product variants
       await tx.product_variant_table.createMany({
         data: product_variants.map((variant) => ({
           product_variant_id: variant.product_variant_id,
           product_variant_product_id: product_id,
           product_variant_color: variant.product_variant_color,
-          product_variant_size: variant.product_variant_size,
-          product_variant_quantity: variant.product_variant_quantity,
           product_variant_slug: variant.product_variant_slug,
         })),
       });
 
-      // Create images for each variant separately
       for (const variant of product_variants) {
+        if (variant.variant_sizes.length > 0) {
+          await tx.variant_size_table.createMany({
+            data: variant.variant_sizes.map((size) => ({
+              variant_size_id: size.variant_size_id,
+              variant_size_variant_id: variant.product_variant_id,
+              variant_size_value: size.variant_size_value,
+              variant_size_quantity: size.variant_size_quantity,
+            })),
+          });
+        }
         if (variant.variant_sample_images.length > 0) {
           await tx.variant_sample_image_table.createMany({
             data: variant.variant_sample_images.map((image) => ({
@@ -135,6 +148,105 @@ export const productVariantCreateModel = async (
   });
 
   return { message: "Product variant created successfully" };
+};
+
+export const productVariantUpdateModel = async (
+  params: typeProductCreateSchema
+) => {
+  await prisma.$transaction(async (tx) => {
+    for (const product of params) {
+      const {
+        product_id,
+        product_name,
+        product_description,
+        product_price,
+        product_sale_percentage,
+        product_slug,
+        product_category_id,
+        product_team_id,
+        product_variants,
+      } = product;
+
+      // 1. Update product_table
+      await tx.product_table.update({
+        where: { product_id },
+        data: {
+          product_name,
+          product_description,
+          product_price,
+          product_sale_percentage,
+          product_slug,
+          product_category_id,
+          product_team_id,
+        },
+      });
+
+      for (const variant of product_variants) {
+        const {
+          product_variant_id,
+          product_variant_color,
+          product_variant_slug,
+          variant_sizes,
+          variant_sample_images,
+        } = variant;
+        console.log(product_variant_id, "variant");
+
+        if (variant.product_variant_is_deleted) {
+          await tx.product_variant_table.update({
+            where: { product_variant_id: product_variant_id },
+            data: {
+              product_variant_is_deleted: true,
+            },
+          });
+
+          continue;
+        }
+
+        await tx.product_variant_table.update({
+          where: { product_variant_id },
+          data: {
+            product_variant_color,
+            product_variant_slug,
+          },
+        });
+
+        await tx.variant_size_table.deleteMany({
+          where: {
+            variant_size_variant_id: product_variant_id,
+          },
+        });
+
+        await tx.variant_sample_image_table.deleteMany({
+          where: {
+            variant_sample_image_product_variant_id: product_variant_id,
+          },
+        });
+
+        if (variant_sizes.length > 0) {
+          await tx.variant_size_table.createMany({
+            data: variant_sizes.map((size) => ({
+              variant_size_id: size.variant_size_id,
+              variant_size_variant_id: product_variant_id,
+              variant_size_value: size.variant_size_value,
+              variant_size_quantity: size.variant_size_quantity,
+            })),
+          });
+        }
+
+        if (variant_sample_images.length > 0) {
+          await tx.variant_sample_image_table.createMany({
+            data: variant_sample_images.map((image) => ({
+              variant_sample_image_image_url:
+                image.variant_sample_image_image_url,
+              variant_sample_image_product_variant_id: product_variant_id,
+            })),
+          });
+        }
+      }
+    }
+  });
+
+  return { message: "Product and variants updated successfully" };
 };
 
 export const productCollectionSlugModel = async (params: {
@@ -188,9 +300,14 @@ export const productCollectionSlugModel = async (params: {
         select: {
           product_variant_id: true,
           product_variant_color: true,
-          product_variant_size: true,
-          product_variant_quantity: true,
           product_variant_slug: true,
+          variant_sizes: {
+            select: {
+              variant_size_id: true,
+              variant_size_value: true,
+              variant_size_quantity: true,
+            },
+          },
           variant_sample_images: {
             select: {
               variant_sample_image_image_url: true,
@@ -258,9 +375,14 @@ export const productGetAllProductModel = async (params: {
         select: {
           product_variant_id: true,
           product_variant_color: true,
-          product_variant_size: true,
-          product_variant_quantity: true,
           product_variant_slug: true,
+          variant_sizes: {
+            select: {
+              variant_size_id: true,
+              variant_size_value: true,
+              variant_size_quantity: true,
+            },
+          },
           variant_sample_images: {
             select: {
               variant_sample_image_image_url: true,
