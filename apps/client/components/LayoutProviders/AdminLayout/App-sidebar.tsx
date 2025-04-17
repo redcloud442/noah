@@ -22,13 +22,12 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { team_table } from "@prisma/client";
 
 // This is sample data.
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  teams: team_table[];
-  activeTeam: team_table;
+  teams: { team_name: string }[];
+  activeTeam: { team_name: string };
 };
 
 export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {

@@ -18,9 +18,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { team_table } from "@prisma/client";
 
-export function TeamSwitcher({ teams }: { teams: team_table[] }) {
+export function TeamSwitcher({ teams }: { teams: { team_name: string }[] }) {
   const { isMobile } = useSidebar();
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
