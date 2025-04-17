@@ -24,7 +24,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-const CheckoutNumberPage = () => {
+const CheckoutPage = () => {
   const params = useParams();
   const router = useRouter();
   const { cart, setCart } = useCartStore();
@@ -558,4 +558,4 @@ const CheckoutNumberPage = () => {
   );
 };
 
-export default CheckoutNumberPage;
+export default CheckoutPage;
