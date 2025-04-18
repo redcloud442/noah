@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 import {
   paymentCreatePaymentSchema,
   paymentSchema,
@@ -56,15 +56,19 @@ export const paymentMiddleware = async (c: Context, next: Next) => {
     );
   }
 
-  const key = `payment:${userData.id}`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${userData.id}:payment-create`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
   c.set("params", validate.data);
+  c.set("user", userData);
 
   await next();
 };
@@ -93,22 +97,25 @@ export const paymentCreatePaymentMiddleware = async (
   });
 
   if (!validate.success) {
-    console.log(validate.error);
     return c.json(
       { message: "Invalid request", errors: validate.error.errors },
       400
     );
   }
 
-  const key = `payment-create:${userData.id}`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${userData.id}:payment-create`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
   c.set("params", validate.data);
+  c.set("user", userData);
 
   await next();
 };
@@ -130,11 +137,14 @@ export const paymentGetMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Invalid request" }, 400);
   }
 
-  const key = `payment:${userData.id}-get`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${userData.id}:payment-get`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 

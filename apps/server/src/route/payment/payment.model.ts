@@ -284,7 +284,6 @@ export const createPaymentMethod = async (
       nextAction: attachPaymentMethod.data.data.attributes.next_action,
     };
   } catch (error) {
-    console.log(error);
     throw new Error("Payment process failed");
   }
 };

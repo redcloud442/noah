@@ -1,13 +1,18 @@
 import type { Context, Next } from "hono";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 import { addressCreateSchema, orderGetSchema } from "../../utils/schema.js";
 
 export const addressGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
 
-  const isRateLimited = await redis.rateLimit(user.id, 10, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:address-get`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -38,9 +43,14 @@ export const addressGetMiddleware = async (c: Context, next: Next) => {
 export const addressCreateMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
 
-  const isRateLimited = await redis.rateLimit(user.id, 10, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:address-create`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -61,9 +71,14 @@ export const addressCreateMiddleware = async (c: Context, next: Next) => {
 export const addressPutDefaultMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
 
-  const isRateLimited = await redis.rateLimit(user.id, 10, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:address-put-default`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -82,9 +97,14 @@ export const addressPutDefaultMiddleware = async (c: Context, next: Next) => {
 export const addressDeleteMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
 
-  const isRateLimited = await redis.rateLimit(user.id, 10, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:address-delete`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 

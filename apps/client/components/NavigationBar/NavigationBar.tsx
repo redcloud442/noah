@@ -15,6 +15,7 @@ import {
 import useUserDataStore from "@/lib/userDataStore";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
+import { FeaturedProductType, FreshDropsType } from "@/utils/types";
 import { LogOut, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -22,21 +23,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ShoppingCartModal from "../ShoppingCartModal/ShoppingCartModal";
 import { Button } from "../ui/button";
-
-const components: {
-  imageSrc: string;
-  title: string;
-  href: string;
-  description: string;
-}[] = [
-  {
-    imageSrc: "/assets/model/noire-10278.jpg",
-    title: "Noire fashion",
-    href: "/collections/noire-fashion",
-    description:
-      "Noire fashion is a fashion brand that sells fashionable and stylish clothes.",
-  },
-];
 
 type Collection = {
   product_category_id: string;
@@ -48,8 +34,12 @@ type Collection = {
 
 export const NavigationBar = ({
   collections,
+  freshDrops,
+  featuredProducts,
 }: {
   collections: Collection[];
+  freshDrops: FreshDropsType[];
+  featuredProducts: FeaturedProductType[];
 }) => {
   const { userData, setUserData } = useUserDataStore();
   const supabase = createClient();
@@ -127,13 +117,10 @@ export const NavigationBar = ({
                         className="w-full h-full object-cover transition-opacity duration-500"
                       />
 
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
-                        <h2 className="text-lg font-medium">
+                      <div className="absolute right-0 bottom-0 inset-0 flex flex-col justify-end p-4">
+                        <h2 className="text-lg font-medium uppercase">
                           {hoveredItem.title}
                         </h2>
-                        <p className="text-sm text-muted-foreground">
-                          {hoveredItem.description}
-                        </p>
                       </div>
                     </div>
                   </Link>
@@ -151,36 +138,6 @@ export const NavigationBar = ({
                       setHoveredItem={setHoveredItem}
                     />
                   ))}
-
-                  {/* <ListItem
-                    title="Tee"
-                    description="Tee that is comfortable and stylish."
-                    imageSrc="/assets/model/noire-10278.jpg"
-                    link="/collections/tee"
-                    setHoveredItem={setHoveredItem}
-                  >
-                    Tee that is comfortable and stylish
-                  </ListItem>
-
-                  <ListItem
-                    title="Pants"
-                    description="Pants that are comfortable and stylish."
-                    imageSrc="/assets/model/noire-10243.jpg"
-                    link="/collections/pants"
-                    setHoveredItem={setHoveredItem}
-                  >
-                    Pants that are comfortable and stylish
-                  </ListItem>
-
-                  <ListItem
-                    title="Hoodies"
-                    description="Hoodies that are comfortable and stylish."
-                    imageSrc="/assets/model/QR_59794.jpg"
-                    link="/collections/hoodies"
-                    setHoveredItem={setHoveredItem}
-                  >
-                    Hoodies that are comfortable and stylish
-                  </ListItem> */}
                 </div>
               </ul>
             </NavigationMenuContent>
@@ -189,18 +146,23 @@ export const NavigationBar = ({
           <NavigationMenuItem>
             <NavigationMenuTrigger>Featured Products</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                {components.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
+              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-3 lg:w-[1000px]">
+                {featuredProducts.map((component) => (
+                  <ListItemWithImage
+                    key={component.product_variant_id}
+                    title={component.product_variant_color}
+                    href={component.product_variant_slug || ""}
                     setHoveredItem={setHoveredItem}
-                    description={component.description}
-                    imageSrc={component.imageSrc as string}
+                    description={
+                      component.product_variant_product.product_description
+                    }
+                    imageSrc={
+                      component.variant_sample_images[0]
+                        .variant_sample_image_image_url
+                    }
                   >
-                    {component.description}
-                  </ListItem>
+                    {component.product_variant_slug?.replace(/-/g, " ")}
+                  </ListItemWithImage>
                 ))}
               </ul>
             </NavigationMenuContent>
@@ -208,18 +170,23 @@ export const NavigationBar = ({
           <NavigationMenuItem>
             <NavigationMenuTrigger>Fresh Drops</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                {components.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
+              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-3 lg:w-[1000px]">
+                {freshDrops.map((component) => (
+                  <ListItemWithImage
+                    key={component.product_variant_id}
+                    title={component.product_variant_color}
+                    href={component.product_variant_slug || ""}
                     setHoveredItem={setHoveredItem}
-                    description={component.description}
-                    imageSrc={component.imageSrc as string}
+                    description={
+                      component.product_variant_product.product_description
+                    }
+                    imageSrc={
+                      component.variant_sample_images[0]
+                        .variant_sample_image_image_url
+                    }
                   >
-                    {component.description}
-                  </ListItem>
+                    {component.product_variant_slug?.replace(/-/g, " ")}
+                  </ListItemWithImage>
                 ))}
               </ul>
             </NavigationMenuContent>
@@ -236,43 +203,35 @@ export const NavigationBar = ({
           </NavigationMenuItem>
           <NavigationMenuItem>
             {userData?.teamMemberProfile?.team_member_role === "ADMIN" ? (
-              <Link
-                href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
-                passHref
-              >
-                <NavigationMenuLink
+              <NavigationMenuLink asChild>
+                <Link
+                  href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
                   className={navigationMenuTriggerStyle()}
-                  asChild
                 >
+                  <User className="w-5 h-5" />
+                </Link>
+              </NavigationMenuLink>
+            ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ? (
+              <>
+                <NavigationMenuLink asChild>
                   <Link
-                    href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
+                    href="/account"
+                    className={navigationMenuTriggerStyle()}
                   >
                     <User className="w-5 h-5" />
                   </Link>
                 </NavigationMenuLink>
-              </Link>
-            ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ? (
-              <>
-                <Link href="/account" passHref>
-                  <NavigationMenuLink
-                    className={navigationMenuTriggerStyle()}
-                    asChild
-                  >
-                    <Link href="/account">
-                      <User className="w-5 h-5" />
-                    </Link>
-                  </NavigationMenuLink>
-                </Link>
+
                 <Button variant="ghost" onClick={handleLogout}>
                   <LogOut className="w-5 h-5" />
                 </Button>
               </>
             ) : (
-              <Link href="/login" passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink asChild>
+                <Link href="/login" className={navigationMenuTriggerStyle()}>
                   <User className="w-5 h-5" />
-                </NavigationMenuLink>
-              </Link>
+                </Link>
+              </NavigationMenuLink>
             )}
           </NavigationMenuItem>
         </NavigationMenuList>
@@ -280,6 +239,74 @@ export const NavigationBar = ({
     </div>
   );
 };
+
+const ListItemWithImage = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a"> & {
+    title: string;
+    description: string;
+    imageSrc: string;
+    link?: string;
+    setHoveredItem: React.Dispatch<
+      React.SetStateAction<{
+        title: string;
+        description: string;
+        imageSrc: string;
+      }>
+    >;
+  }
+>(
+  (
+    {
+      className,
+      title,
+      description,
+      imageSrc,
+      setHoveredItem,
+      children,
+      link,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <li>
+        <NavigationMenuLink asChild>
+          <Link
+            href={link || "#"}
+            ref={ref}
+            onMouseEnter={() =>
+              setHoveredItem({ title, description, imageSrc })
+            }
+            className={cn(
+              "block select-none space-y-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative",
+              className
+            )}
+            {...props}
+          >
+            <Image
+              src={imageSrc}
+              alt={title}
+              width={300}
+              height={300}
+              quality={100}
+              className="w-64 h-44 object-cover object-top transition-opacity duration-500"
+            />
+            <div className="text-md font-medium leading-none uppercase">
+              {children}
+            </div>
+            {description && (
+              <span className="text-xs text-muted-foreground text-justify w-64">
+                {description}
+              </span>
+            )}
+          </Link>
+        </NavigationMenuLink>
+      </li>
+    );
+  }
+);
+ListItemWithImage.displayName = "ListItemWithImage";
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
@@ -329,11 +356,11 @@ const ListItem = React.forwardRef<
               {title.slice(0, 1).toUpperCase() + title.slice(1)}
             </div>
             {description && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground text-black">
                 {description}
               </span>
             )}
-            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground text-black">
               {children}
             </p>
           </Link>

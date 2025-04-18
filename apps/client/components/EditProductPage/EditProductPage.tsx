@@ -43,7 +43,7 @@ const EditProductPage = ({
     control,
     handleSubmit,
     register,
-    watch,
+
     formState: { errors, isSubmitting },
   } = useForm<ProductFormType>({
     resolver: zodResolver(productSchema),
@@ -55,8 +55,6 @@ const EditProductPage = ({
     name: "products",
   });
 
-  const watchedProducts = watch("products");
-  console.log(watchedProducts);
   useEffect(() => {
     const fetchCategories = async () => {
       try {

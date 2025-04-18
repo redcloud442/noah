@@ -174,3 +174,7 @@ export const productGetAllProductSchema = z.object({
   teamId: z.string().optional(),
   category: z.string().optional(),
 });
+
+export const productSetFeaturedProductSchema = z.object({
+  productId: z.string(),
+});

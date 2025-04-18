@@ -40,12 +40,82 @@ export default async function RootLayout({
     },
   });
 
+  const freshDrops = await prisma.product_variant_table.findMany({
+    where: {
+      product_variant_is_deleted: false,
+    },
+    select: {
+      product_variant_id: true,
+      product_variant_color: true,
+      product_variant_slug: true,
+      product_variant_product: {
+        select: {
+          product_id: true,
+          product_name: true,
+          product_slug: true,
+          product_description: true,
+        },
+      },
+      variant_sample_images: {
+        select: {
+          variant_sample_image_id: true,
+          variant_sample_image_image_url: true,
+        },
+        take: 1,
+      },
+    },
+    orderBy: {
+      product_variant_product: {
+        product_created_at: "desc",
+      },
+    },
+    take: 5,
+  });
+
+  const featuredProducts = await prisma.product_variant_table.findMany({
+    where: {
+      product_variant_is_deleted: false,
+      product_variant_is_featured: true,
+    },
+    select: {
+      product_variant_id: true,
+      product_variant_color: true,
+      product_variant_slug: true,
+      product_variant_product: {
+        select: {
+          product_id: true,
+          product_name: true,
+          product_slug: true,
+          product_description: true,
+        },
+      },
+      variant_sample_images: {
+        select: {
+          variant_sample_image_id: true,
+          variant_sample_image_image_url: true,
+        },
+        take: 1,
+      },
+    },
+    orderBy: {
+      product_variant_product: {
+        product_created_at: "desc",
+      },
+    },
+    take: 5,
+  });
+
   return (
     <html suppressHydrationWarning lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <Providers collections={collections} user={user}>
+        <Providers
+          freshDrops={freshDrops}
+          collections={collections}
+          featuredProducts={featuredProducts}
+          user={user}
+        >
           {children}
         </Providers>
       </body>

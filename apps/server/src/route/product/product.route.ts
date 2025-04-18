@@ -4,6 +4,7 @@ import {
   productCreateController,
   productGetAllProductController,
   productGetController,
+  productSetFeaturedProductController,
   productVariantCreateController,
   productVariantUpdateController,
 } from "./product.controller.js";
@@ -13,6 +14,7 @@ import {
   productCollectionsPostMiddleware,
   productCreateMiddleware,
   productGetAllProductMiddleware,
+  productSetFeaturedProductMiddleware,
   productUpdateMiddleware,
 } from "./product.middleware.js";
 
@@ -40,6 +42,12 @@ product.post(
   "/collections/:collectionSlug",
   productCollectionSlugMiddleware,
   productCollectionSlugController
+);
+
+product.post(
+  "/set-featured",
+  productSetFeaturedProductMiddleware,
+  productSetFeaturedProductController
 );
 
 export default product;

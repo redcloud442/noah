@@ -64,7 +64,7 @@ const HeroSection = () => {
       {/* Text Content */}
       <div className="absolute bottom-56 inset-0 flex items-end justify-center text-white text-2xl sm:text-3xl lg:text-4xl font-bold z-20">
         <div className="flex flex-col items-center text-center gap-4">
-          <h1>Discover the latest trends in Noire Fashion</h1>
+          <h1>Discover the latest trends in Noir Fashion</h1>
           <Link href="/collections">
             <Button
               size="lg"

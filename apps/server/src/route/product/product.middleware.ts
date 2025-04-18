@@ -4,15 +4,27 @@ import {
   productCollectionSlugSchema,
   productCreateSchema,
 } from "../../schema/schema.js";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 import {
   productCategorySchema,
   productCollectionSchema,
   productGetAllProductSchema,
+  productSetFeaturedProductSchema,
 } from "../../utils/schema.js";
 
 export const productCollectionMiddleware = async (c: Context, next: Next) => {
-  await adminAuthProtection(c);
+  const user = await adminAuthProtection(c);
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-collection`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
 
   const { search, take, skip, teamId } = c.req.query();
 
@@ -39,7 +51,18 @@ export const productCollectionsPostMiddleware = async (
   c: Context,
   next: Next
 ) => {
-  await adminAuthProtection(c);
+  const user = await adminAuthProtection(c);
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-collections-post`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
 
   const { productCategoryName, productCategoryDescription, teamId, imageUrl } =
     await c.req.json();
@@ -65,9 +88,14 @@ export const productCreateMiddleware = async (c: Context, next: Next) => {
 
   const key = `product:${user.id}-create`;
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-create`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -76,7 +104,6 @@ export const productCreateMiddleware = async (c: Context, next: Next) => {
   const validate = productCreateSchema.safeParse(body);
 
   if (!validate.success) {
-    console.log(validate.error);
     return c.json({ message: "Invalid request" }, 400);
   }
 
@@ -88,11 +115,14 @@ export const productCreateMiddleware = async (c: Context, next: Next) => {
 export const productUpdateMiddleware = async (c: Context, next: Next) => {
   const user = await adminAuthProtection(c);
 
-  const key = `product:${user.id}-update`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-update`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -101,7 +131,6 @@ export const productUpdateMiddleware = async (c: Context, next: Next) => {
   const validate = productCreateSchema.safeParse(body);
 
   if (!validate.success) {
-    console.log(validate.error);
     return c.json({ message: "Invalid request" }, 400);
   }
 
@@ -116,11 +145,14 @@ export const productCollectionSlugMiddleware = async (
 ) => {
   const user = await adminAuthProtection(c);
 
-  const key = `product:${user.id}-collection-slug`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-collection-slug`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -141,11 +173,52 @@ export const productGetAllProductMiddleware = async (
   c: Context,
   next: Next
 ) => {
-  await adminAuthProtection(c);
+  const user = await adminAuthProtection(c);
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-get-all`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
 
   const { params } = await c.req.json();
 
   const validate = productGetAllProductSchema.safeParse(params);
+
+  if (!validate.success) {
+    return c.json({ message: "Invalid request" }, 400);
+  }
+
+  c.set("params", validate.data);
+
+  return await next();
+};
+
+export const productSetFeaturedProductMiddleware = async (
+  c: Context,
+  next: Next
+) => {
+  const user = await adminAuthProtection(c);
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-set-featured`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  const { params } = await c.req.json();
+
+  const validate = productSetFeaturedProductSchema.safeParse(params);
 
   if (!validate.success) {
     return c.json({ message: "Invalid request" }, 400);

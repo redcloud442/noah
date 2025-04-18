@@ -6,7 +6,7 @@ import {
   cartPostSchema,
   cartPutSchema,
 } from "../../schema/schema.js";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 
 export const cartMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
@@ -15,9 +15,14 @@ export const cartMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:cart-get`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -38,9 +43,14 @@ export const cartPostMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:cart-post`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -71,9 +81,14 @@ export const cartDeleteMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:cart-delete`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -101,9 +116,14 @@ export const cartDeleteMiddleware = async (c: Context, next: Next) => {
 export const cartPutMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
 
-  const isRateLimited = await redis.rateLimit(user.id, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:cart-put`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 

@@ -1,8 +1,10 @@
 "use client";
 
 import { Toaster as ToasterSonner } from "@/components/ui/sonner";
+import useFeatureProductStore from "@/lib/featureProductStore";
 import useUserDataStore from "@/lib/userDataStore";
 import { authService } from "@/services/auth";
+import { FeaturedProductType, FreshDropsType } from "@/utils/types";
 import { User } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
@@ -16,6 +18,8 @@ import { Toaster } from "../ui/toaster";
 type RootLayoutProviderProps = {
   children: React.ReactNode;
   user: User | null;
+  freshDrops: FreshDropsType[];
+  featuredProducts: FeaturedProductType[];
   collections: {
     product_category_id: string;
     product_category_name: string;
@@ -29,12 +33,20 @@ export function Providers({
   children,
   user,
   collections,
+  freshDrops,
+  featuredProducts,
 }: RootLayoutProviderProps) {
   const queryClient = new QueryClient();
   const pathname = usePathname();
-  const { teamName } = useParams();
   const isInAdminPath = pathname.includes("admin");
-  const { setUserData } = useUserDataStore();
+
+  const { teamName } = useParams();
+  const { setUserData, userData } = useUserDataStore();
+  const { setFeaturedProducts } = useFeatureProductStore();
+
+  useEffect(() => {
+    setFeaturedProducts(featuredProducts);
+  }, [featuredProducts]);
 
   const fetchUser = async () => {
     try {
@@ -57,8 +69,8 @@ export function Providers({
   }, [user, teamName]);
 
   const isAdmin = useCallback(() => {
-    return user?.user_metadata.role === "ADMIN";
-  }, [user]);
+    return userData?.teamMemberProfile.team_member_role === "ADMIN";
+  }, [userData]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -68,11 +80,15 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        {isAdmin() && isInAdminPath ? (
+        {isAdmin() || isInAdminPath ? (
           children
         ) : (
           <>
-            <NavigationBar collections={collections} />
+            <NavigationBar
+              freshDrops={freshDrops}
+              collections={collections}
+              featuredProducts={featuredProducts}
+            />
             <MobileNavigationBar collections={collections} />
             <main>{children}</main>
             <Footer />

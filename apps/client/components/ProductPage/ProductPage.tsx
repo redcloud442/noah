@@ -1,7 +1,7 @@
 "use client";
 
 import useUserDataStore from "@/lib/userDataStore";
-import { useProductQuery } from "@/query/collectionQuery";
+import { productService } from "@/services/product";
 import { createClient } from "@/utils/supabase/client";
 import { VariantProductType } from "@/utils/types";
 import { product_category_table } from "@prisma/client";
@@ -34,9 +34,14 @@ type FormData = {
 const ProductPage = () => {
   const supabase = createClient();
   const router = useRouter();
+
   const { teamName } = useParams();
 
   const [categories, setCategories] = useState<product_category_table[]>([]);
+  const [products, setProducts] = useState<VariantProductType[]>([]);
+  const [count, setCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(false);
   const [activePage, setActivePage] = useState(1);
   const { register, handleSubmit, reset, getValues, control } =
     useForm<FormData>();
@@ -45,37 +50,88 @@ const ProductPage = () => {
   const search = getValues("search");
   const category = getValues("product_category_id");
 
-  const { data, isLoading, refetch } = useProductQuery(
-    15,
-    activePage,
-    search,
-    userData?.teamMemberProfile?.team_member_team_id,
-    category
-  );
+  const handleFetchProduct = async () => {
+    try {
+      setIsLoading(true);
+      const data = await productService.getProducts({
+        take: 15,
+        skip: activePage,
+        search,
+        teamId: userData?.teamMemberProfile?.team_member_team_id,
+        category,
+      });
+
+      setProducts(data.data);
+      setCount(data.count);
+      setIsLoading(false);
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Error fetching products");
+      }
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onSubmit = async () => {
     setActivePage(1);
-    refetch();
+    handleFetchProduct();
   };
 
   const handleRefresh = useCallback(() => {
     setActivePage(1);
     reset();
-    refetch();
-  }, [reset, refetch]);
+    handleFetchProduct();
+  }, [reset]);
 
   const handleChangePage = useCallback(
     (page: number) => {
       if (page !== activePage) {
         setActivePage(page);
-        refetch({
-          throwOnError: true,
-          cancelRefetch: true,
-        });
+        handleFetchProduct();
       }
     },
-    [activePage, refetch]
+    [activePage]
   );
+
+  const handleSetFeatured = async (productId: string) => {
+    try {
+      setIsFeaturedLoading(true);
+      const { error } = await productService.setFeaturedProduct({
+        productId,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      }
+
+      setProducts(
+        products.map((product) => {
+          if (product.product_variant_id === productId) {
+            return { ...product, product_variant_is_featured: true };
+          }
+          return product;
+        })
+      );
+
+      toast.success("Product set as featured");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error setting featured");
+      }
+    } finally {
+      setIsFeaturedLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchProduct();
+  }, [activePage]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -102,16 +158,18 @@ const ProductPage = () => {
     fetchCategories();
   }, []);
 
-  const collections = data?.data || [];
-  const count = Math.ceil((data?.count || 0) / 15);
+  const pageCount = Math.ceil((count || 0) / 15);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-4">
-        <form className="flex w-full gap-2" onSubmit={handleSubmit(onSubmit)}>
+      <div className="flex flex-wrap items-center gap-4">
+        <form
+          className="flex flex-wrap w-full gap-2"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <FloatingLabelInput
             label="Search"
-            className="w-full flex-1 max-w-2xl"
+            className="w-full max-w-4xl sm:max-w-2xl"
             {...register("search")}
           />
 
@@ -137,13 +195,8 @@ const ProductPage = () => {
             )}
           />
 
-          <Button
-            type="submit"
-            size="icon"
-            variant="outline"
-            disabled={isLoading}
-          >
-            <SearchIcon className="w-4 h-4" />
+          <Button type="submit" variant="outline" disabled={isLoading}>
+            <SearchIcon className="w-4 h-4" /> Search
           </Button>
           <Button
             variant="secondary"
@@ -161,7 +214,7 @@ const ProductPage = () => {
           + Add Product
         </Button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading
           ? Array.from({ length: 8 }).map((_, index) => (
               <Card key={index} className="shadow-md">
@@ -174,18 +227,60 @@ const ProductPage = () => {
                 </div>
               </Card>
             ))
-          : collections.map((product: VariantProductType) => (
+          : products.map((product: VariantProductType) => (
               <Card
                 key={product.product_variant_id}
-                className="shadow-md hover:shadow-xl transition cursor-pointer"
-                onClick={() =>
-                  router.push(
-                    `/${teamName}/admin/product/${product.product_variant_slug}`
-                  )
-                }
+                className="relative group shadow-md hover:shadow-xl transition"
               >
+                {/* Hover Buttons */}
+                <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
+                  <div
+                    className="flex flex-wrap justify-center gap-2"
+                    onClick={(e) => e.stopPropagation()} // prevent router push
+                  >
+                    {!product.product_variant_is_featured && (
+                      <Button
+                        onClick={() =>
+                          handleSetFeatured(product.product_variant_id)
+                        }
+                        disabled={isFeaturedLoading}
+                        variant="secondary"
+                        className="px-3 py-1 bg-yellow-500 text-sm rounded-md shadow hover:bg-yellow-600"
+                      >
+                        Set Featured
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        router.push(
+                          `/${teamName}/admin/product/${product.product_variant_product.product_slug}/edit`
+                        )
+                      }
+                      className="px-3 py-1  text-sm rounded-md shadow"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        router.push(
+                          `/${teamName}/admin/product/${product.product_variant_slug}`
+                        )
+                      }
+                      className="px-3 py-1 bg-white text-sm rounded-md shadow hover:bg-gray-100"
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+
                 <CardHeader className="relative">
                   <div className="absolute top-2 right-2 z-50 flex flex-col items-end gap-1">
+                    {product.product_variant_is_featured && (
+                      <Badge className="bg-blue-500 text-white">Featured</Badge>
+                    )}
+
                     {product.product_variant_product?.product_created_at &&
                       new Date().getTime() -
                         new Date(
@@ -194,6 +289,7 @@ const ProductPage = () => {
                         7 * 24 * 60 * 60 * 1000 && (
                         <Badge className="bg-green-500 text-white">NEW!</Badge>
                       )}
+
                     {product.variant_sizes.some(
                       (size) => size.variant_size_quantity === 0
                     ) && (
@@ -221,6 +317,7 @@ const ProductPage = () => {
                     )}
                   </div>
                 </CardHeader>
+
                 <CollectionVariantContent product={product} />
               </Card>
             ))}
@@ -229,7 +326,7 @@ const ProductPage = () => {
       <Pagination
         activePage={activePage}
         handleChangePage={handleChangePage}
-        pageCount={count}
+        pageCount={pageCount}
       />
     </div>
   );

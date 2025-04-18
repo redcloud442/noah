@@ -3,7 +3,7 @@ import { deleteCookie, getCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
 import { envConfig } from "../../env.js";
 import { loginSchema, registerSchema } from "../../schema/schema.js";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 import { checkoutSchema } from "../../utils/schema.js";
 
 const JWT_SECRET = envConfig.JWT_SECRET;
@@ -23,12 +23,16 @@ export const authLoginMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Invalid email or password" }, 400);
   }
 
-  const isRateLimited = await redis.rateLimit(email, 5, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${email}:login-post`,
+    5,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
-
   c.set("params", parsed.data);
 
   await next();
@@ -51,9 +55,14 @@ export const authRegisterMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Invalid email or password" }, 400);
   }
 
-  const isRateLimited = await redis.rateLimit(email, 5, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:register-post`,
+    5,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -79,12 +88,16 @@ export const createCheckoutTokenMiddleware = async (c: Context, next: Next) => {
 
   const key = `checkout:${checkoutNumber}`;
 
-  const isRateLimited = await redis.rateLimit(key, 5, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${checkoutNumber}:checkout-post`,
+    5,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
-
   c.set("params", parsed.data);
 
   await next();
@@ -98,11 +111,14 @@ export const verifyCheckoutTokenMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `checkout:${user.id}`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:checkout-post`,
+    5,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 

@@ -1,6 +1,6 @@
 import type { Context, Next } from "hono";
 import { userPostSchema } from "../../schema/schema.js";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 
 export const userGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
@@ -9,11 +9,14 @@ export const userGetMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `user:${user.id}`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:user-get`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 10, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -27,17 +30,18 @@ export const userPostMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `user:${user.id}`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:user-post`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 10, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
   const { params } = await c.req.json();
-
-  console.log(params);
 
   const { error } = userPostSchema.safeParse(params);
 

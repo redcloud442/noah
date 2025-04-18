@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["user_schema","team_schema", "product_schema", "order_schema", "category_schema", "payment_schema","location_schema", "public"]
+  schemas   = ["user_schema","team_schema", "product_schema", "order_schema", "category_schema", "payment_schema","location_schema","reseller_schema", "public"]
 }
 
 enum OrderStatus {
@@ -85,6 +85,8 @@ model team_member_table {
   team_member_team team_table @relation(fields: [team_member_team_id], references: [team_id], onDelete: Cascade)
   team_member_user user_table @relation(fields: [team_member_user_id], references: [user_id], onDelete: Cascade)
   team_member_team_group team_group_member_table[]
+  team_member_reseller reseller_table[]
+  team_member_reseller_withdrawals reseller_withdrawal_table[]
   @@schema("team_schema")
 }
 
@@ -146,11 +148,13 @@ model order_table {
   order_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   order_user_id    String?    @db.Uuid
   order_team_id   String    @db.Uuid
+  order_reseller_id String? @db.Uuid
 
   order_user       user_table? @relation(fields: [order_user_id], references: [user_id], onDelete: Cascade)
   order_team      team_table @relation(fields: [order_team_id], references: [team_id], onDelete: Cascade)
-  order_items      order_item_table[]
+  order_reseller reseller_table? @relation(fields: [order_reseller_id], references: [reseller_id], onDelete: Cascade)
 
+   order_items      order_item_table[]
   @@schema("order_schema")
 }
 
@@ -209,6 +213,7 @@ model product_variant_table {
   product_variant_color String
   product_variant_slug String?
   product_variant_is_deleted Boolean @default(false)
+  product_variant_is_featured Boolean @default(false)
 
   product_variant_product product_table @relation(fields: [product_variant_product_id], references: [product_id], onDelete: Cascade)
   cart_items cart_table[]
@@ -241,3 +246,43 @@ model variant_sample_image_table {
 }
 
 
+model reseller_table {
+  reseller_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reseller_created_at DateTime @default(now()) @db.Timestamptz(3)
+  reseller_earnings Float @default(0)
+  reseller_team_member_id String @db.Uuid
+
+  reseller_team_member team_member_table @relation(fields: [reseller_team_member_id], references: [team_member_id], onDelete: Cascade)
+
+  reseller_withdrawals reseller_withdrawal_table[]
+  reseller_orders order_table[]
+  reseller_transactions reseller_transaction_table[]
+  @@schema("reseller_schema")
+}
+
+model reseller_withdrawal_table {
+  reseller_withdrawal_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reseller_withdrawal_amount Float
+  reseller_withdrawal_status String
+  reseller_withdrawal_created_at DateTime @default(now()) @db.Timestamptz(3)
+  reseller_withdrawal_reseller_id String @db.Uuid
+  reseller_withdrawal_action_by String? @db.Uuid
+
+  reseller_withdrawal_reseller reseller_table @relation(fields: [reseller_withdrawal_reseller_id], references: [reseller_id], onDelete: Cascade)
+
+  action_by team_member_table? @relation(fields: [reseller_withdrawal_action_by], references: [team_member_id], onDelete: Cascade)
+
+  @@schema("reseller_schema")
+}
+
+model reseller_transaction_table {
+  reseller_transaction_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reseller_transaction_amount Float
+  reseller_transaction_created_at DateTime @default(now()) @db.Timestamptz(3)
+  reseller_transaction_reseller_id String @db.Uuid
+  reseller_transaction_type String
+
+  reseller_transaction_reseller reseller_table @relation(fields: [reseller_transaction_reseller_id], references: [reseller_id], onDelete: Cascade)
+
+  @@schema("reseller_schema")
+}

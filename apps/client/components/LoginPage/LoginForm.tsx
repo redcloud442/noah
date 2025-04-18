@@ -105,13 +105,13 @@ export const LoginForm = ({
             <div className="relative overflow-hidden flex items-center justify-center">
               <Image
                 src="/assets/logo/NOIR_Logo_White_png.png"
-                alt="Noire Luxury"
+                alt="Noir Luxury"
                 width={80}
                 height={80}
                 className="cursor-pointer relative"
               />
             </div>
-            <h1 className="text-xl font-bold">Welcome to Noire</h1>
+            <h1 className="text-xl font-bold">Welcome to Noir</h1>
             <div className="text-center text-sm">
               Don&apos;t have an account? <RegisterModal />
             </div>

@@ -209,6 +209,7 @@ model product_variant_table {
   product_variant_color String
   product_variant_slug String?
   product_variant_is_deleted Boolean @default(false)
+  product_variant_is_featured Boolean @default(false)
 
   product_variant_product product_table @relation(fields: [product_variant_product_id], references: [product_id], onDelete: Cascade)
   cart_items cart_table[]
@@ -235,6 +236,7 @@ model variant_sample_image_table {
   variant_sample_image_product_variant_id String @db.Uuid
   variant_sample_image_image_url String
   variant_sample_image_created_at DateTime @default(now()) @db.Timestamptz(3)
+
 
   variant_sample_image_product_variant product_variant_table @relation(fields: [variant_sample_image_product_variant_id], references: [product_variant_id], onDelete: Cascade)
   @@schema("product_schema")

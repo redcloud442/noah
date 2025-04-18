@@ -97,7 +97,7 @@ export const ProductVariantsEdit = ({
             key={field.id}
             className="border p-4 rounded-md flex flex-col-reverse md:flex-row gap-6 w-full"
           >
-            <div className="w-full md:w-1/3 flex flex-col items-center gap-4">
+            <div className="w-full md:w-1/3 flex flex-col justify-center items-center gap-4">
               {editingIndex === field.id ? (
                 <Controller
                   control={control}
@@ -120,8 +120,8 @@ export const ProductVariantsEdit = ({
                   )}
                 />
               ) : (
-                <div className="relative group flex flex-wrap gap-2 justify-start">
-                  {imagePreviews[variantIndex]?.length > 0 ? (
+                <div className="relative group flex flex-wrap gap-2 justify-center">
+                  {imagePreviews[variantIndex]?.length > 0 &&
                     imagePreviews[variantIndex].map((url, i) => (
                       <Image
                         key={i}
@@ -131,16 +131,7 @@ export const ProductVariantsEdit = ({
                         height={200}
                         className=" object-cover rounded border"
                       />
-                    ))
-                  ) : (
-                    <Image
-                      src="/placeholder.png"
-                      alt="Placeholder"
-                      width={200}
-                      height={200}
-                      className="object-cover rounded border"
-                    />
-                  )}
+                    ))}
                   <button
                     type="button"
                     onClick={() => setEditingIndex(field.id)}

@@ -1,9 +1,9 @@
 export const siteConfig = {
-  name: "Noire",
+  name: "Noir",
   url: "https://noir-clothing.com",
   ogImage: "https://noire.com/og.jpg",
   description:
-    "Noire is a luxury brand that offers a range of products from clothing to accessories.",
+    "Noir is a luxury brand that offers a range of products from clothing to accessories.",
   links: {
     facebook: "https://www.facebook.com/share/16QBmPag2r/?mibextid=wwXIfr",
     instagram: "https://www.instagram.com/noir__ph?igsh=dDE3Y2hxc2MyaW4w",

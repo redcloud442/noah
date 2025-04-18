@@ -84,4 +84,15 @@ export const productService = {
 
     return data;
   },
+  setFeaturedProduct: async (params: { productId: string }) => {
+    const { data } = await axios.post("/api/v1/product/set-featured", {
+      params,
+    });
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
 };

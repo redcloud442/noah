@@ -1,24 +1,12 @@
+"use client";
+
+import useFeatureProductStore from "@/lib/featureProductStore";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const HighlightSecond = () => {
-  const modelSection = [
-    {
-      id: 1,
-      alt: "Featured Product 1",
-      image: "/assets/model/noire-10200.jpg",
-    },
-
-    {
-      id: 2,
-      alt: "Featured Product 2",
-      image: "/assets/model/noire-10313.jpg",
-    },
-    {
-      id: 3,
-      alt: "Featured Product 3",
-      image: "/assets/model/noire-10343.jpg",
-    },
-  ];
+  const { featuredProducts } = useFeatureProductStore();
+  const router = useRouter();
 
   return (
     <div className="w-full bg-white gap-4 p-4">
@@ -27,14 +15,15 @@ const HighlightSecond = () => {
         Featured Products
       </h1>
       <div className="flex flex-wrap justify-center items-center w-full gap-4 p-4">
-        {modelSection.map((item) => (
+        {featuredProducts.map((item) => (
           <div
-            key={item.id}
-            className="relative overflow-hidden w-full sm:w-[calc(33.33%-1rem)] h-full group"
+            key={item.product_variant_id}
+            className="relative overflow-hidden w-full sm:w-[calc(33.33%-1rem)] h-full group cursor-pointer"
+            onClick={() => router.push(`/product/${item.product_variant_slug}`)}
           >
             <Image
-              src={item.image}
-              alt={item.alt}
+              src={item.variant_sample_images[0].variant_sample_image_image_url}
+              alt={item.product_variant_color}
               width={800}
               height={800}
               className="w-full h-full object-cover"
@@ -45,8 +34,8 @@ const HighlightSecond = () => {
 
             {/* Text Overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <span className="text-white text-lg font-semibold">
-                {item.alt}
+              <span className="text-white text-lg font-semibold uppercase">
+                {item.product_variant_product.product_name}
               </span>
             </div>
           </div>

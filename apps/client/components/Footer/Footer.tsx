@@ -13,7 +13,7 @@ export const Footer = () => {
           <div className="text-center md:text-left">
             <h1 className="text-2xl font-bold">Noir</h1>
             <p className="mt-2 text-sm text-white/90">
-              Elevate your style with Noire – where luxury meets fashion.
+              Elevate your style with Noir – where luxury meets fashion.
             </p>
           </div>
 
@@ -81,7 +81,7 @@ export const Footer = () => {
 
       {/* Bottom Section */}
       <div className="mt-6 pt-4 text-center text-sm text-white/90">
-        © {new Date().getFullYear()} Noire. All Rights Reserved.
+        © {new Date().getFullYear()} Noir. All Rights Reserved.
       </div>
     </footer>
   );

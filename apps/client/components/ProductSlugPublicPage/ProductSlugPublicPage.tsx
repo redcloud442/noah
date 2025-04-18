@@ -13,6 +13,7 @@ import { generateCheckoutNumber } from "@/lib/utils";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
 import { ProductType, ProductVariantType } from "@/utils/types";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -98,6 +99,8 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
     } finally {
       setIsLoading(false);
     }
+
+    toast.success("Added to cart successfully!");
   };
 
   const handleProceedToCheckout = async () => {
@@ -121,19 +124,24 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
   };
 
   return (
-    <div className="py-8 grid grid-cols-1 md:grid-cols-2 gap-12 bg-white mt-24 p-10 text-black">
-      <div className="sticky top-0">
+    <div className="py-8 grid grid-cols-1 md:grid-cols-3 gap-12 bg-white mt-24 p-10 text-black relative space-y-8">
+      <div className="absolute top-0 left-4 pt-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft /> Go back
+        </Button>
+      </div>
+      <div className="block md:sticky top-0">
         <div className="relative bg-gray-200 rounded-lg overflow-hidden mb-4">
           <Image
             src={selectedImage}
             alt="Selected Product Image"
-            width={500}
-            height={500}
+            width={1000}
+            height={1000}
             className="object-cover w-full h-full"
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex  gap-2 overflow-x-auto">
           {allImages.map((image, idx) => (
             <div
               key={idx}
@@ -158,7 +166,7 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
         </div>
       </div>
 
-      <div className="sticky top-0 self-start">
+      <div className="block md:sticky top-0 self-start md:col-span-2">
         <h1 className="text-3xl font-bold uppercase">
           {product.product_name} - {variantInfo.product_variant_color}
         </h1>

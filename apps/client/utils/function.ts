@@ -64,6 +64,7 @@ export const findCollectionBySlug = async (
           product_variant_color: true,
           product_variant_product: true,
           product_variant_is_deleted: true,
+          product_variant_is_featured: true,
           variant_sizes: {
             select: {
               variant_size_id: true,
@@ -114,6 +115,7 @@ export const findProductBySlug = async (slug: string, prisma: PrismaClient) => {
           product_variant_color: true,
           product_variant_product: true,
           product_variant_is_deleted: true,
+          product_variant_is_featured: true,
           variant_sizes: {
             select: {
               variant_size_id: true,
@@ -175,7 +177,12 @@ export const findProductBySlugAdmin = async (
           product_variant_product_id: true,
           product_variant_slug: true,
           product_variant_color: true,
-          product_variant_product: true,
+          product_variant_product: {
+            select: {
+              product_slug: true,
+            },
+          },
+          product_variant_is_featured: true,
           variant_sizes: {
             select: {
               variant_size_id: true,

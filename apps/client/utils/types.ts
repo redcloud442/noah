@@ -103,3 +103,35 @@ export type ProductVariantType = product_variant_table & {
   variant_sizes: variant_size_table[];
   variant_sample_images: variant_sample_image_table[];
 };
+
+export type FeaturedProductType = {
+  product_variant_id: string;
+  product_variant_color: string;
+  product_variant_slug: string | null;
+  product_variant_product: {
+    product_id: string;
+    product_name: string;
+    product_slug: string | null;
+    product_description: string;
+  };
+  variant_sample_images: {
+    variant_sample_image_id: string;
+    variant_sample_image_image_url: string;
+  }[];
+};
+
+export type FreshDropsType = {
+  product_variant_id: string;
+  product_variant_color: string;
+  product_variant_slug: string | null;
+  product_variant_product: {
+    product_id: string;
+    product_name: string;
+    product_slug: string | null;
+    product_description: string;
+  };
+  variant_sample_images: {
+    variant_sample_image_id: string;
+    variant_sample_image_image_url: string;
+  }[];
+};

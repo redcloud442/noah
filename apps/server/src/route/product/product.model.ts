@@ -189,7 +189,6 @@ export const productVariantUpdateModel = async (
           variant_sizes,
           variant_sample_images,
         } = variant;
-        console.log(product_variant_id, "variant");
 
         if (variant.product_variant_is_deleted) {
           await tx.product_variant_table.update({
@@ -377,6 +376,7 @@ export const productGetAllProductModel = async (params: {
       product_variant_id: true,
       product_variant_color: true,
       product_variant_slug: true,
+      product_variant_is_featured: true,
       product_variant_product: {
         select: {
           product_id: true,
@@ -384,6 +384,7 @@ export const productGetAllProductModel = async (params: {
           product_price: true,
           product_sale_percentage: true,
           product_created_at: true,
+          product_slug: true,
         },
       },
       variant_sizes: {
@@ -417,4 +418,27 @@ export const productGetAllProductModel = async (params: {
     data: products,
     count,
   };
+};
+
+export const productSetFeaturedProductModel = async (params: {
+  productId: string;
+}) => {
+  const { productId } = params;
+
+  const productVariant = await prisma.product_variant_table.findUnique({
+    where: { product_variant_id: productId },
+  });
+
+  if (!productVariant) {
+    throw new Error("Product variant not found");
+  }
+
+  await prisma.product_variant_table.update({
+    where: { product_variant_id: productId },
+    data: {
+      product_variant_is_featured: true,
+    },
+  });
+
+  return { message: "Product variant set as featured" };
 };

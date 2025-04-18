@@ -1,6 +1,6 @@
 import type { Context, Next } from "hono";
 import { orderGetListSchema } from "../../schema/schema.js";
-import { redis } from "../../utils/redis.js";
+import { rateLimit } from "../../utils/redis.js";
 import { orderGetSchema } from "../../utils/schema.js";
 
 export const orderGetMiddleware = async (c: Context, next: Next) => {
@@ -12,9 +12,14 @@ export const orderGetMiddleware = async (c: Context, next: Next) => {
 
   const key = `order:${user.id}`;
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:order-get`,
+    50,
+    "1m",
+    c
+  );
 
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -45,11 +50,14 @@ export const orderGetItemsMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `order:${user.id}-get-items`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:order-get-items`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
@@ -68,11 +76,14 @@ export const orderGetListMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `order:${user.id}-list`;
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:order-get-list`,
+    50,
+    "1m",
+    c
+  );
 
-  const isRateLimited = await redis.rateLimit(key, 100, 60);
-
-  if (!isRateLimited) {
+  if (!isAllowed) {
     return c.json({ message: "Too many requests" }, 429);
   }
 
