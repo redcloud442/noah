@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: { children: any }) {
         />
       </head>
       <body>
-        <MantineProvider theme={theme}>
+        <MantineProvider defaultColorScheme="dark" theme={theme}>
           <Notifications />
           <PublicLayout user={user}>{children}</PublicLayout>
         </MantineProvider>
