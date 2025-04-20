@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCartStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import loginSchema from "@/lib/zod";
 import { authService } from "@/services/auth";
@@ -21,6 +22,8 @@ export const LoginForm = ({
 }: React.ComponentPropsWithoutRef<"div">) => {
   const supabase = createClient();
   const router = useRouter();
+
+  const { cart } = useCartStore();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,11 +48,19 @@ export const LoginForm = ({
         password,
       });
 
-      const { redirectTo } = await authService.login(email);
+      const { redirectTo } = await authService.login(
+        email,
+        "",
+        "",
+        "",
+        cart?.products ?? []
+      );
 
       if (error) {
         toast.error(error.message);
       }
+
+      localStorage.removeItem("shoppingCart");
 
       router.push(redirectTo);
     } catch (error) {
@@ -69,8 +80,13 @@ export const LoginForm = ({
         provider: "google",
         options: {
           redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+          queryParams: {
+            cart: JSON.stringify(cart?.products ?? []),
+          },
         },
       });
+
+      localStorage.removeItem("shoppingCart");
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -86,8 +102,13 @@ export const LoginForm = ({
         provider: "facebook",
         options: {
           redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+          queryParams: {
+            cart: JSON.stringify(cart?.products ?? []),
+          },
         },
       });
+
+      localStorage.removeItem("shoppingCart");
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);

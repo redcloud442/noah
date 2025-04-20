@@ -1,15 +1,20 @@
 "use client";
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { ProductType, ProductVariantType } from "@/utils/types";
+import {
+  ProductType,
+  ProductVariantType,
+  ProductVariantTypeShop,
+} from "@/utils/types";
+import { product_table } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { VariantSelectionToast } from "./AddToCart";
-
+import { VariantSelectionToast, VariantTypeSelectionToast } from "./AddToCart";
 type Props = {
   collectionItems: ProductType[];
   categoryName: string;
@@ -59,8 +64,6 @@ export const HoverImageCard = ({
   currentDate,
   product,
 }: HoverImageCardProps) => {
-  const router = useRouter();
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -109,7 +112,6 @@ export const HoverImageCard = ({
       className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push(`/product/${product.product_slug}`)}
     >
       <div className="relative group">
         <Image
@@ -122,12 +124,12 @@ export const HoverImageCard = ({
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
             variant="outline"
-            className="bg-white text-black"
+            className="bg-white text-black z-50"
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
@@ -143,7 +145,7 @@ export const HoverImageCard = ({
 
       {/* Product Details */}
       <CardContent className="p-4 text-center text-black">
-        <CardTitle className="text-sm font-semibold">
+        <CardTitle className="text-sm font-semibold uppercase">
           {product.product_name} - {variant.product_variant_color}
         </CardTitle>
         <p className="text-sm font-bold mt-2">
@@ -158,6 +160,7 @@ type HoverVariantCardProps = {
   variant: ProductVariantType;
   product: ProductType;
   currentDate: Date;
+  referralCode?: string;
 };
 
 export const HoverVariantCard = ({
@@ -194,12 +197,6 @@ export const HoverVariantCard = ({
       <VariantSelectionToast
         selectedVariant={variant}
         product={product}
-        // availableVariants={
-        //   availableVariants as (product_variant_table & {
-        //     variant_sizes: variant_size_table[];
-        //     variant_sample_image_product_variant: variant_sample_image_table;
-        //   })[]
-        // }
         closeToast={() => toast.dismiss(t)}
       />
     ));
@@ -222,7 +219,7 @@ export const HoverVariantCard = ({
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
@@ -231,14 +228,133 @@ export const HoverVariantCard = ({
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
+          <Link href={`/shop`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              Shop
+            </Button>
+          </Link>
         </div>
 
         {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
-          <div className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
+          <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
             New
-          </div>
+          </Badge>
+        )}
+
+        {variant.product_variant_is_featured && (
+          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
+            Featured
+          </Badge>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <CardContent className="p-4 text-center text-black">
+        <CardTitle className="text-sm font-semibold uppercase">
+          {product.product_name} - {variant.product_variant_color}
+        </CardTitle>
+        <p className="text-sm font-bold mt-2">
+          ₱{product.product_price.toLocaleString()}
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
+
+type HoverVariantTypeCardProps = {
+  variant: ProductVariantTypeShop;
+  product: product_table;
+  currentDate: Date;
+  referralCode?: string;
+};
+
+export const HoverVariantTypeCard = ({
+  variant,
+  product,
+  currentDate,
+  referralCode,
+}: HoverVariantTypeCardProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  const imageUrls = variant.variant_sample_images.map(
+    (img) => img.variant_sample_image_image_url
+  );
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isHovered && imageUrls.length > 1) {
+      interval = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageUrls.length);
+      }, 500); // Smooth transition interval
+    } else {
+      setCurrentImageIndex(0);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isHovered, imageUrls.length]);
+
+  const handleAddToCart = () => {
+    toast.custom((t) => (
+      <VariantTypeSelectionToast
+        selectedVariant={variant}
+        product={product}
+        referralCode={referralCode}
+        closeToast={() => toast.dismiss(t)}
+      />
+    ));
+  };
+
+  return (
+    <Card
+      className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative group">
+        <Image
+          src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
+          alt={product.product_name}
+          width={2000}
+          height={2000}
+          quality={80}
+          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+        />
+
+        {/* "Add to Cart" button - initially hidden */}
+        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Button
+            onClick={() => handleAddToCart()}
+            size="sm"
+            variant="outline"
+            className="bg-white text-black z-50"
+          >
+            <PlusIcon className="w-4 h-4" /> Quick Add
+          </Button>
+        </div>
+
+        {/* Badges */}
+        {new Date(product.product_created_at).getTime() >
+          currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
+          <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
+            New
+          </Badge>
+        )}
+
+        {variant.product_variant_is_featured && (
+          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
+            Featured
+          </Badge>
         )}
       </div>
 

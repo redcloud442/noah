@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Noire Luxury",
-  description: "Noire Luxury",
+  title: "Noir Luxury",
+  description: "Noir Luxury",
 };
 
 export default async function RootLayout({

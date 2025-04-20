@@ -21,4 +21,20 @@ export const userService = {
 
     return data;
   },
+  resellerRequest: async () => {
+    const { data } = await axios.post("/api/v1/user/reseller-request");
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
+  verifyResellerCode: async (params: { otp: string }) => {
+    const { data } = await axios.post("/api/v1/user/verify-reseller-code", {
+      params,
+    });
+
+    return data;
+  },
 };

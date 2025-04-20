@@ -9,6 +9,8 @@ import cart from "./cart/cart.route.js";
 import order from "./order/order.route.js";
 import payment from "./payment/payment.route.js";
 import product from "./product/product.route.js";
+import publicRoutes from "./public/public.routes.js";
+import reseller from "./reseller/reseller.route.js";
 import user from "./user/user.route.js";
 
 const app = new Hono();
@@ -38,6 +40,13 @@ app.route("/address", address);
 // Product
 app.use("/product/*", protectionMiddleware);
 app.route("/product", product);
+
+// Reseller
+app.use("/reseller/*", protectionMiddleware);
+app.route("/reseller", reseller);
+
+// Public
+app.route("/publicRoutes", publicRoutes);
 
 app.get("/", (c) => c.text("This is the api endpoint"));
 

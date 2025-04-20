@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { generateCheckoutNumber } from "@/lib/utils";
+import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
 import { Product } from "@/utils/types";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
@@ -14,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Skeleton } from "../ui/skeleton";
-
 const CartPage = () => {
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
@@ -57,6 +57,7 @@ const CartPage = () => {
       setCart({
         ...cart,
         products: cart.products.filter((item) => item.cart_id !== cartId),
+        count: cart.count - 1,
       });
 
       try {
@@ -80,6 +81,7 @@ const CartPage = () => {
           products: cart.products.filter(
             (item: Product) => item.cart_id !== cartId
           ),
+          count: cart.count - 1,
         };
 
         localStorage.setItem("cart", JSON.stringify(updatedCart));
@@ -132,14 +134,16 @@ const CartPage = () => {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setSubmitting(true);
     const checkoutNumber = generateCheckoutNumber();
+
+    await authService.createCheckoutToken(checkoutNumber);
     setTimeout(() => {
       router.push(`/checkout/cn/${checkoutNumber}`);
       setSubmitting(false);
     }, 1000);
-  };
+};
 
   return (
     <div className="min-h-screen mt-20 p-6 bg-gray-100 text-black">
@@ -198,7 +202,7 @@ const CartPage = () => {
                         {product.product_name} - {product.product_variant_color}
                       </p>
                       <p className="text-gray-500 text-sm">
-                        Size: {product.product_variant_size}
+                        Size: {product.product_size}
                       </p>
                       <p className="text-gray-500 text-sm">
                         Color: {product.product_variant_color}

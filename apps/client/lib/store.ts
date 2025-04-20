@@ -6,6 +6,7 @@ interface Product {
   product_name: string;
   product_price: number;
   product_quantity: number;
+  product_size: string;
   product_variant_id: string;
   product_variant_size: string;
   product_variant_color: string;

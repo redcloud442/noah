@@ -1,5 +1,5 @@
 import CheckOutNumberPage from "@/components/CheckoutOutNumberPage/CheckOutNumberPage";
-import { createClient } from "@/utils/supabase/server";
+import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -8,16 +8,22 @@ const page = async ({
 }: {
   params: Promise<{ checkoutNumber: string }>;
 }) => {
-  const supabase = await createClient();
-  const user = await supabase.auth.getUser();
-
   const { checkoutNumber } = await params;
 
-  if (!user.data.user) {
-    const checkoutToken = (await cookies()).get("checkout_token");
-    if (!checkoutToken) {
-      return redirect("/");
-    }
+  const checkoutToken = (await cookies()).get("checkout_token");
+
+  if (!checkoutToken) {
+    return redirect("/");
+  }
+
+  const decoded = jwt.verify(checkoutToken?.value, process.env.JWT_SECRET!) as {
+    checkoutNumber: string;
+    role: string;
+    referralCode: string;
+  };
+
+  if (decoded.checkoutNumber !== checkoutNumber) {
+    return redirect("/");
   }
 
   if (!checkoutNumber) {

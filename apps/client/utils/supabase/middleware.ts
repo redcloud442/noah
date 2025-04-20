@@ -30,17 +30,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname === "/account") {
-    if (!user) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // if (request.nextUrl.pathname === "/account") {
+  //   if (!user) {
+  //     return NextResponse.redirect(new URL("/", request.url));
+  //   }
 
-    if (user.user_metadata.role === "MEMBER") {
-      return NextResponse.next();
-    }
+  //   if (user.user_metadata.role === "MEMBER") {
+  //     return NextResponse.next();
+  //   }
 
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
-  }
+  //   return NextResponse.redirect(new URL("/unauthorized", request.url));
+  // }
 
   return supabaseResponse;
 }

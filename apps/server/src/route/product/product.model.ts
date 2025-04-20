@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { typeProductCreateSchema } from "../../schema/schema.js";
 import { slugifyVariant } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import type { ProductPublicParams } from "../../utils/schema.js";
 
 export const productCollectionModel = async (params: {
   search?: string;
@@ -441,4 +442,81 @@ export const productSetFeaturedProductModel = async (params: {
   });
 
   return { message: "Product variant set as featured" };
+};
+
+export const productPublicModel = async (params: ProductPublicParams) => {
+  const { search, category, sort, take, skip, branch } = params;
+
+  const filter: Prisma.product_tableWhereInput = {};
+  const sortFilter: Prisma.product_tableOrderByWithRelationInput = {};
+  const offset = (skip - 1) * take;
+
+  if (search) {
+    filter.product_name = { contains: search, mode: "insensitive" };
+  }
+
+  if (category) {
+    filter.product_category_id = category;
+  }
+
+  if (sort) {
+    if (sort === "newest") {
+      sortFilter.product_created_at = "desc";
+    }
+
+    if (sort === "oldest") {
+      sortFilter.product_created_at = "asc";
+    }
+
+    if (sort === "price_asc") {
+      sortFilter.product_price = "asc";
+    }
+
+    if (sort === "price_desc") {
+      sortFilter.product_price = "desc";
+    }
+    if (sort === "featured") {
+      sortFilter.product_variants = {
+        _count: "desc",
+      };
+    }
+  }
+
+  if (branch) {
+    filter.product_team_id = branch;
+  }
+
+  const products = await prisma.product_table.findMany({
+    where: {
+      ...filter,
+      product_variants: { some: { product_variant_is_deleted: false } },
+    },
+    orderBy: sortFilter,
+    include: {
+      product_variants: {
+        where: {
+          product_variant_is_deleted: false,
+        },
+        include: {
+          variant_sample_images: true,
+          variant_sizes: true,
+        },
+      },
+    },
+    take,
+    skip: offset,
+  });
+
+  const count = await prisma.product_table.count({
+    where: {
+      ...filter,
+      product_variants: { some: { product_variant_is_deleted: false } },
+    },
+  });
+
+  return {
+    data: products,
+    count,
+    hasMore: count > offset + products.length,
+  };
 };

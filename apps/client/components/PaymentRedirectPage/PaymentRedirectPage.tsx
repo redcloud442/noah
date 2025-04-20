@@ -2,11 +2,13 @@
 
 import { Button } from "@/components/ui/button"; // ShadCN Button
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { authService } from "@/services/auth";
 import { paymentService } from "@/services/payment";
 import { motion } from "framer-motion"; // Animation library
 import { CheckCircle, XCircle } from "lucide-react"; // Icons for success & failure
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type PaymentRedirectPageProps = {
   paymentNumber: string;
@@ -41,13 +43,27 @@ export const PaymentRedirectPage = ({
           setOrderStatus("CANCELED");
         }
       } catch (error) {
-        console.error("Error fetching payment status:", error);
-        setOrderStatus("CANCELED");
+        if (error instanceof Error) {
+          setOrderStatus("CANCELED");
+        }
       }
     };
 
     fetchPayment();
   }, [paymentIntentId]);
+
+  const handleDeleteCheckoutToken = async () => {
+    try {
+      await authService.deleteCheckoutToken();
+      router.push("/");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error deleting checkout token");
+      }
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen mt-24 bg-gray-100">
@@ -84,7 +100,7 @@ export const PaymentRedirectPage = ({
               <Button
                 className="mt-4 w-full"
                 variant="secondary"
-                onClick={() => router.push("/")}
+                onClick={handleDeleteCheckoutToken}
               >
                 Return to Home
               </Button>
@@ -112,7 +128,7 @@ export const PaymentRedirectPage = ({
               </p>
               <Button
                 className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white"
-                onClick={() => router.push("/")}
+                onClick={handleDeleteCheckoutToken}
               >
                 Try Again
               </Button>

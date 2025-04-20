@@ -5,6 +5,7 @@ import {
   productCollectionSlugModel,
   productCreateModel,
   productGetAllProductModel,
+  productPublicModel,
   productSetFeaturedProductModel,
   productVariantCreateModel,
   productVariantUpdateModel,
@@ -118,5 +119,22 @@ export const productSetFeaturedProductController = async (c: Context) => {
     return c.json(data, 200);
   } catch (error) {
     return c.json({ message: "Internal server error" }, 500);
+  }
+};
+
+export const productPublicController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const data = await productPublicModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    console.log(error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return c.json({ message: "Internal server error" }, 500);
+    } else if (error instanceof Error) {
+      return c.json({ message: "Internal server error" }, 500);
+    }
   }
 };

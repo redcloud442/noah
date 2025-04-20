@@ -59,7 +59,7 @@ export const MobileNavigationBar = ({
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/assets/logo/NOIR_Logo_White_png.png"
-            alt="Noire Logo"
+            alt="Noir Logo"
             width={50}
             height={50}
           />

@@ -27,7 +27,7 @@ import { cartService } from "@/services/cart";
 import { Product } from "@/utils/types";
 import { Trash } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { IoBagOutline } from "react-icons/io5";
 import { toast } from "sonner";
@@ -35,6 +35,8 @@ import { toast } from "sonner";
 const ShoppingCartModal = () => {
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
+  const searchParams = useSearchParams();
+  const REFERRAL_CODE = searchParams.get("REFERRAL_CODE") as string;
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,31 +46,37 @@ const ShoppingCartModal = () => {
 
   useEffect(() => {
     const fetchCart = async () => {
-      if (!userData) {
-        const storedCart = localStorage.getItem("shoppingCart");
-        if (storedCart) {
-          setCart(JSON.parse(storedCart));
-        }
-      } else {
-        const response = await cartService.get();
+      try {
+        if (!userData) {
+          const storedCart = localStorage.getItem("shoppingCart");
 
-        if (!response.json) {
+          if (storedCart) {
+            setCart(JSON.parse(storedCart));
+          }
+        } else {
+          const response = await cartService.get();
+
+          localStorage.removeItem("shoppingCart");
+
+          setCart(response);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
           toast.error("Error fetching cart");
-          return;
         }
-
-        const cartData = await response.json();
-
-        setCart(cartData);
       }
     };
 
     fetchCart();
-  }, []);
+  }, [userData]);
 
   useEffect(() => {
-    if (cart || !userData) {
+    if (cart && !userData) {
       localStorage.setItem("shoppingCart", JSON.stringify(cart));
+    } else {
+      localStorage.removeItem("shoppingCart");
     }
   }, [cart, userData]);
 
@@ -124,7 +132,9 @@ const ShoppingCartModal = () => {
       toast.error("Error generating checkout number");
       return;
     }
-    router.push(`/checkout/cn/${checkoutNumber}`);
+    router.push(
+      `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
+    );
   };
 
   return (
@@ -168,13 +178,15 @@ const ShoppingCartModal = () => {
                     item.product_variant_image || "/assets/model/QR_59794.jpg"
                   }
                   alt={item.product_name}
-                  width={120}
-                  height={120}
-                  className="w-20 h-20 rounded-md object-contain"
+                  width={150}
+                  height={150}
+                  className="w-32 h-32 rounded-md object-contain"
                 />
                 <div className="w-full">
                   <div className="w-full flex justify-between items-start">
-                    <h3 className="text-md font-medium">{item.product_name}</h3>
+                    <h3 className="text-md font-medium uppercase">
+                      {item.product_name} - {item.product_variant_color}
+                    </h3>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" className="p-2">

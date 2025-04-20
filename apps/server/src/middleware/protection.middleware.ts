@@ -24,6 +24,16 @@ export const protectionMiddleware = async (c: Context, next: Next) => {
   await next();
 };
 
+export const checkoutMiddleware = async (c: Context, next: Next) => {
+  const supabase = getSupabase(c);
+
+  const { data } = await supabase.auth.getUser();
+
+  c.set("user", data.user || null);
+
+  await next();
+};
+
 export const checkoutProtectionMiddleware = async (c: Context, next: Next) => {
   const supabase = getSupabase(c);
   const checkoutToken = getCookie(c, "checkout_token");

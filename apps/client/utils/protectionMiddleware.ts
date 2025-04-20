@@ -29,7 +29,10 @@ export const protectionUserMiddleware = async () => {
 
   if (!currentUser) return redirect("/login");
 
-  if (currentUser.user_metadata.role === "MEMBER") {
+  if (
+    currentUser.user_metadata.role !== "MEMBER" &&
+    currentUser.user_metadata.role !== "RESELLER"
+  ) {
     return redirect("/");
   }
 

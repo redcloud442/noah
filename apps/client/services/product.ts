@@ -84,6 +84,24 @@ export const productService = {
 
     return data;
   },
+  publicProduct: async (params: {
+    take: number;
+    skip: number;
+    search?: string;
+    category?: string;
+    sort?: string;
+    branch?: string;
+  }) => {
+    const { data } = await axios.get("/api/v1/publicRoutes/product-public", {
+      params,
+    });
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
   setFeaturedProduct: async (params: { productId: string }) => {
     const { data } = await axios.post("/api/v1/product/set-featured", {
       params,

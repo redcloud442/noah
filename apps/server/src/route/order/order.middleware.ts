@@ -10,8 +10,6 @@ export const orderGetMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  const key = `order:${user.id}`;
-
   const isAllowed = await rateLimit(
     `rate-limit:${user.id}:order-get`,
     50,

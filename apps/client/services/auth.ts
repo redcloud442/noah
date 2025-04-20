@@ -1,4 +1,4 @@
-import { teamMemberProfile } from "@/utils/types";
+import { Product, teamMemberProfile } from "@/utils/types";
 import { user_table } from "@prisma/client";
 import { apiClient } from "./axios";
 
@@ -7,13 +7,15 @@ export const authService = {
     email: string,
     firstName?: string,
     lastName?: string,
-    userId?: string
+    userId?: string,
+    cart?: Product[]
   ) => {
     const result = await apiClient.post("/auth/login", {
       email,
       firstName,
       lastName,
       userId,
+      cart,
     });
 
     if (result.status !== 200) {
@@ -23,6 +25,34 @@ export const authService = {
     return result.data as {
       redirectTo: string;
     };
+  },
+
+  callback: async (params: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    userId: string;
+    cart?: Product[];
+  }) => {
+    const result = await apiClient.post("/auth/callback", params);
+
+    if (result.status !== 200) {
+      throw new Error("Callback failed");
+    }
+
+    return result.data;
+  },
+
+  saveCart: async (cart: Product[]) => {
+    const result = await apiClient.post("/auth/save-cart", {
+      cart,
+    });
+
+    if (result.status !== 200) {
+      throw new Error("Save cart failed");
+    }
+
+    return result.data;
   },
 
   register: async ({
@@ -43,9 +73,13 @@ export const authService = {
     return result.data;
   },
 
-  createCheckoutToken: async (checkoutNumber: string) => {
+  createCheckoutToken: async (
+    checkoutNumber: string,
+    referralCode?: string
+  ) => {
     const result = await apiClient.post("/auth/checkout-token", {
       checkoutNumber,
+      referralCode,
     });
     if (result.status !== 200) {
       throw new Error("Failed to create checkout token");
@@ -69,6 +103,14 @@ export const authService = {
     const result = await apiClient.get(`/auth/verify-checkout-token`);
     if (result.status !== 200) {
       throw new Error("Failed to verify checkout token");
+    }
+    return result.data;
+  },
+
+  deleteCheckoutToken: async () => {
+    const result = await apiClient.post("/auth/delete-checkout-token");
+    if (result.status !== 200) {
+      throw new Error("Failed to delete checkout token");
     }
     return result.data;
   },

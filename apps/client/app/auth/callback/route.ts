@@ -10,15 +10,18 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
     if (data.user) {
+      const cartState = searchParams.get("cart");
+      const cart = cartState ? JSON.parse(cartState) : [];
+
       const nameParts = data.user?.user_metadata.full_name?.split(" ");
-      const result = await authService.login(
-        data.user.email ?? "",
-        nameParts?.[0] ?? "",
-        nameParts?.[1] ?? "",
-        data.user.id ?? ""
-      );
+      const result = await authService.callback({
+        email: data.user.email ?? "",
+        firstName: nameParts?.[0] ?? "",
+        lastName: nameParts?.[1] ?? "",
+        userId: data.user.id ?? "",
+        cart: cart,
+      });
 
       return NextResponse.redirect(result.redirectTo);
     }

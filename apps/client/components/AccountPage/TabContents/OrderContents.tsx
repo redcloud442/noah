@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/function";
 import { order_table } from "@prisma/client";
@@ -40,7 +41,7 @@ const OrderContents = ({
       ) : orders.length === 0 ? (
         <p className="mt-6 text-gray-500">No orders found.</p>
       ) : (
-        <>
+        <ScrollArea className="h-[700px]">
           <ul className="space-y-4 mt-6">
             {orders.map((order) => (
               <li
@@ -57,8 +58,8 @@ const OrderContents = ({
                         order.order_status === "PENDING"
                           ? "default"
                           : order.order_status === "PAID"
-                          ? "success"
-                          : "destructive"
+                            ? "success"
+                            : "destructive"
                       }
                     >
                       {order.order_status}
@@ -82,14 +83,14 @@ const OrderContents = ({
               </li>
             ))}
           </ul>
-          {count > 0 && (
-            <Pagination
-              activePage={activePage}
-              handleChangePage={setActivePage}
-              pageCount={pageCount}
-            />
-          )}
-        </>
+        </ScrollArea>
+      )}
+      {count > 0 && (
+        <Pagination
+          activePage={activePage}
+          handleChangePage={setActivePage}
+          pageCount={pageCount}
+        />
       )}
     </div>
   );

@@ -72,9 +72,9 @@ export const NavigationBar = ({
   }, []);
 
   const [hoveredItem, setHoveredItem] = useState({
-    title: "Noire fashion",
+    title: "Noir fashion",
     description:
-      "Noire fashion is a fashion brand that sells fashionable and stylish clothes.",
+      "Noir fashion is a fashion brand that sells fashionable and stylish clothes.",
     imageSrc: "/assets/model/noire-10278.jpg",
   });
 
@@ -151,7 +151,7 @@ export const NavigationBar = ({
                   <ListItemWithImage
                     key={component.product_variant_id}
                     title={component.product_variant_color}
-                    href={component.product_variant_slug || ""}
+                    href={`/product/${component.product_variant_slug}`}
                     setHoveredItem={setHoveredItem}
                     description={
                       component.product_variant_product.product_description
@@ -175,7 +175,7 @@ export const NavigationBar = ({
                   <ListItemWithImage
                     key={component.product_variant_id}
                     title={component.product_variant_color}
-                    href={component.product_variant_slug || ""}
+                    href={`/product/${component.product_variant_slug}`}
                     setHoveredItem={setHoveredItem}
                     description={
                       component.product_variant_product.product_description
@@ -211,7 +211,8 @@ export const NavigationBar = ({
                   <User className="w-5 h-5" />
                 </Link>
               </NavigationMenuLink>
-            ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ? (
+            ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ||
+              userData?.teamMemberProfile?.team_member_role === "RESELLER" ? (
               <>
                 <NavigationMenuLink asChild>
                   <Link

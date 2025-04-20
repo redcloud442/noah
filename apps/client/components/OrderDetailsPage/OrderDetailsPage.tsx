@@ -54,8 +54,8 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   );
 
   return (
-    <div className="min-h-screen h-auto px-6 text-black ">
-      <div className="w-full p-6 rounded-md flex flex-col xl:flex-row gap-6 h-auto">
+    <div className="min-h-screen h-full px-0 sm:px-6 text-black relative">
+      <div className="w-full sm:p-6 rounded-md flex flex-col xl:flex-row gap-6 h-auto">
         <div className="w-full md:w-1/2 space-y-6 bg-white p-6 rounded-md h-fit">
           <div className="flex justify-between items-center border-b pb-2">
             <h1 className="text-2xl font-bold pb-2">
@@ -66,8 +66,8 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
                 order.order_status === "PAID"
                   ? "bg-green-100 text-green-700"
                   : order.order_status === "PENDING"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-700"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
               } font-semibold`}
             >
               {order.order_status}
@@ -169,9 +169,10 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
                   <div className="relative">
                     <Image
                       src={
-                        product.order_item_image || "/assets/model/QR_59794.jpg"
+                        product.product_variant_image ||
+                        "/assets/model/QR_59794.jpg"
                       }
-                      alt={product.order_item_name}
+                      alt={product.product_variant_name}
                       width={80}
                       height={80}
                       className="w-20 h-20 object-contain rounded-xl"
@@ -185,14 +186,18 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
 
                   {/* Product Details */}
                   <div className="flex-1">
-                    <p className="font-semibold text-lg">
-                      {product.order_item_name}
+                    <p className="font-semibold text-lg uppercase">
+                      {product.product_variant_name} -{" "}
+                      {product.product_variant_color}
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Size: {product.order_item_size}
+                      Size: {product.product_variant_size}
                     </p>
                     <p className="text-gray-500 text-sm">
                       Color: {product.order_item_color}
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      Quantity: {product.order_item_quantity}
                     </p>
                     <p className="text-gray-700 font-bold">
                       ₱

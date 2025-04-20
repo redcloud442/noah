@@ -25,6 +25,10 @@ export const cartService = {
   get: async () => {
     const result = await apiClient.get("/cart");
 
+    if (result.status !== 200) {
+      throw new Error("Login failed");
+    }
+
     return result.data;
   },
 

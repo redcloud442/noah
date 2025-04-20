@@ -71,6 +71,7 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
         product_name: product.product_name,
         product_price: product.product_price,
         product_quantity: quantity,
+        product_size: selectedSize,
         product_variant_id: variantInfo.product_variant_id,
         product_variant_size: selectedSize,
         product_variant_color: variantInfo.product_variant_color,

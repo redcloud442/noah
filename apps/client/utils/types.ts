@@ -30,6 +30,13 @@ export type OrderItem = {
   order_item_image: string;
   order_item_size: string;
   order_item_color: string;
+  product_variant_name: string;
+  product_variant_slug: string;
+  product_variant_size: string;
+  product_variant_image: string;
+  product_variant_quantity: number;
+  product_variant_price: number;
+  product_variant_color: string;
 };
 
 export type Order = {
@@ -102,6 +109,12 @@ export type UserType = user_table & {
 export type ProductVariantType = product_variant_table & {
   variant_sizes: variant_size_table[];
   variant_sample_images: variant_sample_image_table[];
+};
+
+export type ProductVariantTypeShop = product_variant_table & {
+  variant_sizes: variant_size_table[];
+  variant_sample_images: variant_sample_image_table[];
+  product_variant_product: product_table;
 };
 
 export type FeaturedProductType = {

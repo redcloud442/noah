@@ -55,6 +55,7 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
           order_item_id: true,
           quantity: true,
           price: true,
+          size: true,
           product_variant: {
             select: {
               product_variant_id: true,
@@ -86,6 +87,7 @@ export const orderGetItemsModel = async (params: { orderNumber: string }) => {
       order_item_color: item.product_variant.product_variant_color,
       product_variant_id: item.product_variant.product_variant_id,
       product_variant_color: item.product_variant.product_variant_color,
+      product_variant_size: item.size,
       product_variant_name:
         item.product_variant.product_variant_product.product_name,
       product_variant_image:

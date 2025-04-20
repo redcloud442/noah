@@ -28,7 +28,8 @@ export const cartMiddleware = async (c: Context, next: Next) => {
 
   if (
     user.user_metadata.role !== "ADMIN" &&
-    user.user_metadata.role !== "MEMBER"
+    user.user_metadata.role !== "MEMBER" &&
+    user.user_metadata.role !== "RESELLER"
   ) {
     return c.json({ message: "Unauthorized" }, 401);
   }
@@ -56,7 +57,8 @@ export const cartPostMiddleware = async (c: Context, next: Next) => {
 
   if (
     user.user_metadata.role !== "ADMIN" &&
-    user.user_metadata.role !== "MEMBER"
+    user.user_metadata.role !== "MEMBER" &&
+    user.user_metadata.role !== "RESELLER"
   ) {
     return c.json({ message: "Unauthorized" }, 401);
   }
@@ -94,7 +96,8 @@ export const cartDeleteMiddleware = async (c: Context, next: Next) => {
 
   if (
     user.user_metadata.role !== "MEMBER" &&
-    user.user_metadata.role !== "ADMIN"
+    user.user_metadata.role !== "ADMIN" &&
+    user.user_metadata.role !== "RESELLER"
   ) {
     return c.json({ message: "Unauthorized" }, 401);
   }

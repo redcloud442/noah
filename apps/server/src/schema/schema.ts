@@ -22,6 +22,14 @@ export const loginSchema = z.object({
   cart: z.array(productSchema).optional(),
 });
 
+export const loginResellerSchema = z.object({
+  email: z.string().email(),
+});
+
+export const saveCartSchema = z.object({
+  cart: z.array(productSchema).optional(),
+});
+
 export const registerSchema = z.object({
   email: z.string().email(),
   firstName: z.string(),
@@ -35,6 +43,7 @@ export const cartPostSchema = z.object({
   product_name: z.string(),
   product_price: z.number(),
   product_quantity: z.number(),
+  product_size: z.string(),
   product_variant_id: z.string().uuid(),
   product_variant_size: z.string(),
   product_variant_color: z.string(),
@@ -132,3 +141,16 @@ export const userPostSchema = z.object({
 });
 
 export type typeUserPostSchema = z.infer<typeof userPostSchema>;
+
+export const userVerifyResellerCodeSchema = z.object({
+  otp: z.string().min(6).max(6),
+});
+
+export type typeUserVerifyResellerCodeSchema = z.infer<
+  typeof userVerifyResellerCodeSchema
+>;
+
+export const resellerGetListSchema = z.object({
+  take: z.coerce.number().min(1).max(15),
+  skip: z.coerce.number().min(1),
+});

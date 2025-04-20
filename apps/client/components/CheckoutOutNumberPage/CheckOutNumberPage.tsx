@@ -155,7 +155,7 @@ const CheckOutNumberPage = () => {
         product_variant_id: product.product_variant_id,
         product_variant_quantity: product.product_quantity,
         product_variant_price: product.product_price,
-        product_variant_size: product.product_variant_size,
+        product_variant_size: product.product_size,
         product_variant_color: product.product_variant_color,
       }))
     );
@@ -503,10 +503,15 @@ const CheckOutNumberPage = () => {
 
               {/* Product Details */}
               <div className="flex-1">
-                <p className="font-semibold text-lg">{product.product_name}</p>
+                <p className="font-semibold text-lg uppercase">
+                  {product.product_name} {product.product_variant_color}
+                </p>
 
                 <p className="text-gray-500 text-sm">
-                  Size: {product.product_variant_size}
+                  Size: {product.product_size}
+                </p>
+                <p className="text-gray-500 text-sm">
+                  Quantity: {product.product_quantity}
                 </p>
                 <p className="text-gray-500 text-sm">
                   Color: {product.product_variant_color}

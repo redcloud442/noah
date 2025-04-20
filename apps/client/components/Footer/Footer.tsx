@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 
 export const Footer = () => {
   return (
-    <footer className="bg-zinc-950 text-white py-10">
+    <footer className="bg-zinc-950 text-white py-10 relative">
       <div className="container mx-auto flex flex-col items-center justify-between space-y-8 md:flex-row md:space-y-0 px-6">
         {/* Brand Section */}
         <div className="flex flex-col space-y-4 text-center">

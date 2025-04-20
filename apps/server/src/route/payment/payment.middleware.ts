@@ -1,23 +1,43 @@
 import type { Context, Next } from "hono";
+import { getCookie } from "hono/cookie";
+import { verify } from "hono/jwt";
 import { rateLimit } from "../../utils/redis.js";
 import {
   paymentCreatePaymentSchema,
   paymentSchema,
 } from "../../utils/schema.js";
 
+const JWT_SECRET = process.env.JWT_SECRET || "secret";
+
 export const paymentMiddleware = async (c: Context, next: Next) => {
   const userData = c.get("user");
+  const checkoutToken = getCookie(c, "checkout_token");
 
-  if (!userData) {
+  if (!getCookie) {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (
-    userData.user_metadata.role !== "MEMBER" &&
-    userData.user_metadata.role !== "ADMIN"
-  ) {
+  if (!checkoutToken) {
     return c.json({ message: "Unauthorized" }, 401);
   }
+
+  const decoded = (await verify(checkoutToken, JWT_SECRET!)) as {
+    referralCode?: string;
+  };
+
+  const referralCode = decoded.referralCode ?? null;
+
+  // if (!userData) {
+  //   return c.json({ message: "Unauthorized" }, 401);
+  // }
+
+  // if (
+  //   userData.user_metadata.role !== "MEMBER" &&
+  //   userData.user_metadata.role !== "ADMIN" &&
+  //   userData.user_metadata.role !== "RESELLER"
+  // ) {
+  //   return c.json({ message: "Unauthorized" }, 401);
+  // }
 
   const {
     order_number,
@@ -47,9 +67,11 @@ export const paymentMiddleware = async (c: Context, next: Next) => {
     province,
     postalCode,
     productVariant,
+    referralCode,
   });
 
   if (!validate.success) {
+    console.log(validate.error.errors);
     return c.json(
       { message: "Invalid request", errors: validate.error.errors },
       400
@@ -79,12 +101,13 @@ export const paymentCreatePaymentMiddleware = async (
 ) => {
   const userData = c.get("user");
 
-  if (
-    userData.user_metadata.role !== "MEMBER" &&
-    userData.user_metadata.role !== "ADMIN"
-  ) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
+  // if (
+  //   userData.user_metadata.role !== "MEMBER" &&
+  //   userData.user_metadata.role !== "ADMIN" &&
+  //   userData.user_metadata.role !== "RESELLER"
+  // ) {
+  //   return c.json({ message: "Unauthorized" }, 401);
+  // }
 
   const { order_number, payment_method, payment_details, payment_type } =
     await c.req.json();
@@ -123,12 +146,13 @@ export const paymentCreatePaymentMiddleware = async (
 export const paymentGetMiddleware = async (c: Context, next: Next) => {
   const userData = c.get("user");
 
-  if (
-    userData.user_metadata.role !== "MEMBER" &&
-    userData.user_metadata.role !== "ADMIN"
-  ) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
+  // if (
+  //   userData.user_metadata.role !== "MEMBER" &&
+  //   userData.user_metadata.role !== "ADMIN" &&
+  //   userData.user_metadata.role !== "RESELLER"
+  // ) {
+  //   return c.json({ message: "Unauthorized" }, 401);
+  // }
 
   const { orderNumber } = c.req.param();
   const { paymentIntentId, clientKey } = c.req.query();

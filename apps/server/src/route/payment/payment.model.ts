@@ -23,6 +23,7 @@ export const createPaymentIntent = async (
     province,
     postalCode,
     barangay,
+    referralCode,
   } = params;
 
   const productVariantIds = productVariant.map(
@@ -100,6 +101,16 @@ export const createPaymentIntent = async (
   const data = response.data;
 
   const paymentIntent = await prisma.$transaction(async (tx) => {
+    let referral = null;
+    if (referralCode) {
+      const referralData = await prisma.reseller_table.findUnique({
+        where: {
+          reseller_code: referralCode ?? "",
+        },
+      });
+      referral = referralData;
+    }
+    console.log(user);
     const paymentIntent = await tx.order_table.create({
       data: {
         order_user_id: user.id ? user.id : null,
@@ -117,6 +128,7 @@ export const createPaymentIntent = async (
         order_postal_code: postalCode,
         order_barangay: barangay,
         order_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
+        order_reseller_id: referral ? referral.reseller_id : null,
       },
       select: {
         order_id: true,
@@ -134,31 +146,21 @@ export const createPaymentIntent = async (
       })),
     });
 
-    if (user.id) {
-      await tx.variant_size_table.updateMany({
-        where: {
-          variant_size_variant_id: {
-            in: productVariant.map((variant) => variant.product_variant_id),
-          },
+    await tx.variant_size_table.updateMany({
+      where: {
+        variant_size_variant_id: {
+          in: productVariant.map((variant) => variant.product_variant_id),
         },
-        data: {
-          variant_size_quantity: {
-            decrement: productVariant.reduce(
-              (total, variant) => total + variant.product_variant_quantity,
-              0
-            ),
-          },
+      },
+      data: {
+        variant_size_quantity: {
+          decrement: productVariant.reduce(
+            (total, variant) => total + variant.product_variant_quantity,
+            0
+          ),
         },
-      });
-      await tx.cart_table.deleteMany({
-        where: {
-          cart_product_variant_id: {
-            in: productVariant.map((variant) => variant.product_variant_id),
-          },
-          cart_user_id: user.id ?? null,
-        },
-      });
-    }
+      },
+    });
 
     return {
       paymentIntent: data.data.id,
@@ -252,7 +254,7 @@ export const createPaymentMethod = async (
           attributes: {
             payment_method: createPaymentMethod.data.data.id,
             client_key: createPaymentMethod.data.data.attributes.client_key,
-            return_url: `http://localhost:3000/payment/pn/${orderDetails.order_number}/redirect`,
+            return_url: `http://localhost:3001/payment/pn/${orderDetails.order_number}/redirect`,
           },
         },
       },
@@ -330,8 +332,75 @@ export const getPayment = async (params: {
       data: { order_status: orderStatus },
     });
 
+    const orderDetails = await prisma.order_table.findUnique({
+      where: { order_number: params.orderNumber },
+      include: {
+        order_items: true,
+      },
+    });
+    await prisma.$transaction(async (tx) => {
+      if (orderStatus === "PAID") {
+        if (orderDetails?.order_reseller_id) {
+          const referral = await tx.reseller_table.findUnique({
+            where: { reseller_id: orderDetails?.order_reseller_id ?? "" },
+          });
+
+          if (referral) {
+            const referralAmount = (orderDetails?.order_total ?? 0) * 0.1;
+
+            await tx.reseller_transaction_table.create({
+              data: {
+                reseller_transaction_reseller_id: referral.reseller_id,
+                reseller_transaction_amount: referralAmount,
+                reseller_transaction_type: "REFERRAL",
+                reseller_transaction_status: "NON-WITHDRAWABLE",
+              },
+            });
+
+            await tx.reseller_table.update({
+              where: { reseller_id: referral.reseller_id },
+              data: {
+                reseller_non_withdrawable_earnings: {
+                  increment: referralAmount,
+                },
+              },
+            });
+          }
+        }
+        await tx.cart_table.deleteMany({
+          where: {
+            cart_product_variant_id: {
+              in: orderDetails?.order_items.map(
+                (item) => item.product_variant_id
+              ),
+            },
+            cart_user_id: orderDetails?.order_user_id ?? undefined,
+          },
+        });
+      } else {
+        await prisma.variant_size_table.updateMany({
+          where: {
+            variant_size_variant_id: {
+              in: orderDetails?.order_items.map(
+                (item) => item.product_variant_id
+              ),
+            },
+          },
+          data: {
+            variant_size_quantity: {
+              increment: orderDetails?.order_items.reduce(
+                (total, item) => total + item.quantity,
+                0
+              ),
+            },
+          },
+        });
+      }
+    });
+
     return { orderStatus, paymentStatus };
   } catch (error) {
+    console.log(error);
     throw new Error("Failed to retrieve payment status");
   }
 };
