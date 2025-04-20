@@ -18,7 +18,6 @@ export const getUserController = async (c: Context) => {
 
     return c.json(userData);
   } catch (error) {
-    console.log(error);
     return c.json({ message: "Internal server error" }, 500);
   }
 };

@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import prisma from "../../utils/prisma.js";
 
 export const resellerGetListModel = async (params: {
@@ -55,5 +56,93 @@ export const resellerDashboardModel = async (params: {
   return {
     totalResellerSales,
     todayResellerSales,
+  };
+};
+
+export const resellerOrdersModel = async (params: {
+  resellerId: string;
+  take: number;
+  skip: number;
+  search: string;
+  sortDirection: string;
+  columnAccessor: string;
+  dateFilter: {
+    start: string;
+    end: string;
+  };
+}) => {
+  const {
+    resellerId,
+    take,
+    skip,
+    search,
+    sortDirection,
+    columnAccessor,
+    dateFilter,
+  } = params;
+
+  const filters: Prisma.order_tableWhereInput = {};
+  const sort: Prisma.order_tableOrderByWithRelationInput = {};
+
+  if (search) {
+    filters.order_number = { contains: search, mode: "insensitive" };
+  }
+
+  if (dateFilter.start && dateFilter.end) {
+    filters.order_created_at = {
+      gte: new Date(dateFilter.start),
+      lte: new Date(dateFilter.end),
+    };
+  }
+
+  if (sortDirection && columnAccessor) {
+    const columnAccessorMapping = {
+      orderNumber: "order_number",
+      customerName: "order_first_name",
+      orderDate: "order_created_at",
+      orderStatus: "order_status",
+    };
+
+    sort[
+      columnAccessorMapping[
+        columnAccessor as keyof typeof columnAccessorMapping
+      ] as keyof Prisma.order_tableOrderByWithRelationInput
+    ] = sortDirection === "asc" ? "asc" : "desc";
+  }
+
+  const offset = take * skip + 1;
+
+  const orders = await prisma.order_table.findMany({
+    where: {
+      order_reseller_id: resellerId,
+    },
+    select: {
+      order_number: true,
+      order_first_name: true,
+      order_last_name: true,
+      order_created_at: true,
+      order_status: true,
+    },
+    take,
+    skip: offset,
+    orderBy: sort,
+  });
+
+  const formattedOrders = orders.map((order) => ({
+    orderNumber: order.order_number,
+    customerName: `${order.order_first_name} ${order.order_last_name}`,
+    orderDate: order.order_created_at,
+    orderStatus: order.order_status,
+  }));
+
+  const total = await prisma.order_table.count({
+    where: {
+      order_reseller_id: resellerId,
+    },
+  });
+
+  return {
+    data: formattedOrders,
+    count: total,
   };
 };

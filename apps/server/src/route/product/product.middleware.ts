@@ -256,7 +256,6 @@ export const productPublicMiddleware = async (c: Context, next: Next) => {
   });
 
   if (!validate.success) {
-    console.log(validate.error);
     return c.json({ message: "Invalid request" }, 400);
   }
 

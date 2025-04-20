@@ -12,7 +12,7 @@ import product from "./product/product.route.js";
 import publicRoutes from "./public/public.routes.js";
 import reseller from "./reseller/reseller.route.js";
 import user from "./user/user.route.js";
-
+import withdraw from "./withdraw/withdraw.route.js";
 const app = new Hono();
 
 app.route("/auth", auth);
@@ -44,6 +44,10 @@ app.route("/product", product);
 // Reseller
 app.use("/reseller/*", protectionMiddleware);
 app.route("/reseller", reseller);
+
+// Withdraw
+app.use("/withdraw/*", protectionMiddleware);
+app.route("/withdraw", withdraw);
 
 // Public
 app.route("/publicRoutes", publicRoutes);

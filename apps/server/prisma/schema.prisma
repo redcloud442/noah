@@ -150,6 +150,7 @@ model order_table {
   order_user_id    String?    @db.Uuid
   order_team_id   String    @db.Uuid
   order_reseller_id String? @db.Uuid
+  order_reseller_is_processed Boolean @default(false)
 
   order_user       user_table? @relation(fields: [order_user_id], references: [user_id], onDelete: Cascade)
   order_team      team_table @relation(fields: [order_team_id], references: [team_id], onDelete: Cascade)
@@ -267,6 +268,9 @@ model reseller_withdrawal_table {
   reseller_withdrawal_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   reseller_withdrawal_amount Float
   reseller_withdrawal_status String
+  reseller_withdrawal_bank_name String?
+  reseller_withdrawal_account_number String?
+  reseller_withdrawal_account_name String?
   reseller_withdrawal_created_at DateTime @default(now()) @db.Timestamptz(3)
   reseller_withdrawal_reseller_id String @db.Uuid
   reseller_withdrawal_action_by String? @db.Uuid
@@ -284,6 +288,7 @@ model reseller_transaction_table {
   reseller_transaction_created_at DateTime @default(now()) @db.Timestamptz(3)
   reseller_transaction_reseller_id String @db.Uuid
   reseller_transaction_type String
+  reseller_transaction_status String
 
   reseller_transaction_reseller reseller_table @relation(fields: [reseller_transaction_reseller_id], references: [reseller_id], onDelete: Cascade)
 

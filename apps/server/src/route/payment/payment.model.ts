@@ -110,7 +110,7 @@ export const createPaymentIntent = async (
       });
       referral = referralData;
     }
-    console.log(user);
+
     const paymentIntent = await tx.order_table.create({
       data: {
         order_user_id: user.id ? user.id : null,
@@ -400,7 +400,6 @@ export const getPayment = async (params: {
 
     return { orderStatus, paymentStatus };
   } catch (error) {
-    console.log(error);
     throw new Error("Failed to retrieve payment status");
   }
 };
