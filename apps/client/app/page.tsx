@@ -20,5 +20,7 @@ export default async function Home() {
     take: 15,
   });
 
+  //test
+
   return <HomeSection variants={products} />;
 }
