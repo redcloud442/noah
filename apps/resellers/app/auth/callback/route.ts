@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       });
 
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_BASE_URL}${result.redirectTo}`
+        `${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://noir-clothing.com"}${result.redirectTo}`
       );
     }
 
