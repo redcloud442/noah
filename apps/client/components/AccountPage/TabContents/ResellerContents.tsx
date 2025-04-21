@@ -95,7 +95,34 @@ const ResellerContents = () => {
 
   return (
     <>
-      {userData?.teamMemberProfile.team_member_role !== "RESELLER" ? (
+      {/* ✅ Already a reseller */}
+      {userData?.teamMemberProfile.team_member_role === "RESELLER" ? (
+        <div className="p-6 max-w-3xl mx-auto text-center space-y-6">
+          <div className="flex flex-col items-center gap-3">
+            <h2 className="text-xl font-medium text-green-600">
+              You are already a verified NOAH Reseller ✅
+            </h2>
+            <Link href="/dashboard">
+              <Button variant="secondary">Proceed to Reseller Dashboard</Button>
+            </Link>
+          </div>
+        </div>
+      ) : userData?.teamMemberProfile.team_member_request_reseller ? (
+        // 🔄 Requested but waiting for approval
+        <div className="p-6 max-w-3xl mx-auto text-center space-y-6">
+          <div className="flex flex-col items-center gap-3">
+            <h2 className="text-xl font-medium text-yellow-600">
+              Please wait while your request to become a reseller is being
+              processed...
+            </h2>
+            <p className="text-muted-foreground">
+              Once you&apos;re eligible, you will be notified and gain full
+              access to the reseller dashboard.
+            </p>
+          </div>
+        </div>
+      ) : (
+        // 🆕 Initial request + OTP flow
         <div className="p-6 max-w-3xl mx-auto text-center space-y-6">
           <div className="flex flex-col items-center gap-3">
             <Sparkles className="w-12 h-12 text-yellow-400 animate-pulse" />
@@ -174,17 +201,6 @@ const ResellerContents = () => {
               </div>
             )
           )}
-        </div>
-      ) : (
-        <div className="p-6 max-w-3xl mx-auto text-center space-y-6">
-          <div className="flex flex-col items-center gap-3">
-            <h2 className="text-xl font-medium text-green-600">
-              You are already a verified NOIR Reseller ✅
-            </h2>
-            <Link href="/reseller">
-              <Button variant="secondary">Proceed to Reseller Dashboard</Button>
-            </Link>
-          </div>
         </div>
       )}
     </>

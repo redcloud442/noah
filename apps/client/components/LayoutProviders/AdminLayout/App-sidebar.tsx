@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  Banknote,
   BarChart,
   Box,
   LayoutDashboard,
   ListOrdered,
+  PiggyBank,
   ShoppingBag,
   ShoppingCart,
   User,
@@ -93,6 +95,19 @@ export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
             title: "Orders",
             url: `/${activeTeamName}/admin/orders`,
             icon: ListOrdered,
+          },
+        ],
+      },
+      {
+        title: "Withdrawal",
+        url: `/${activeTeamName}/admin/withdrawal`,
+        icon: PiggyBank,
+        isActive: true,
+        items: [
+          {
+            title: "Withdrawal",
+            url: `/${activeTeamName}/admin/withdrawal`,
+            icon: Banknote,
           },
         ],
       },

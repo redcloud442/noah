@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Badge } from "../ui/badge";
 import ButtonVariant from "../ui/button-variant";
 import { Card, CardHeader } from "../ui/card";
+import { Separator } from "../ui/separator";
 import CollectionContent from "./CollectionContent";
 
 type Props = {
@@ -110,11 +111,17 @@ const CollectionSlugPage = ({
   }, [activePage, userData]);
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold capitalize">
-          {collectionSlug.replace(/-/g, " ")}
-        </h1>
+        <div className="space-y-1 pb-2">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground uppercase">
+            {collectionSlug.replace(/-/g, " ")}
+          </h1>
+          <p className="text-muted-foreground">
+            View and manage all products in the{" "}
+            {collectionSlug.replace(/-/g, " ")}.
+          </p>
+        </div>
         <ButtonVariant
           variant="default"
           type="link"
@@ -124,6 +131,8 @@ const CollectionSlugPage = ({
           Add Product
         </ButtonVariant>
       </div>
+
+      <Separator className="my-6" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {products.map((product) => {

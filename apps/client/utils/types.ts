@@ -54,6 +54,7 @@ export type teamMemberProfile = {
   team_member_user_id: string;
   team_member_team: string;
   team_member_role: string;
+  team_member_request_reseller: boolean;
   team_member_team_group: team_group_member_table[];
 };
 
@@ -103,6 +104,7 @@ export type OrderType = order_table & {
 export type UserType = user_table & {
   team_member_table: team_member_table[];
   order_count: number;
+  team_member_role: string;
   order_purchased_amount: number;
 };
 
@@ -147,4 +149,36 @@ export type FreshDropsType = {
     variant_sample_image_id: string;
     variant_sample_image_image_url: string;
   }[];
+};
+
+export type WithdrawalType = {
+  reseller_withdrawal_reseller: string;
+  reseller_withdrawal_action_by: string;
+  reseller_withdrawal_status: string;
+  reseller_withdrawal_bank_name: string;
+  reseller_withdrawal_account_number: string;
+  reseller_withdrawal_account_name: string;
+  reseller_withdrawal_amount: number;
+  reseller_withdrawal_created_at: Date;
+  reseller_withdrawal_updated_at: Date;
+  reseller_withdrawal_id: string;
+  reseller_withdrawal_reseller_id: string;
+};
+
+export type DashboardType = {
+  sales: {
+    daily: number;
+    monthly: number;
+    total: number;
+    currentDate: Date;
+  };
+  withdrawals: {
+    currentDate: Date;
+    daily: number;
+    monthly: number;
+    total: number;
+  };
+  branches: {
+    total: number;
+  };
 };

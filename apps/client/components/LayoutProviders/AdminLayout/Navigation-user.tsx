@@ -60,7 +60,10 @@ export function NavUser() {
                   src={""}
                   alt={`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}
                 />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {userData?.userProfile.user_first_name.charAt(0)}
+                  {userData?.userProfile.user_last_name.charAt(0)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{`${userData?.userProfile.user_first_name} ${userData?.userProfile.user_last_name}`}</span>

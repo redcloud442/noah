@@ -1,10 +1,10 @@
-import ResellerPage from "@/components/ResellerPage/ResellerPage";
+import WithdrawalPage from "@/components/WithdrawalPage/WithdrawalPage";
 import { protectionAdminMiddleware } from "@/utils/protectionMiddleware";
 
 const page = async () => {
   await protectionAdminMiddleware();
 
-  return <ResellerPage />;
+  return <WithdrawalPage />;
 };
 
 export default page;

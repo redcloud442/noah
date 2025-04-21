@@ -105,10 +105,15 @@ const EditProductPage = ({
   };
 
   return (
-    <div className="p-6 rounded-lg shadow-md bg-white dark:bg-zinc-900">
-      <h2 className="text-2xl font-semibold mb-6 text-zinc-800 dark:text-white">
-        Edit Product
-      </h2>
+    <div className="p-6 rounded-lg shadow-md bg-white dark:bg-zinc-900 mx-4">
+      <div className="space-y-1 pb-2">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Edit Product
+        </h1>
+        <p className="text-muted-foreground">
+          Edit the product details and variants.
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {productFields.map((product, productIndex) => (

@@ -9,7 +9,7 @@ import { User } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useParams, usePathname } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Footer } from "../Footer/Footer";
 import { NavigationBar } from "../NavigationBar/NavigationBar";
@@ -41,7 +41,7 @@ export function Providers({
   const isInAdminPath = pathname.includes("admin");
 
   const { teamName } = useParams();
-  const { setUserData, userData } = useUserDataStore();
+  const { setUserData } = useUserDataStore();
   const { setFeaturedProducts } = useFeatureProductStore();
 
   useEffect(() => {
@@ -68,9 +68,9 @@ export function Providers({
     fetchUser();
   }, [user, teamName]);
 
-  const isAdmin = useCallback(() => {
-    return userData?.teamMemberProfile.team_member_role === "ADMIN";
-  }, [userData]);
+  const isAdmin = useMemo(() => {
+    return user?.user_metadata.role === "ADMIN";
+  }, [user]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -80,7 +80,7 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        {isAdmin() || isInAdminPath ? (
+        {isAdmin && isInAdminPath ? (
           children
         ) : (
           <>

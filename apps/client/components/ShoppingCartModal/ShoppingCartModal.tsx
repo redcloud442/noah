@@ -27,12 +27,14 @@ import { cartService } from "@/services/cart";
 import { Product } from "@/utils/types";
 import { Trash } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { IoBagOutline } from "react-icons/io5";
 import { toast } from "sonner";
-
 const ShoppingCartModal = () => {
+  const [open, setOpen] = useState(false);
+
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
   const searchParams = useSearchParams();
@@ -124,21 +126,22 @@ const ShoppingCartModal = () => {
   const handleCheckout = async () => {
     const checkoutNumber = generateCheckoutNumber();
 
-    if (!userData) {
-      await authService.createCheckoutToken(checkoutNumber);
-    }
+    await authService.createCheckoutToken(checkoutNumber);
 
     if (!checkoutNumber) {
       toast.error("Error generating checkout number");
       return;
     }
+
+    setOpen(false);
+
     router.push(
       `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
     );
   };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       {pathname !== "/cart" && pathname !== "/checkout" ? (
         <SheetTrigger>
           <div className="relative">
@@ -234,7 +237,13 @@ const ShoppingCartModal = () => {
         )}
 
         {cart?.products?.length > 0 && (
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex flex-col gap-2">
+            <Link href="/cart">
+              <Button variant="outline" className="w-full">
+                View Cart
+              </Button>
+            </Link>
+
             <Button
               onClick={handleCheckout}
               className="w-full "

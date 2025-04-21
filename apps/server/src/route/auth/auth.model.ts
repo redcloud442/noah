@@ -79,7 +79,6 @@ export const authLoginModel = async (params: {
           },
         },
         create: {
-          cart_id: item.cart_id,
           cart_quantity: item.product_quantity,
           cart_user_id: userData.user_id,
           cart_product_variant_id: item.product_variant_id,
@@ -217,7 +216,8 @@ export const authCallbackModel = async (params: {
 
   if (
     !userData.team_member_table[0].team_member_role.includes("ADMIN") &&
-    !userData.team_member_table[0].team_member_role.includes("MEMBER")
+    !userData.team_member_table[0].team_member_role.includes("MEMBER") &&
+    !userData.team_member_table[0].team_member_role.includes("RESELLER")
   ) {
     throw new Error("User not found");
   }

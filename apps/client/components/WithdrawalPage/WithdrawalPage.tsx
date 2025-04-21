@@ -1,22 +1,24 @@
 import { Separator } from "../ui/separator";
-import ProductCategoryTable from "./ProductCategoryTable";
+import WithdrawalTable from "./WithdrawalTable";
 
-const ProductCategoryPage = () => {
+const WithdrawalPage = () => {
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-1 pb-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Product Categories
+          Withdrawal List
         </h1>
         <p className="text-muted-foreground">
-          View and manage all product categories in the system.
+          View and manage all withdrawal in the system. You can search for
+          withdrawal by email, name, or payment method.
         </p>
       </div>
 
       <Separator className="my-6" />
-      <ProductCategoryTable />
+
+      <WithdrawalTable />
     </div>
   );
 };
 
-export default ProductCategoryPage;
+export default WithdrawalPage;

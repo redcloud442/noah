@@ -222,7 +222,7 @@ export const VariantSelectionToast = ({
       </div>
 
       <p className="mt-4 font-semibold">Available Sizes:</p>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-gray-600 text-center">
         {selectedSizeData
           ? `${selectedSizeData.variant_size_quantity} left`
           : null}

@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDateToYYYYMMDD } from "@/utils/function";
 import { UserType } from "@/utils/types";
@@ -15,13 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import UserActionModal from "./UserActionModal";
+import UserActionModal from "../UserPage/UserActionModal";
 
-type UserColumnProps = {
+type ResellerColumnProps = {
   setRequest: Dispatch<SetStateAction<UserType[]>>;
 };
 
-export const UserColumn = ({ setRequest }: UserColumnProps) => {
+export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
   const router = useRouter();
   const { teamName } = useParams();
 
@@ -78,28 +77,6 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
       },
     },
     {
-      accessorKey: "team_member_role",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="p-1 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Role <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const role = row.getValue("team_member_role") as string;
-
-        return (
-          <div className="font-medium text-center">
-            <Badge>{role}</Badge>
-          </div>
-        );
-      },
-    },
-
-    {
       accessorKey: "user_created_at",
       header: ({ column }) => (
         <Button
@@ -115,18 +92,6 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
         return (
           <div className="flex items-center justify-center gap-2 text-wrap w-full">
             <span>{formatDateToYYYYMMDD(value)}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "order_count",
-      header: "Order Count",
-      cell: ({ row }) => {
-        const orderCount = row.getValue("order_count") as number;
-        return (
-          <div className="flex items-center justify-center">
-            <span>{orderCount}</span>
           </div>
         );
       },
@@ -155,37 +120,18 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
                   Copy user email
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>View payment details</DropdownMenuItem>
-
                 <div className="flex flex-col space-y-1 items-start justify-center px-1">
                   <UserActionModal
                     type="ban"
                     userId={user.user_id}
                     setRequest={setRequest}
                   />
-                  {user.team_member_role !== "RESELLER" && (
-                    <UserActionModal
-                      type="promote"
-                      userId={user.user_id}
-                      role="RESELLER"
-                      setRequest={setRequest}
-                    />
-                  )}
 
                   {user.team_member_role !== "MEMBER" && (
                     <UserActionModal
                       type="promote"
                       userId={user.user_id}
                       role="MEMBER"
-                      setRequest={setRequest}
-                    />
-                  )}
-
-                  {user.team_member_role !== "ADMIN" && (
-                    <UserActionModal
-                      type="promote"
-                      userId={user.user_id}
-                      role="ADMIN"
                       setRequest={setRequest}
                     />
                   )}

@@ -1,5 +1,6 @@
 import type { Context, Next } from "hono";
 import {
+  userPatchSchema,
   userPostSchema,
   userVerifyResellerCodeSchema,
 } from "../../schema/schema.js";
@@ -47,6 +48,42 @@ export const userPostMiddleware = async (c: Context, next: Next) => {
   const { params } = await c.req.json();
 
   const { error } = userPostSchema.safeParse(params);
+
+  if (error) {
+    return c.json({ message: error.message }, 400);
+  }
+
+  c.set("params", params);
+
+  await next();
+};
+
+export const userPatchMiddleware = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  if (!user) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:user-post`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  const { params } = await c.req.json();
+
+  const { id } = c.req.param();
+
+  const { error } = userPatchSchema.safeParse({
+    ...params,
+    userId: id,
+  });
 
   if (error) {
     return c.json({ message: error.message }, 400);

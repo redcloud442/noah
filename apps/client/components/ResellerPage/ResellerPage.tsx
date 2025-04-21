@@ -1,22 +1,21 @@
 import { Separator } from "../ui/separator";
-import ProductCategoryTable from "./ProductCategoryTable";
-
-const ProductCategoryPage = () => {
+import ResellerTable from "./ResellerTable";
+const ResellerPage = () => {
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-1 pb-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Product Categories
+          Reseller List
         </h1>
         <p className="text-muted-foreground">
-          View and manage all product categories in the system.
+          View and manage all reseller in the system. You can search for
+          withdrawal by email, name, or payment method.
         </p>
       </div>
-
-      <Separator className="my-6" />
-      <ProductCategoryTable />
+      <Separator />
+      <ResellerTable />
     </div>
   );
 };
 
-export default ProductCategoryPage;
+export default ResellerPage;

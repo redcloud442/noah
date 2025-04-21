@@ -112,6 +112,7 @@ export const getUserModel = async (params: {
         team_member_role: true,
         team_member_team_id: true,
         team_member_date_created: true,
+        team_member_request_reseller: true,
         team_member_team: {
           select: {
             team_id: true,
@@ -140,6 +141,8 @@ export const getUserModel = async (params: {
       team_member_role: teamMemberProfile?.team_member_role,
       team_member_team_id: teamMemberProfile?.team_member_team_id,
       team_member_team: teamMemberProfile?.team_member_team.team_name,
+      team_member_request_reseller:
+        teamMemberProfile?.team_member_request_reseller,
       team_member_team_group: teamMemberProfile?.team_member_team_group.map(
         (teamGroup: {
           team_group_member_id: string;
@@ -198,6 +201,7 @@ export const getUserListModel = async (params: {
 
   const filter: Prisma.user_tableWhereInput = {};
   const orderBy: Record<string, string> = {};
+  const offset = (skip - 1) * take;
 
   if (search) {
     filter.OR = [
@@ -217,15 +221,18 @@ export const getUserListModel = async (params: {
     orderBy[columnAccessor] = sortDirection;
   }
 
-  if (teamId) {
-    filter.team_member_table = {
-      some: {
-        team_member_team_id: teamId,
-      },
-    };
-  }
   const users = await prisma.user_table.findMany({
-    where: filter,
+    where: {
+      ...filter,
+      team_member_table: {
+        some: {
+          team_member_team_id: teamId,
+          team_member_role: {
+            not: "RESELLER",
+          },
+        },
+      },
+    },
     select: {
       user_id: true,
       user_email: true,
@@ -242,9 +249,6 @@ export const getUserListModel = async (params: {
         },
       },
       team_member_table: {
-        where: {
-          team_member_active_team_id: teamId,
-        },
         select: {
           team_member_id: true,
           team_member_team_id: true,
@@ -254,7 +258,7 @@ export const getUserListModel = async (params: {
     },
     orderBy: orderBy,
     take,
-    skip,
+    skip: offset,
   });
 
   const formattedUsers = users.map((user) => ({
@@ -268,6 +272,98 @@ export const getUserListModel = async (params: {
     team_member_role: user.team_member_table[0]?.team_member_role,
     order_count: user._count.order_table,
     // order_purchased_amount: user.order_table[0]._sum.order_total,
+  }));
+
+  const count = await prisma.user_table.count({
+    where: filter,
+  });
+
+  return {
+    data: formattedUsers,
+    count: count,
+  };
+};
+
+export const getUserListResellerModel = async (params: {
+  search: string;
+  dateFilter: { start: string; end: string };
+  columnAccessor: string;
+  sortDirection: "asc" | "desc";
+  take: number;
+  skip: number;
+  teamId: string;
+}) => {
+  const {
+    search,
+    dateFilter,
+    columnAccessor,
+    sortDirection,
+    take,
+    skip,
+    teamId,
+  } = params;
+
+  const filter: Prisma.user_tableWhereInput = {};
+  const orderBy: Record<string, string> = {};
+  const offset = (skip - 1) * take;
+
+  if (search) {
+    filter.OR = [
+      { user_email: { contains: search, mode: "insensitive" } },
+      { user_first_name: { contains: search, mode: "insensitive" } },
+      { user_last_name: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (dateFilter.start && dateFilter.end) {
+    filter.user_created_at = {
+      gte: new Date(dateFilter.start),
+      lte: new Date(dateFilter.end),
+    };
+  }
+  if (columnAccessor) {
+    orderBy[columnAccessor] = sortDirection;
+  }
+
+  const users = await prisma.user_table.findMany({
+    where: {
+      ...filter,
+      team_member_table: {
+        some: {
+          team_member_team_id: teamId,
+          team_member_role: {
+            equals: "RESELLER",
+          },
+        },
+      },
+    },
+    select: {
+      user_id: true,
+      user_email: true,
+      user_first_name: true,
+      user_last_name: true,
+      user_created_at: true,
+      team_member_table: {
+        select: {
+          team_member_id: true,
+          team_member_role: true,
+        },
+        take: 1,
+      },
+    },
+    orderBy: orderBy,
+    take,
+    skip: offset,
+  });
+
+  const formattedUsers = users.map((user) => ({
+    user_id: user.user_id,
+    user_email: user.user_email,
+    user_first_name: user.user_first_name,
+    user_last_name: user.user_last_name,
+    user_created_at: user.user_created_at,
+    team_member_id: user.team_member_table[0]?.team_member_id,
+    team_member_role: user.team_member_table[0]?.team_member_role,
   }));
 
   const count = await prisma.user_table.count({
@@ -427,4 +523,77 @@ export const generateResellerCode = () => {
   }
 
   return `${prefix}-${randomCode}`;
+};
+
+export const userPatchModel = async (params: {
+  id: string;
+  type: "ban" | "promote";
+  role: "ADMIN" | "MEMBER" | "RESELLER";
+}) => {
+  if (params.type === "ban") {
+    const { error } = await supabaseClient.auth.admin.updateUserById(
+      params.id,
+      {
+        user_metadata: {
+          role: "BANNED",
+        },
+      }
+    );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  } else if (params.type === "promote") {
+    await prisma.$transaction(async (tx) => {
+      const user = await tx.user_table.findUnique({
+        where: {
+          user_id: params.id,
+        },
+        select: {
+          team_member_table: {
+            select: {
+              team_member_id: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      if (params.role !== "RESELLER") {
+        await tx.team_member_table.update({
+          where: {
+            team_member_id: user.team_member_table[0]?.team_member_id,
+          },
+          data: {
+            team_member_role: params.role,
+          },
+        });
+
+        const { error } = await supabaseClient.auth.admin.updateUserById(
+          params.id,
+          {
+            user_metadata: {
+              role: params.role,
+            },
+          }
+        );
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        await tx.team_member_table.update({
+          where: {
+            team_member_id: user.team_member_table[0]?.team_member_id,
+          },
+          data: {
+            team_member_request_reseller: true,
+          },
+        });
+      }
+    });
+  }
 };

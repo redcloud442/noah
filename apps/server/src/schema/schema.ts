@@ -7,19 +7,17 @@ export const productSchema = z.object({
   product_price: z.number(),
   product_quantity: z.number(),
   product_variant_id: z.string().uuid(),
-  product_variant_size: z.string(),
   product_variant_color: z.string(),
-  product_variant_quantity: z.number(),
 });
 
 export type typeProductSchema = z.infer<typeof productSchema>;
 
 export const loginSchema = z.object({
   email: z.string().email(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  userId: z.string().uuid().optional(),
-  cart: z.array(productSchema).optional(),
+  firstName: z.string().optional().nullable(),
+  lastName: z.string().optional().nullable(),
+  userId: z.string().optional().nullable(),
+  cart: z.array(productSchema).optional().nullable(),
 });
 
 export const loginResellerSchema = z.object({
@@ -142,6 +140,14 @@ export const userPostSchema = z.object({
 
 export type typeUserPostSchema = z.infer<typeof userPostSchema>;
 
+export const userPatchSchema = z.object({
+  userId: z.string().uuid(),
+  type: z.enum(["ban", "promote"]),
+  role: z.enum(["ADMIN", "MEMBER", "RESELLER"]).optional().nullable(),
+});
+
+export type typeUserPatchSchema = z.infer<typeof userPatchSchema>;
+
 export const userVerifyResellerCodeSchema = z.object({
   otp: z.string().min(6).max(6),
 });
@@ -180,3 +186,37 @@ export const resellerOrdersSchema = z.object({
 });
 
 export type typeResellerOrdersSchema = z.infer<typeof resellerOrdersSchema>;
+
+export const withdrawalListSchema = z.object({
+  take: z.coerce.number().min(1).max(100),
+  skip: z.coerce.number().min(0),
+  search: z.string().optional(),
+  sortDirection: z.string().optional(),
+  columnAccessor: z.string().optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+  teamId: z.string().uuid(),
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+});
+
+export type typeWithdrawalListSchema = z.infer<typeof withdrawalListSchema>;
+
+export const withdrawalActionSchema = z.object({
+  withdrawalId: z.string().uuid(),
+  resellerId: z.string().uuid(),
+  status: z.enum(["APPROVED", "REJECTED"]),
+});
+
+export type typeWithdrawalActionSchema = z.infer<typeof withdrawalActionSchema>;
+
+export const dashboardSchema = z.object({
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+  teamId: z.string().uuid(),
+});
+
+export type typeDashboardSchema = z.infer<typeof dashboardSchema>;

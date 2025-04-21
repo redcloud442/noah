@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Skeleton } from "../ui/skeleton";
+
 const CartPage = () => {
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
@@ -143,7 +144,7 @@ const CartPage = () => {
       router.push(`/checkout/cn/${checkoutNumber}`);
       setSubmitting(false);
     }, 1000);
-};
+  };
 
   return (
     <div className="min-h-screen mt-20 p-6 bg-gray-100 text-black">
@@ -198,7 +199,7 @@ const CartPage = () => {
 
                     {/* Product Details */}
                     <div className="flex-1">
-                      <p className="font-semibold text-lg">
+                      <p className="font-semibold text-lg uppercase">
                         {product.product_name} - {product.product_variant_color}
                       </p>
                       <p className="text-gray-500 text-sm">

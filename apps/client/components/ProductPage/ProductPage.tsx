@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Separator } from "../ui/separator";
 import { Skeleton } from "../ui/skeleton";
 
 type FormData = {
@@ -161,7 +162,19 @@ const ProductPage = () => {
   const pageCount = Math.ceil((count || 0) / 15);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-4">
+      <div className="space-y-1">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Product List
+        </h1>
+        <p className="text-muted-foreground">
+          View and manage all products in the system. You can search for
+          products by name, category, or price.
+        </p>
+      </div>
+
+      <Separator className="my-2" />
+
       <div className="flex flex-wrap items-center gap-4">
         <form
           className="flex flex-wrap w-full gap-2"

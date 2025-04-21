@@ -2,7 +2,9 @@ import type { Context } from "hono";
 import {
   createResellerRequestModel,
   getUserListModel,
+  getUserListResellerModel,
   getUserModel,
+  userPatchModel,
   verifyResellerCodeModel,
 } from "./user.model.js";
 
@@ -27,6 +29,18 @@ export const getUserListController = async (c: Context) => {
     const params = c.get("params");
 
     const userData = await getUserListModel(params);
+
+    return c.json(userData, 200);
+  } catch (error) {
+    return c.json({ message: "Internal server error" }, 500);
+  }
+};
+
+export const getUserListResellerController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const userData = await getUserListResellerModel(params);
 
     return c.json(userData, 200);
   } catch (error) {
@@ -67,6 +81,21 @@ export const userVerifyResellerCodeController = async (c: Context) => {
       return c.json({ message: error.message }, 400);
     }
 
+    return c.json({ message: "Internal server error" }, 500);
+  }
+};
+
+export const userPatchController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+    await userPatchModel({
+      id: params.userId,
+      type: params.type,
+      role: params.role,
+    });
+
+    return c.json("User updated successfully", 200);
+  } catch (error) {
     return c.json({ message: "Internal server error" }, 500);
   }
 };

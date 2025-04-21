@@ -55,6 +55,15 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
 
   return (
     <div className="min-h-screen h-full px-0 sm:px-6 text-black relative">
+      <div className="space-y-1">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Order Number: {order.order_number}
+        </h1>
+        <p className="text-muted-foreground">
+          View and manage all orders in the system. You can search for orders by
+          order number, user email, or payment method.
+        </p>
+      </div>
       <div className="w-full sm:p-6 rounded-md flex flex-col xl:flex-row gap-6 h-auto">
         <div className="w-full md:w-1/2 space-y-6 bg-white p-6 rounded-md h-fit">
           <div className="flex justify-between items-center border-b pb-2">

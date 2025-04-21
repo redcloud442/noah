@@ -6,6 +6,7 @@ import {
 import address from "./address/address.route.js";
 import auth from "./auth/auth.route.js";
 import cart from "./cart/cart.route.js";
+import dashboard from "./dashboard/dashboard.route.js";
 import order from "./order/order.route.js";
 import payment from "./payment/payment.route.js";
 import product from "./product/product.route.js";
@@ -48,6 +49,10 @@ app.route("/reseller", reseller);
 // Withdraw
 app.use("/withdraw/*", protectionMiddleware);
 app.route("/withdraw", withdraw);
+
+// Dashboard
+app.use("/dashboard/*", protectionMiddleware);
+app.route("/dashboard", dashboard);
 
 // Public
 app.route("/publicRoutes", publicRoutes);

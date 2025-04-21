@@ -24,6 +24,7 @@ export const authLoginMiddleware = async (c: Context, next: Next) => {
   });
 
   if (!parsed.success) {
+    console.log(parsed.error);
     return c.json({ message: "Invalid email or password" }, 400);
   }
 

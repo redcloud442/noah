@@ -29,7 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { UserColumn } from "./UserColumn";
+import { ResellerColumn } from "./ResellerColumn";
 
 import { Separator } from "@/components/ui/separator";
 import { userService } from "@/services/user";
@@ -43,7 +43,7 @@ type FilterFormValues = {
   skip: number;
 };
 
-const UserTable = () => {
+const ResellerTable = () => {
   const { userData } = useUserDataStore();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -66,7 +66,7 @@ const UserTable = () => {
         : undefined;
       const formattedStartDate = startDate ? formatDateToLocal(startDate) : "";
 
-      const { data, count } = await userService.getUserList({
+      const { data, count } = await userService.getUserListReseller({
         take: 15,
         skip: activePage,
         search,
@@ -102,17 +102,12 @@ const UserTable = () => {
     },
   });
 
-  const { columns } = UserColumn({ setRequest: setRequestData });
+  const { columns } = ResellerColumn({ setRequest: setRequestData });
 
   const table = useReactTable({
     data: requestData || [],
     columns,
     onSortingChange: setSorting,
-    manualFiltering: true,
-    enableSorting: true,
-    enableColumnResizing: true,
-    enableColumnPinning: true,
-    enableGlobalFilter: true,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -267,4 +262,4 @@ const UserTable = () => {
   );
 };
 
-export default UserTable;
+export default ResellerTable;

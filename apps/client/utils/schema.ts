@@ -192,3 +192,29 @@ export const productGetAllProductSchema = z.object({
 export type ProductGetAllProductSchema = z.infer<
   typeof productGetAllProductSchema
 >;
+
+export const withdrawalListSchema = z.object({
+  take: z.coerce.number().min(1).max(100),
+  skip: z.coerce.number().min(0),
+  search: z.string().optional(),
+  sortDirection: z.string().optional(),
+  columnAccessor: z.string().optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+  teamId: z.string().uuid(),
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+});
+
+export type typeWithdrawalListSchema = z.infer<typeof withdrawalListSchema>;
+
+export const dashboardSchema = z.object({
+  dateFilter: z.object({
+    start: z.string().optional(),
+    end: z.string().optional(),
+  }),
+  teamId: z.string().uuid(),
+});
+
+export type typeDashboardSchema = z.infer<typeof dashboardSchema>;

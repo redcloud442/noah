@@ -272,6 +272,7 @@ model reseller_withdrawal_table {
   reseller_withdrawal_account_number String?
   reseller_withdrawal_account_name String?
   reseller_withdrawal_created_at DateTime @default(now()) @db.Timestamptz(3)
+  reseller_withdrawal_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   reseller_withdrawal_reseller_id String @db.Uuid
   reseller_withdrawal_action_by String? @db.Uuid
 
