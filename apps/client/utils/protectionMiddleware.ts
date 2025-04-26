@@ -13,9 +13,9 @@ export const protectionAdminMiddleware = async () => {
 
   if (!currentUser) return redirect("/login");
 
-  // if (currentUser.user_metadata.role !== "ADMIN") {
-  //   return redirect("/500");
-  // }
+  if (currentUser.user_metadata.role !== "ADMIN") {
+    return redirect("/500");
+  }
 
   return currentUser;
 };

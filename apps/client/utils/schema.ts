@@ -119,6 +119,16 @@ export const productSchema = z.object({
       price: z.coerce.number().min(1, "Price must be greater than 0"),
       description: z.string(),
       category: z.string().min(1, "Category is required"),
+      sizeGuide: z
+        .instanceof(File)
+        .refine((file) => !!file, { message: "File is required" })
+        .refine(
+          (file) =>
+            ["image/jpeg", "image/png", "image/jpg"].includes(file.type) &&
+            file.size <= 12 * 1024 * 1024, // 12MB limit
+          { message: "File must be a valid image and less than 12MB." }
+        ),
+      sizeGuideUrl: z.string().optional(),
       variants: z.array(
         z.object({
           id: z.string().uuid("ID must be a valid UUID"),
@@ -132,7 +142,6 @@ export const productSchema = z.object({
           images: z.array(
             z
               .instanceof(File)
-              .optional()
               .refine((file) => !!file, { message: "File is required" })
               .refine(
                 (file) =>
@@ -159,6 +168,7 @@ export const productVariantSchema = z.object({
   product_variant_quantity: z.number(),
   product_variant_size: z.string(),
   product_variant_slug: z.string(),
+  product_variant_size_guide_url: z.string().optional(),
   variant_sample_images: z.array(
     z.object({
       variant_sample_image_image_url: z.string(),
@@ -177,6 +187,7 @@ export const productCreateSchema = z.object({
   product_slug: z.string(),
   product_team_id: z.string(),
   product_variants: z.array(productVariantSchema),
+  product_size_guide_url: z.string().optional(),
 });
 
 export type typeProductCreateSchema = z.infer<typeof productCreateSchema>;
@@ -218,3 +229,17 @@ export const dashboardSchema = z.object({
 });
 
 export type typeDashboardSchema = z.infer<typeof dashboardSchema>;
+
+export const userChangePasswordSchema = z
+  .object({
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type UserChangePasswordFormData = z.infer<
+  typeof userChangePasswordSchema
+>;

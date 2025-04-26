@@ -113,6 +113,7 @@ export const findProductBySlug = async (slug: string, prisma: PrismaClient) => {
           product_variant_product_id: true,
           product_variant_slug: true,
           product_variant_color: true,
+
           product_variant_product: true,
           product_variant_is_deleted: true,
           product_variant_is_featured: true,
@@ -228,6 +229,8 @@ export const formattedCreateProductResponse = async (
         price: number;
         description: string;
         category: string;
+        sizeGuide: File;
+        sizeGuideUrl?: string;
         variants: {
           id: string;
           color: string;
@@ -237,6 +240,19 @@ export const formattedCreateProductResponse = async (
           isDeleted?: boolean;
         }[];
       }) => {
+        let sizeGuideUrl: string | undefined;
+        if (prod.sizeGuide) {
+          const filePath = `uploads/${Date.now()}_${prod.sizeGuide.name}`;
+
+          const productImage = await supabaseClient.storage
+            .from("PRODUCT_IMAGE")
+            .upload(filePath, prod.sizeGuide, { upsert: true });
+
+          if (productImage.error) throw new Error(productImage.error.message);
+
+          sizeGuideUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+        }
+
         const product_variants = await Promise.all(
           prod.variants.map(
             async (variant: {
@@ -295,6 +311,7 @@ export const formattedCreateProductResponse = async (
           product_name: prod.name,
           product_slug: slugify(prod.name),
           product_description: prod.description,
+          product_size_guide_url: sizeGuideUrl,
           product_price: prod.price,
           product_sale_percentage: 0,
           product_category_id: prod.category,
@@ -317,8 +334,21 @@ export const formattedUpdateProductResponse = async (
   teamId: string,
   productId: string
 ) => {
+  let sizeGuideUrl: string | undefined;
   const formattedProducts = await Promise.all(
     product.products.map(async (prod) => {
+      if (prod.sizeGuide) {
+        const filePath = `uploads/${Date.now()}_${prod.sizeGuide?.name}`;
+
+        const productImage = await supabaseClient.storage
+          .from("PRODUCT_IMAGE")
+          .upload(filePath, prod.sizeGuide, { upsert: true });
+
+        if (productImage.error) throw new Error(productImage.error.message);
+
+        sizeGuideUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+      }
+
       const product_variants = await Promise.all(
         prod.variants.map(async (variant) => {
           const variantId = variant.id || uuidv4();
@@ -350,6 +380,7 @@ export const formattedUpdateProductResponse = async (
               slugify(prod.name),
               slugify(variant.color)
             ),
+            product_variant_size_guide_url: sizeGuideUrl,
             variant_sample_images: imageUrls.map((url) => ({
               variant_sample_image_image_url: url,
               variant_sample_image_product_variant_id: variant.id,
@@ -375,6 +406,7 @@ export const formattedUpdateProductResponse = async (
         product_sale_percentage: 0,
         product_category_id: prod.category,
         product_team_id: teamId,
+        product_size_guide_url: sizeGuideUrl,
         product_variants,
       };
     })
@@ -399,6 +431,10 @@ export const formatDateToYYYYMMDD = (date: Date | string): string => {
   const day = String(inputDate.getDate()).padStart(2, "0"); // Use `getDate()`
 
   return `${year}-${month}-${day}`;
+};
+
+export const pesoSignedNumber = (number: number): string => {
+  return `₱ ${number.toLocaleString()}`;
 };
 
 export const formateMonthDateYear = (date: Date | string): string => {

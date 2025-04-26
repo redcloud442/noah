@@ -11,14 +11,14 @@ import {
   type MRT_TableInstance,
 } from "mantine-react-table";
 
-type ReusableMantineReactTableProps<T extends Record<string, any>> = {
+type ReusableMantineReactTableProps<T extends Record<string, unknown>> = {
   table?: MRT_TableInstance<T>; // NEW: optional controlled table instance
   data?: T[]; // fallback for uncontrolled
   columns?: MRT_ColumnDef<T>[]; // fallback for uncontrolled
   isLoading?: boolean;
 };
 
-export function ReusableMantineReactTable<T extends Record<string, any>>({
+export function ReusableMantineReactTable<T extends Record<string, unknown>>({
   table,
   data,
   columns,

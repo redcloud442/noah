@@ -72,4 +72,26 @@ export const userService = {
 
     return data;
   },
+  changePassword: async (params: { userId: string; password: string }) => {
+    const { data } = await axios.post("/api/v1/user/change-password", {
+      params,
+    });
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
+  generateLoginLink: async (params: { email: string }) => {
+    const { data } = await axios.post("/api/v1/user/generate-link", {
+      params,
+    });
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
 };

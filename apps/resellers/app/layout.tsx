@@ -18,7 +18,11 @@ export const metadata = {
   description: "Noir Reseller",
 };
 
-export default async function RootLayout({ children }: { children: any }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const supabase = await createClient();
 
   const {

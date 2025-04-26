@@ -121,7 +121,7 @@ export const VariantSelectionToast = ({
             Added to cart successfully!
           </h1>
           <div className="flex justify-start gap-2 items-center">
-            <div className="w-20 h-20 rounded-md overflow-hidden relative">
+            <div className="w-20 h-20 overflow-hidden relative">
               <Image
                 src={cartItem.product_variant_image}
                 alt={product.product_name}

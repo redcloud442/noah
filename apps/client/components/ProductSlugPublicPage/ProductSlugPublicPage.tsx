@@ -17,14 +17,16 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { Badge } from "../ui/badge";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
+import { ScrollArea } from "../ui/scroll-area";
 
 type Props = {
   product: ProductType;
@@ -46,8 +48,21 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
 
   const router = useRouter();
 
+  const isSoldOut = useMemo(
+    () =>
+      variantInfo.variant_sizes.every(
+        (size) => size.variant_size_quantity === 0
+      ),
+    [variantInfo.variant_sizes]
+  );
+
   const handleAddToCart = async () => {
     try {
+      if (isSoldOut) {
+        toast.error("This product is sold out.");
+        return;
+      }
+
       setIsLoading(true);
       if (!variantInfo || !selectedSize) {
         toast.error("Please select a size before adding to cart.");
@@ -133,6 +148,11 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
       </div>
       <div className="block md:sticky top-0">
         <div className="relative bg-gray-200 rounded-lg overflow-hidden mb-4">
+          {isSoldOut && (
+            <Badge className="absolute top-2 right-2 bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
           <Image
             src={selectedImage}
             alt="Selected Product Image"
@@ -223,6 +243,7 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
             {variantInfo.variant_sizes.map((variant) => (
               <Button
                 key={variant.variant_size_id}
+                disabled={variant.variant_size_quantity === 0}
                 onClick={() => setSelectedSize(variant.variant_size_value)}
                 className={`px-4 py-2 border rounded-md ${
                   selectedSize === variant.variant_size_value
@@ -280,24 +301,27 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
             </Button>
           </div>
         </div>
+        {!isSoldOut && (
+          <>
+            <Button
+              className="mt-4 w-full"
+              disabled={isLoading}
+              onClick={handleAddToCart}
+            >
+              {isLoading ? "Adding..." : "+ Add to Cart"}
+            </Button>
 
-        <Button
-          className="mt-4 w-full"
-          disabled={isLoading}
-          onClick={handleAddToCart}
-        >
-          {isLoading ? "Adding..." : "+ Add to Cart"}
-        </Button>
-
-        <Button
-          className="mt-4 w-full"
-          variant="secondary"
-          disabled={isLoading}
-          onClick={handleProceedToCheckout}
-        >
-          {" "}
-          Proceed to Checkout
-        </Button>
+            <Button
+              className="mt-4 w-full"
+              variant="secondary"
+              disabled={isLoading}
+              onClick={handleProceedToCheckout}
+            >
+              {" "}
+              Proceed to Checkout
+            </Button>
+          </>
+        )}
 
         {/* Expandable Sections */}
         <Accordion type="single" collapsible className="mt-6">
@@ -307,13 +331,157 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
               {product.product_description || "No description available."}
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="size-guide">
+            <AccordionTrigger>Size Guide</AccordionTrigger>
+            <AccordionContent className="flex justify-center items-center">
+              <Image
+                src={product.product_size_guide_url || ""}
+                alt="Size Guide"
+                width={600}
+                height={600}
+              />
+            </AccordionContent>
+          </AccordionItem>
           <AccordionItem value="shipping">
             <AccordionTrigger>Shipping</AccordionTrigger>
             <AccordionContent>Shipping details go here.</AccordionContent>
           </AccordionItem>
           <AccordionItem value="returns">
-            <AccordionTrigger>Returns</AccordionTrigger>
-            <AccordionContent>Return policy details go here.</AccordionContent>
+            <AccordionTrigger>
+              Noir Clothing Philippines Corporation Returns
+            </AccordionTrigger>
+            <AccordionContent>
+              <ScrollArea className="h-[400px] px-4 py-2 text-sm text-gray-700">
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold">Returns Policy</h2>
+
+                  <p>
+                    <strong>
+                      Noir Clothing Philippines Corporation Returns Policy
+                    </strong>
+                  </p>
+
+                  <p>
+                    Original receipt of purchase is needed for product
+                    exchange/refund within 7 days after purchase date, provided
+                    that the product is purchased from any NOIR Philippines
+                    physical store. For items purchased through the official
+                    NOIR online store, the packing list and return form are
+                    required to be presented within 30 days after receipt of
+                    shipment confirmation email.
+                  </p>
+
+                  <p>
+                    Products purchased with a coupon may be exchanged/refunded.
+                    The amount to be refunded will be the total amount of the
+                    transaction for refund less the coupon price. The coupon is
+                    only for one-time use and will be forfeited once redeemed.
+                    Coupon will be revived only if the item to be refunded is
+                    damaged, defective, or faulty.
+                  </p>
+
+                  <p>
+                    Refund can only be processed in the same store where the
+                    item(s) were bought, including online orders settled using
+                    the Pay In Store method.
+                  </p>
+
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>
+                      Refund for products purchased in the official NOIR online
+                      store, which are paid through the website, will be
+                      processed through our Online Store warehouse. Please see
+                      here for the Online Order Return Process.
+                    </li>
+                    <li>
+                      Customers will be refunded based on their original mode of
+                      payment.
+                    </li>
+                  </ul>
+
+                  <p>
+                    Product exchange can be processed in any of our NOIR
+                    Philippines physical stores except for special sizes or
+                    products exclusive to the NOIR online store. For exchange of
+                    items purchased in the official NOIR online store, please
+                    bring the products along with the packing list, items with
+                    price tags, and return form to any NOIR Philippines physical
+                    store. There is no online processing for product exchange.
+                  </p>
+
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>
+                      If the requested size or product to be exchanged is not
+                      available in the physical store (i.e., special sizes,
+                      online-exclusive products), exchange will not be allowed
+                      but a refund can be processed using the Online Order
+                      Return Process.
+                    </li>
+                    <li>
+                      Customer may exchange the same product for a different
+                      size, color, or a completely different product of equal or
+                      greater value. If the exchanged product has a higher
+                      price, the customer may pay the price difference.
+                    </li>
+                  </ul>
+
+                  <p>
+                    Products which are discounted at the time of purchase may be
+                    exchanged/refunded based on the net amount of the purchased
+                    item appearing on the receipt.
+                  </p>
+
+                  <p>
+                    Products purchased through bulk order are not eligible for
+                    return and exchange.
+                  </p>
+
+                  <p>
+                    Products must be new and in their original condition and
+                    with attached labels and price tags to be eligible under
+                    this Return Policy. However, if products are found to be
+                    defective or have manufacturing faults, they will still be
+                    eligible for refund/exchange as an exemption to the policy.
+                  </p>
+
+                  <p>
+                    Products that have been sent for alteration cannot be
+                    returned or exchanged.
+                  </p>
+
+                  <p>
+                    <strong>
+                      Noir Clothing Philippines Corporation reserves the right
+                      to:
+                    </strong>
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>
+                      Define and limit, refuse, and/or reject returns from
+                      customers
+                    </li>
+                    <li>
+                      Delete or freeze customer accounts at any time due to:
+                    </li>
+                    <ul className="list-[circle] pl-6 space-y-1">
+                      <li>
+                        Irregular or excessive returns history involving worn,
+                        altered, laundered, damaged, or missing tags
+                      </li>
+                      <li>Purchases made for resale purposes</li>
+                      <li>Creation of multiple account IDs by one user</li>
+                      <li>Potential fraudulent or criminal activity</li>
+                    </ul>
+                  </ul>
+
+                  <p>
+                    Refund & Exchange conditions may be subject to Local
+                    Government Unit (LGU) restrictions in relation to health and
+                    safety protocols.
+                  </p>
+                </div>
+              </ScrollArea>
+            </AccordionContent>
           </AccordionItem>
         </Accordion>
       </div>

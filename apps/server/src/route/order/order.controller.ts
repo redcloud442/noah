@@ -38,6 +38,7 @@ export const orderGetListController = async (c: Context) => {
 
     return c.json(orders);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Internal server error" }, 500);
   }
 };

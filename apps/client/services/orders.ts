@@ -15,6 +15,22 @@ export const ordersService = {
       count: number;
     };
   },
+  getOrdersAdmin: async (params: {
+    take: number;
+    skip: number;
+    userId: string;
+  }) => {
+    const result = await apiClient.post("/orders/list", { params });
+
+    if (result.status !== 200) {
+      throw new Error("Payment failed");
+    }
+
+    return result.data as {
+      orders: order_table[];
+      count: number;
+    };
+  },
   getOrderItems: async (order_number: string) => {
     const result = await apiClient.get(`/orders/${order_number}/items`);
 

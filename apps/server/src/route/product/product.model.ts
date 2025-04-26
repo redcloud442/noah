@@ -97,6 +97,7 @@ export const productVariantCreateModel = async (
         product_slug,
         product_team_id,
         product_variants,
+        product_size_guide_url,
       } = product;
 
       // Create product
@@ -110,6 +111,7 @@ export const productVariantCreateModel = async (
           product_sale_percentage,
           product_slug,
           product_team_id,
+          product_size_guide_url: product_size_guide_url,
         },
       });
 
@@ -164,6 +166,7 @@ export const productVariantUpdateModel = async (
         product_sale_percentage,
         product_slug,
         product_category_id,
+        product_size_guide_url,
         product_team_id,
         product_variants,
       } = product;
@@ -179,6 +182,7 @@ export const productVariantUpdateModel = async (
           product_slug,
           product_category_id,
           product_team_id,
+          product_size_guide_url,
         },
       });
 

@@ -20,6 +20,9 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import PolicyModal from "../PolicyModal/PolicyModal";
+import ReturnPolicyPage from "../ReturnPolicyPage/ReturnPolicyPage";
+import TermsOfServicePage from "../TermsOfService/TermsOfServicePage";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -473,6 +476,22 @@ const CheckOutNumberPage = () => {
               "Pay Now"
             )}
           </Button>
+          <div className="text-gray-500 text-sm text-center flex flex-col items-center gap-2">
+            By clicking &quot;Pay Now&quot;, you agree to the{" "}
+            <div className="flex gap-2">
+              <PolicyModal
+                title="Terms of Service"
+                description="Noir Clothing Philippines Corporation"
+                content={<TermsOfServicePage />}
+              />{" "}
+              And
+              <PolicyModal
+                title="Returns Policy"
+                description="Noir Clothing Philippines Corporation"
+                content={<ReturnPolicyPage />}
+              />{" "}
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-6 shadow-md rounded-md space-y-4">

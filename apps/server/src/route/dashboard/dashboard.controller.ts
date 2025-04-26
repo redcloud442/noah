@@ -9,6 +9,7 @@ export const dashboardController = async (c: Context) => {
 
     return c.json(dashboard);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Internal server error" }, 500);
   }
 };

@@ -3,6 +3,7 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import useUserDataStore from "@/lib/userDataStore";
 import { createClient } from "@/utils/supabase/client";
+import { FeaturedProductType, FreshDropsType } from "@/utils/types";
 import { LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,8 +20,12 @@ type Collection = {
 
 export const MobileNavigationBar = ({
   collections,
+  freshDrops,
+  featuredProducts,
 }: {
   collections: Collection[];
+  freshDrops: FreshDropsType[];
+  featuredProducts: FeaturedProductType[];
 }) => {
   const { userData, setUserData } = useUserDataStore();
   const supabase = createClient();
@@ -82,26 +87,43 @@ export const MobileNavigationBar = ({
                   className="block text-white hover:underline"
                   onClick={() => setOpen(false)}
                 >
-                  {col.product_category_name}
+                  {col.product_category_name.toUpperCase()}
                 </Link>
               ))}
             </div>
 
-            <div className="space-y-2">
-              <Link
-                href="/featured"
-                className="block text-white hover:underline"
-                onClick={() => setOpen(false)}
-              >
+            <div className="space-y-3">
+              <p className="text-sm uppercase font-semibold text-gray-400">
                 Featured Products
-              </Link>
-              <Link
-                href="/drops"
-                className="block text-white hover:underline"
-                onClick={() => setOpen(false)}
-              >
+              </p>
+              {featuredProducts.map((product) => (
+                <Link
+                  key={product.product_variant_id}
+                  href={`/products/${product.product_variant_slug}`}
+                  className="block text-white hover:underline"
+                  onClick={() => setOpen(false)}
+                >
+                  {product.product_variant_product.product_name.toUpperCase()} -{" "}
+                  {product.product_variant_color.toUpperCase()}
+                </Link>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm uppercase font-semibold text-gray-400">
                 Fresh Drops
-              </Link>
+              </p>
+              {freshDrops.map((drop) => (
+                <Link
+                  key={drop.product_variant_id}
+                  href={`/drops/${drop.product_variant_slug}`}
+                  className="block text-white hover:underline"
+                  onClick={() => setOpen(false)}
+                >
+                  {drop.product_variant_product.product_name.toUpperCase()} -{" "}
+                  {drop.product_variant_color.toUpperCase()}
+                </Link>
+              ))}
             </div>
 
             <div className="border-t border-white/20 pt-4 space-y-3">
@@ -127,13 +149,13 @@ export const MobileNavigationBar = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start"
+                    className="w-full justify-start p-0"
                     onClick={() => {
                       handleLogout();
                       setOpen(false);
                     }}
                   >
-                    <LogOut className="w-5 h-5 mr-2" />
+                    <LogOut className="w-5 h-5" />
                     Logout
                   </Button>
                 </>

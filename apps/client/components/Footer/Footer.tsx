@@ -23,7 +23,7 @@ export const Footer = () => {
               Get the latest updates, promotions, and trends directly to your
               inbox.
             </p>
-            <form className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <form className="flex flex-col sm:flex-row items-start justify-start gap-3">
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -42,18 +42,19 @@ export const Footer = () => {
         {/* 📬 Subscribe Section */}
 
         {/* Navigation Links */}
-        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-8 text-center">
+        <div className="flex flex-col justify-end   space-y-4 text-start">
           <Link href="/about" className="hover:text-gray-300">
             About Us
           </Link>
           <Link href="/contact" className="hover:text-gray-300">
             Contact
           </Link>
-          <Link href="/privacy" className="hover:text-gray-300">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-gray-300">
+
+          <Link href="/policy/terms-of-service" className="hover:text-gray-300">
             Terms of Service
+          </Link>
+          <Link href="/policy/terms-of-service" className="hover:text-gray-300">
+            Returns Policy
           </Link>
         </div>
 

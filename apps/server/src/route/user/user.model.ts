@@ -597,3 +597,46 @@ export const userPatchModel = async (params: {
     });
   }
 };
+
+export const userChangePasswordModel = async (params: {
+  userId: string;
+  password: string;
+}) => {
+  const { error } = await supabaseClient.auth.admin.updateUserById(
+    params.userId,
+    {
+      password: params.password,
+    }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { message: "Password updated successfully" };
+};
+
+export const userGenerateLoginLinkModel = async (params: { email: string }) => {
+  const { data, error } = await supabaseClient.auth.admin.generateLink({
+    email: params.email,
+    type: "magiclink",
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Failed to generate login link");
+  }
+
+  const link =
+    process.env.NODE_ENV === "development"
+      ? `http://localhost:3001/auth/callback?hashedToken=${data.properties.hashed_token}`
+      : `https://www.noir-clothing.com/auth/callback?hashedToken=${data.properties.hashed_token}`;
+
+  return {
+    message: "Login link generated successfully",
+    link: link,
+  };
+};

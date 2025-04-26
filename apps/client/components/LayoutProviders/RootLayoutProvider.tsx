@@ -89,7 +89,11 @@ export function Providers({
               collections={collections}
               featuredProducts={featuredProducts}
             />
-            <MobileNavigationBar collections={collections} />
+            <MobileNavigationBar
+              freshDrops={freshDrops}
+              featuredProducts={featuredProducts}
+              collections={collections}
+            />
             <main>{children}</main>
             <Footer />
             <Toaster />

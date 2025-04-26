@@ -10,6 +10,7 @@ import { product_table } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "../ui/badge";
@@ -168,6 +169,7 @@ export const HoverVariantCard = ({
   product,
   currentDate,
 }: HoverVariantCardProps) => {
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -202,6 +204,16 @@ export const HoverVariantCard = ({
     ));
   };
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
+  const redirectToViewProduct = (productVariantSlug: string | null) => {
+    router.push(`/product/${productVariantSlug}`);
+  };
+
   return (
     <Card
       className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
@@ -216,18 +228,21 @@ export const HoverVariantCard = ({
           height={2000}
           quality={80}
           className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+          onClick={() => redirectToViewProduct(variant.product_variant_slug)}
         />
 
-        {/* "Add to Cart" button - initially hidden */}
         <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
-          <Button
-            onClick={() => handleAddToCart()}
-            size="sm"
-            variant="outline"
-            className="bg-white text-black"
-          >
-            <PlusIcon className="w-4 h-4" /> Quick Add
-          </Button>
+          {!isSoldOut && (
+            <Button
+              onClick={() => handleAddToCart()}
+              size="sm"
+              variant="outline"
+              className="bg-white text-black"
+            >
+              <PlusIcon className="w-4 h-4" /> Quick Add
+            </Button>
+          )}
+
           <Link href={`/shop`}>
             <Button
               size="sm"
@@ -244,6 +259,12 @@ export const HoverVariantCard = ({
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
           <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
             New
+          </Badge>
+        )}
+
+        {isSoldOut && (
+          <Badge className="absolute top-2 right-2 bg-gray-500 text-xs px-2 py-1 rounded text-white">
+            Sold Out
           </Badge>
         )}
 

@@ -9,11 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import useUserDataStore from "@/lib/userDataStore";
-import { productService } from "@/services/product";
 import { formattedCreateProductResponse } from "@/utils/function";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { productService } from "@/services/product";
 import { ProductFormType, productSchema } from "@/utils/schema";
 import { product_category_table } from "@prisma/client";
 import { PhilippinePeso, PlusCircle, Trash } from "lucide-react";
@@ -22,7 +22,9 @@ import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { ImageDropzone } from "../ProductCategoryPage/CreateProductCategory/ImageDropzone";
 import { FloatingLabelInput } from "../ui/floating-input";
+import { Label } from "../ui/label";
 import { ProductVariants } from "./ProductVariants";
 
 const CreateProductPage = () => {
@@ -31,6 +33,7 @@ const CreateProductPage = () => {
 
   const { userData } = useUserDataStore();
   const [categories, setCategories] = useState<product_category_table[]>([]);
+  const [sizeGuidePreviewUrl, setSizeGuidePreviewUrl] = useState<string>("");
 
   const {
     control,
@@ -46,6 +49,8 @@ const CreateProductPage = () => {
           price: 0,
           description: "",
           category: "",
+          sizeGuide: new File([], ""),
+          sizeGuideUrl: "",
           variants: [
             {
               id: uuidv4(),
@@ -122,6 +127,8 @@ const CreateProductPage = () => {
       price: 0,
       description: "",
       category: "",
+      sizeGuide: new File([], ""),
+      sizeGuideUrl: "",
       variants: [
         {
           id: uuidv4(),
@@ -216,7 +223,22 @@ const CreateProductPage = () => {
                   {errors.products[productIndex]?.category?.message}
                 </p>
               )}
-
+              <div className="space-y-2">
+                <Label>Size Guide Image</Label>
+                <Controller
+                  control={control}
+                  name={`products.${productIndex}.sizeGuide`}
+                  render={({ field }) => (
+                    <ImageDropzone
+                      onDropImages={(file) => {
+                        field.onChange(file);
+                        setSizeGuidePreviewUrl(URL.createObjectURL(file));
+                      }}
+                      previewUrl={sizeGuidePreviewUrl}
+                    />
+                  )}
+                />
+              </div>
               <div className="p-2 space-y-8">
                 <ProductVariants
                   key={product.id}

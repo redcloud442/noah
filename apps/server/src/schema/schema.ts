@@ -95,6 +95,7 @@ export const productCreateSchema = z.array(
     product_slug: z.string(),
     product_team_id: z.string(),
     product_variants: z.array(productVariantSchema),
+    product_size_guide_url: z.string().optional(),
   })
 );
 
@@ -116,11 +117,14 @@ export const orderGetListSchema = z.object({
   take: z.number(),
   skip: z.number(),
   search: z.string().optional(),
-  dateFilter: z.object({
-    start: z.string().optional(),
-    end: z.string().optional(),
-  }),
-  teamId: z.string().uuid(),
+  dateFilter: z
+    .object({
+      start: z.string().optional(),
+      end: z.string().optional(),
+    })
+    .optional(),
+  teamId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 export type typeOrderGetListSchema = z.infer<typeof orderGetListSchema>;
@@ -220,3 +224,12 @@ export const dashboardSchema = z.object({
 });
 
 export type typeDashboardSchema = z.infer<typeof dashboardSchema>;
+
+export const userChangePasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  userId: z.string().uuid(),
+});
+
+export type typeUserChangePasswordSchema = z.infer<
+  typeof userChangePasswordSchema
+>;

@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma/prisma";
 import { createClient } from "@/utils/supabase/server";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import React from "react";
+import { ReactNode } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ children: ReactNode }>) {
   const supabase = await createClient();
 
   const {

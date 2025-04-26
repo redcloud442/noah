@@ -30,7 +30,7 @@ model user_table {
 
   user_address_table user_address_table[]
   cart_table cart_table[]
-  
+
   order_table order_table[]
   team_member_table team_member_table[]
 
@@ -54,7 +54,7 @@ model user_address_table {
   user_address_user_id String @db.Uuid
 
   user_address_user user_table @relation(fields: [user_address_user_id], references: [user_id], onDelete: Cascade)
-  
+
   @@schema("user_schema")
 }
 
@@ -62,6 +62,7 @@ model team_table {
   team_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   team_date_created DateTime @default(now())
   team_name String
+  team_image String?
 
   team_members team_member_table[]
   team_group team_group_table[]
@@ -144,12 +145,13 @@ model order_table {
   order_postal_code String
   order_phone      String
   order_status     OrderStatus
-  order_total      Float?   
+  order_total      Float?
   order_created_at DateTime  @default(now()) @db.Timestamptz(3)
   order_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   order_user_id    String?    @db.Uuid
   order_team_id   String    @db.Uuid
   order_reseller_id String? @db.Uuid
+  order_reseller_is_processed Boolean @default(false)
 
   order_user       user_table? @relation(fields: [order_user_id], references: [user_id], onDelete: Cascade)
   order_team      team_table @relation(fields: [order_team_id], references: [team_id], onDelete: Cascade)
@@ -183,8 +185,9 @@ model product_table {
   product_sale_percentage Int @default(0)
   product_created_at DateTime @default(now()) @db.Timestamptz(3)
   product_updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  product_size_guide_url String?
   product_category_id String @db.Uuid
-  product_slug String? @unique 
+  product_slug String? @unique
   product_team_id String @db.Uuid
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
@@ -253,7 +256,7 @@ model reseller_table {
   reseller_non_withdrawable_earnings Float @default(0)
   reseller_withdrawable_earnings Float @default(0)
   reseller_team_member_id String @db.Uuid
-  reseller_code String @unique 
+  reseller_code String @unique
 
   reseller_team_member team_member_table @relation(fields: [reseller_team_member_id], references: [team_member_id], onDelete: Cascade)
 
@@ -267,7 +270,11 @@ model reseller_withdrawal_table {
   reseller_withdrawal_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   reseller_withdrawal_amount Float
   reseller_withdrawal_status String
+  reseller_withdrawal_bank_name String?
+  reseller_withdrawal_account_number String?
+  reseller_withdrawal_account_name String?
   reseller_withdrawal_created_at DateTime @default(now()) @db.Timestamptz(3)
+  reseller_withdrawal_updated_at DateTime? @updatedAt @db.Timestamptz(3)
   reseller_withdrawal_reseller_id String @db.Uuid
   reseller_withdrawal_action_by String? @db.Uuid
 
@@ -284,6 +291,7 @@ model reseller_transaction_table {
   reseller_transaction_created_at DateTime @default(now()) @db.Timestamptz(3)
   reseller_transaction_reseller_id String @db.Uuid
   reseller_transaction_type String
+  reseller_transaction_status String
 
   reseller_transaction_reseller reseller_table @relation(fields: [reseller_transaction_reseller_id], references: [reseller_id], onDelete: Cascade)
 

@@ -21,7 +21,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ImageDropzone } from "../ProductCategoryPage/CreateProductCategory/ImageDropzone";
 import { FloatingLabelInput } from "../ui/floating-input";
+import { Label } from "../ui/label";
 import { ProductVariantsEdit } from "./ProductVariantsEdit";
 
 type EditProductPageProps = {
@@ -38,6 +40,9 @@ const EditProductPage = ({
 
   const { userData } = useUserDataStore();
   const [categories, setCategories] = useState<product_category_table[]>([]);
+  const [sizeGuidePreviewUrl, setSizeGuidePreviewUrl] = useState<string>(
+    formattedVariantInfo.products[0].sizeGuideUrl || ""
+  );
 
   const {
     control,
@@ -186,6 +191,23 @@ const EditProductPage = ({
                 {errors.products[productIndex]?.category?.message}
               </p>
             )}
+
+            <div className="space-y-2">
+              <Label>Size Guide Image</Label>
+              <Controller
+                control={control}
+                name={`products.${productIndex}.sizeGuide`}
+                render={({ field }) => (
+                  <ImageDropzone
+                    onDropImages={(file) => {
+                      field.onChange(file);
+                      setSizeGuidePreviewUrl(URL.createObjectURL(file));
+                    }}
+                    previewUrl={sizeGuidePreviewUrl}
+                  />
+                )}
+              />
+            </div>
 
             <div className="p-2 space-y-8">
               <ProductVariantsEdit

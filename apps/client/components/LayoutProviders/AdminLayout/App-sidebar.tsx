@@ -28,8 +28,8 @@ import {
 // This is sample data.
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  teams: { team_name: string }[];
-  activeTeam: { team_name: string };
+  teams: { team_name: string; team_image: string }[];
+  activeTeam: { team_name: string; team_image: string };
 };
 
 export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
