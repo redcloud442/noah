@@ -189,6 +189,7 @@ model product_table {
   product_category_id String @db.Uuid
   product_slug String? @unique
   product_team_id String @db.Uuid
+  product_is_best_seller Boolean @default(false)
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
   product_team team_table @relation(fields: [product_team_id], references: [team_id], onDelete: Cascade)
@@ -296,4 +297,12 @@ model reseller_transaction_table {
   reseller_transaction_reseller reseller_table @relation(fields: [reseller_transaction_reseller_id], references: [reseller_id], onDelete: Cascade)
 
   @@schema("reseller_schema")
+}
+
+model newsletter_table {
+  newsletter_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  newsletter_email String @unique
+  newsletter_created_at DateTime @default(now()) @db.Timestamptz(3)
+
+  @@schema("public")
 }

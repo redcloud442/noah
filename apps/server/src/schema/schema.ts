@@ -233,3 +233,11 @@ export const userChangePasswordSchema = z.object({
 export type typeUserChangePasswordSchema = z.infer<
   typeof userChangePasswordSchema
 >;
+
+export const newsletterSubscribeSchema = z.object({
+  email: z.string().email(),
+});
+
+export type typeNewsletterSubscribeSchema = z.infer<
+  typeof newsletterSubscribeSchema
+>;

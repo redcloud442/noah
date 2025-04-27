@@ -68,10 +68,10 @@ export const DashboardTable = () => {
           >
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Date</Table.Th>
-                <Table.Th>Type</Table.Th>
-                <Table.Th>Amount</Table.Th>
-                <Table.Th>Status</Table.Th>
+                <Table.Th style={{ width: "25%" }}>Date</Table.Th>
+                <Table.Th style={{ width: "25%" }}>Type</Table.Th>
+                <Table.Th style={{ width: "25%" }}>Amount</Table.Th>
+                <Table.Th style={{ width: "25%" }}>Status</Table.Th>
               </Table.Tr>
             </Table.Thead>
 

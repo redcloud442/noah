@@ -4,8 +4,11 @@ import { formatDateToYYYYMMDD, pesoSignedNumber } from "@/utils/function";
 import { order_table } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 
 export const UserOrderHistoryColumn = () => {
+  const router = useRouter();
+  const { teamName } = useParams();
   const columns: ColumnDef<order_table>[] = [
     {
       accessorKey: "order_number",
@@ -20,8 +23,15 @@ export const UserOrderHistoryColumn = () => {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="text-center hover:underline cursor-pointer">
-          {row.getValue("order_number")}
+        <div
+          onClick={() => {
+            router.push(
+              `/${teamName}/admin/orders/${row.original.order_number}`
+            );
+          }}
+          className="text-center hover:underline cursor-pointer"
+        >
+          CN - {row.getValue("order_number")}
         </div>
       ),
     },
@@ -62,7 +72,17 @@ export const UserOrderHistoryColumn = () => {
 
         return (
           <div className="font-medium text-center">
-            <Badge>{status}</Badge>
+            <Badge
+              className={`${
+                status === "PAID"
+                  ? "bg-green-500"
+                  : status === "PENDING"
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+              }`}
+            >
+              {status}
+            </Badge>
           </div>
         );
       },

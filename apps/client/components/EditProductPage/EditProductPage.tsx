@@ -40,15 +40,22 @@ const EditProductPage = ({
 
   const { userData } = useUserDataStore();
   const [categories, setCategories] = useState<product_category_table[]>([]);
-  const [sizeGuidePreviewUrl, setSizeGuidePreviewUrl] = useState<string>(
-    formattedVariantInfo.products[0].sizeGuideUrl || ""
+  const [sizeGuidePreviewUrls, setSizeGuidePreviewUrls] = useState<
+    Record<number, string>
+  >(
+    formattedVariantInfo.products.reduce(
+      (acc, product, index) => {
+        acc[index] = product.sizeGuideUrl || "";
+        return acc;
+      },
+      {} as Record<number, string>
+    )
   );
 
   const {
     control,
     handleSubmit,
     register,
-
     formState: { errors, isSubmitting },
   } = useForm<ProductFormType>({
     resolver: zodResolver(productSchema),
@@ -87,7 +94,7 @@ const EditProductPage = ({
 
   const onSubmit = async (data: ProductFormType) => {
     try {
-      const { formattedProducts } = await formattedUpdateProductResponse(
+      const formattedProducts = await formattedUpdateProductResponse(
         data,
         supabaseClient,
         userData?.teamMemberProfile.team_member_team_id || "",
@@ -201,9 +208,12 @@ const EditProductPage = ({
                   <ImageDropzone
                     onDropImages={(file) => {
                       field.onChange(file);
-                      setSizeGuidePreviewUrl(URL.createObjectURL(file));
+                      setSizeGuidePreviewUrls((prev) => ({
+                        ...prev,
+                        [productIndex]: URL.createObjectURL(file),
+                      }));
                     }}
-                    previewUrl={sizeGuidePreviewUrl}
+                    previewUrl={sizeGuidePreviewUrls[productIndex] || ""}
                   />
                 )}
               />
@@ -226,7 +236,7 @@ const EditProductPage = ({
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-6"
         >
-          Save Changes
+          {isSubmitting ? "Saving..." : "Save Changes"}
         </Button>
       </form>
     </div>

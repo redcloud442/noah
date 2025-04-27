@@ -26,7 +26,7 @@ const HighlightSecond = () => {
               alt={item.product_variant_color}
               width={800}
               height={800}
-              className="w-full h-full object-cover"
+              className="w-[500px] h-[500px] object-cover object-center transition-opacity duration-300 rounded-md"
             />
 
             {/* Dark Overlay */}

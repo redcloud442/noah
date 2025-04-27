@@ -216,7 +216,7 @@ export const HoverVariantCard = ({
 
   return (
     <Card
-      className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
+      className="overflow-hidden bg-white shadow-lg rounded-none border border-gray-200 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -224,10 +224,10 @@ export const HoverVariantCard = ({
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
-          width={2000}
-          height={2000}
+          width={500}
+          height={500}
           quality={80}
-          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
           onClick={() => redirectToViewProduct(variant.product_variant_slug)}
         />
 
@@ -262,17 +262,25 @@ export const HoverVariantCard = ({
           </Badge>
         )}
 
-        {isSoldOut && (
-          <Badge className="absolute top-2 right-2 bg-gray-500 text-xs px-2 py-1 rounded text-white">
-            Sold Out
-          </Badge>
-        )}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
 
-        {variant.product_variant_is_featured && (
-          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
-            Featured
-          </Badge>
-        )}
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}
@@ -336,6 +344,12 @@ export const HoverVariantTypeCard = ({
     ));
   };
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
   return (
     <Card
       className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
@@ -346,10 +360,10 @@ export const HoverVariantTypeCard = ({
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
-          width={2000}
-          height={2000}
+          width={500}
+          height={500}
           quality={80}
-          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
         />
 
         {/* "Add to Cart" button - initially hidden */}
@@ -364,7 +378,6 @@ export const HoverVariantTypeCard = ({
           </Button>
         </div>
 
-        {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
           <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
@@ -372,11 +385,25 @@ export const HoverVariantTypeCard = ({
           </Badge>
         )}
 
-        {variant.product_variant_is_featured && (
-          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
-            Featured
-          </Badge>
-        )}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
+
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}

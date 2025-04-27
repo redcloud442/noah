@@ -1,11 +1,13 @@
 import type { User } from "@supabase/supabase-js";
 import { sign, verify } from "hono/jwt";
+import { Resend } from "resend";
 import { envConfig } from "../../env.js";
 import prisma from "../../utils/prisma.js";
 import { supabaseClient } from "../../utils/supabase.js";
 import type { Product } from "../../utils/types.js";
 
 const JWT_SECRET = envConfig.JWT_SECRET;
+const resendClient = new Resend(process.env.RESEND_API_KEY);
 
 export const authLoginModel = async (params: {
   email: string;
@@ -202,6 +204,17 @@ export const authCallbackModel = async (params: {
   }
 
   if (!isUserExists) {
+    await prisma.newsletter_table.create({
+      data: {
+        newsletter_email: email,
+      },
+    });
+
+    await resendClient.contacts.create({
+      audienceId: process.env.RESEND_AUDIENCE_ID!,
+      email: email,
+    });
+
     await supabaseClient.auth.admin.updateUserById(userId, {
       user_metadata: {
         role: "MEMBER",
@@ -299,6 +312,17 @@ export const authRegisterModel = async (params: {
           },
         },
       },
+    });
+
+    await prisma.newsletter_table.create({
+      data: {
+        newsletter_email: email,
+      },
+    });
+
+    await resendClient.contacts.create({
+      audienceId: process.env.RESEND_AUDIENCE_ID!,
+      email: email,
     });
 
     return userData;

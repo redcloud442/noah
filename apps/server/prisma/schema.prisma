@@ -189,6 +189,7 @@ model product_table {
   product_category_id String @db.Uuid
   product_slug String? @unique
   product_team_id String @db.Uuid
+  product_is_best_seller Boolean @default(false)
 
   product_category product_category_table @relation(fields: [product_category_id], references: [product_category_id], onDelete: Cascade)
   product_team team_table @relation(fields: [product_team_id], references: [team_id], onDelete: Cascade)

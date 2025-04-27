@@ -12,8 +12,6 @@ const page = async ({
 
   await protectionAdminMiddleware();
 
-  console.log(userEmail);
-
   const user = await prisma.user_table.findUnique({
     where: {
       user_email: decodeURIComponent(userEmail),
@@ -39,8 +37,6 @@ const page = async ({
       },
     },
   });
-
-  console.log(user);
 
   if (!user) {
     redirect(`/${teamName}/admin/user`);

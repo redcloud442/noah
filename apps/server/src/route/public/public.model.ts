@@ -48,6 +48,12 @@ export const productPublicModel = async (params: ProductPublicParams) => {
     if (sort === "featured") {
       sortFilter.product_variant_is_featured = "desc";
     }
+
+    if (sort === "best_seller") {
+      sortFilter.product_variant_product = {
+        product_is_best_seller: "desc",
+      };
+    }
   }
   const products = await prisma.product_variant_table.findMany({
     where: {
@@ -64,10 +70,9 @@ export const productPublicModel = async (params: ProductPublicParams) => {
     skip: offset,
   });
 
-  const count = await prisma.product_table.count({
+  const count = await prisma.product_variant_table.count({
     where: {
       ...filter,
-      product_variants: { some: { product_variant_is_deleted: false } },
     },
   });
 

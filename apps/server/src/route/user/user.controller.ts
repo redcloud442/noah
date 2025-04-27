@@ -125,7 +125,6 @@ export const userGenerateLoginLinkController = async (c: Context) => {
 
     return c.json(userGenerateLoginLink, 200);
   } catch (error) {
-    console.log(error);
     if (error instanceof Error) {
       return c.json({ message: error.message }, 400);
     }

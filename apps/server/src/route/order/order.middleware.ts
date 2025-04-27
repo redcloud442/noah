@@ -90,7 +90,6 @@ export const orderGetListMiddleware = async (c: Context, next: Next) => {
   const validated = orderGetListSchema.safeParse(params);
 
   if (!validated.success) {
-    console.log(validated.error);
     return c.json({ message: "Invalid request" }, 400);
   }
 

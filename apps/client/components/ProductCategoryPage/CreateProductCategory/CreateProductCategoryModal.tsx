@@ -13,30 +13,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import useUserDataStore from "@/lib/userDataStore";
-import { getCollectionQueryKey } from "@/query/queryKeys";
 import { productService } from "@/services/product";
 import { ProductCategoryForm, productCategorySchema } from "@/utils/schema";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { product_category_table } from "@prisma/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { ImageDropzone } from "./ImageDropzone";
 
 type Props = {
-  take: number;
-  skip: number;
-  search?: string;
+  setCollections: Dispatch<
+    SetStateAction<{
+      collections: product_category_table[];
+      count: number;
+    } | null>
+  >;
 };
 
-const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
+const CreateProductCategoryModal = ({ setCollections }: Props) => {
   const [open, setOpen] = useState(false);
 
   const { userData } = useUserDataStore();
-  const queryClient = useQueryClient();
+
   const supabase = createClient();
 
   const {
@@ -63,53 +63,20 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
     }
   }, [userData?.teamMemberProfile?.team_member_team_id]);
 
-  const queryKey = getCollectionQueryKey(
-    take,
-    skip,
-    search || "",
-    userData?.teamMemberProfile?.team_member_team_id || ""
-  );
-
-  const { mutateAsync } = useMutation({
-    mutationFn: async (data: ProductCategoryForm & { imageUrl: string }) => {
+  const handleCreateProductCategory = async (
+    data: ProductCategoryForm & { imageUrl: string }
+  ) => {
+    try {
       const productCategory = await productService.createProductCategory(data);
-      return productCategory;
-    },
-
-    onMutate: async (newData) => {
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousData = queryClient.getQueryData<{
-        collections: product_category_table[];
-        count: number;
-      }>(queryKey);
-
-      // Optimistically update the cache
-      queryClient.setQueryData(queryKey, {
-        collections: [...(previousData?.collections ?? []), newData],
-        count: (previousData?.count ?? 0) + 1,
-      });
-
-      return { previousData };
-    },
-
-    onError: (error: Error, _newData, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
-      }
-      toast.error(error.message);
-    },
-
-    onSuccess: () => {
-      toast.success("Product category created successfully");
-      reset();
-      setOpen(false);
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
+      setCollections((prev) => ({
+        ...prev,
+        collections: [...(prev?.collections ?? []), productCategory],
+        count: (prev?.count ?? 0) + 1,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const onSubmit = async (data: ProductCategoryForm) => {
     const file = data.image as File;
@@ -128,7 +95,7 @@ const CreateProductCategoryModal = ({ take, skip, search }: Props) => {
       imageUrl = publicUrl;
     }
 
-    await mutateAsync({ ...data, imageUrl });
+    await handleCreateProductCategory({ ...data, imageUrl });
   };
 
   return (

@@ -2,7 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { ProductFormType, typeProductCreateSchema } from "./schema";
+import {
+  ProductFormType,
+  ProductVariantFormType,
+  typeProductCreateSchema,
+} from "./schema";
 
 export const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("en-US", {
@@ -220,144 +224,44 @@ export const formattedCreateProductResponse = async (
   supabaseClient: SupabaseClient,
   teamId: string
 ) => {
-  const productId = uuidv4();
-
-  const formattedProducts = await Promise.all(
-    product.products.map(
-      async (prod: {
-        name: string;
-        price: number;
-        description: string;
-        category: string;
-        sizeGuide: File;
-        sizeGuideUrl?: string;
-        variants: {
-          id: string;
-          color: string;
-          sizesWithQuantities: { size: string; quantity: number }[];
-          images: File[];
-          publicUrl?: string[];
-          isDeleted?: boolean;
-        }[];
-      }) => {
-        let sizeGuideUrl: string | undefined;
-        if (prod.sizeGuide) {
-          const filePath = `uploads/${Date.now()}_${prod.sizeGuide.name}`;
-
-          const productImage = await supabaseClient.storage
-            .from("PRODUCT_IMAGE")
-            .upload(filePath, prod.sizeGuide, { upsert: true });
-
-          if (productImage.error) throw new Error(productImage.error.message);
-
-          sizeGuideUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
-        }
-
-        const product_variants = await Promise.all(
-          prod.variants.map(
-            async (variant: {
-              id: string;
-              color: string;
-              sizesWithQuantities: { size: string; quantity: number }[];
-              images: File[];
-              publicUrl?: string[];
-              isDeleted?: boolean;
-            }) => {
-              const variantId = uuidv4();
-              const imageUrls: string[] = [];
-
-              for (const image of variant.images ?? []) {
-                if (!image) continue;
-                const filePath = `uploads/${Date.now()}_${image.name}`;
-
-                const { error: uploadError } = await supabaseClient.storage
-                  .from("PRODUCT_IMAGE")
-                  .upload(filePath, image, { upsert: true });
-
-                if (uploadError) throw new Error(uploadError.message);
-
-                const publicUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
-
-                imageUrls.push(publicUrl);
-              }
-
-              return {
-                product_variant_id: variantId,
-                product_variant_product_id: productId,
-                product_variant_color: variant.color,
-                product_variant_slug: slugifyVariant(
-                  slugify(prod.name),
-                  slugify(variant.color)
-                ),
-                variant_sample_images: imageUrls.map((url) => ({
-                  variant_sample_image_image_url: url,
-                  variant_sample_image_product_variant_id: variantId,
-                })),
-                variant_sizes: variant.sizesWithQuantities.map(
-                  (sizeObj: { size: string; quantity: number }) => ({
-                    variant_size_id: uuidv4(),
-                    variant_size_variant_id: variantId,
-                    variant_size_value: sizeObj.size,
-                    variant_size_quantity: sizeObj.quantity,
-                  })
-                ),
-              };
-            }
-          )
-        );
-
-        return {
-          product_id: productId,
-          product_name: prod.name,
-          product_slug: slugify(prod.name),
-          product_description: prod.description,
-          product_size_guide_url: sizeGuideUrl,
-          product_price: prod.price,
-          product_sale_percentage: 0,
-          product_category_id: prod.category,
-          product_team_id: teamId,
-          product_variants,
-        };
-      }
-    )
-  );
-
-  return {
-    formattedProducts:
-      formattedProducts as unknown as typeProductCreateSchema[],
-  };
-};
-
-export const formattedUpdateProductResponse = async (
-  product: ProductFormType,
-  supabaseClient: SupabaseClient,
-  teamId: string,
-  productId: string
-) => {
-  let sizeGuideUrl: string | undefined;
   const formattedProducts = await Promise.all(
     product.products.map(async (prod) => {
-      if (prod.sizeGuide) {
-        const filePath = `uploads/${Date.now()}_${prod.sizeGuide?.name}`;
+      const productId = uuidv4(); // Move productId inside if per product unique
 
-        const productImage = await supabaseClient.storage
+      // Upload Size Guide
+      let sizeGuideUrl: string | undefined;
+      if (prod.sizeGuide) {
+        const cleanFileName = prod.sizeGuide.name.replace(
+          /[^a-zA-Z0-9.-]/g,
+          "_"
+        );
+        const filePath = `uploads/${Date.now()}_${cleanFileName}`;
+
+        const { error: uploadError } = await supabaseClient.storage
           .from("PRODUCT_IMAGE")
           .upload(filePath, prod.sizeGuide, { upsert: true });
 
-        if (productImage.error) throw new Error(productImage.error.message);
+        if (uploadError) throw new Error(uploadError.message);
 
         sizeGuideUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
       }
 
+      // Upload Variant Images
       const product_variants = await Promise.all(
         prod.variants.map(async (variant) => {
           const variantId = variant.id || uuidv4();
           const imageUrls: string[] = [];
+
           if (variant.images && variant.images.length > 0) {
-            for (const image of variant.images) {
+            for (const image of variant.images ?? []) {
               if (!image) continue;
 
-              const filePath = `uploads/${Date.now()}_${image.name}`;
+              const cleanFileName =
+                image instanceof File
+                  ? image.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+                  : "unnamed_file";
+              const filePath = `uploads/${Date.now()}_${cleanFileName}`;
+
               const { error: uploadError } = await supabaseClient.storage
                 .from("PRODUCT_IMAGE")
                 .upload(filePath, image, { upsert: true });
@@ -368,31 +272,27 @@ export const formattedUpdateProductResponse = async (
               imageUrls.push(publicUrl);
             }
           } else if (variant.publicUrl && variant.publicUrl.length > 0) {
-            imageUrls.push(...variant.publicUrl);
+            imageUrls.push(...variant.publicUrl); // fallback use publicUrl
           }
 
           return {
             product_variant_id: variantId,
             product_variant_product_id: productId,
             product_variant_color: variant.color,
-            product_variant_is_deleted: variant.isDeleted ? true : false,
             product_variant_slug: slugifyVariant(
               slugify(prod.name),
               slugify(variant.color)
             ),
-            product_variant_size_guide_url: sizeGuideUrl,
             variant_sample_images: imageUrls.map((url) => ({
               variant_sample_image_image_url: url,
-              variant_sample_image_product_variant_id: variant.id,
+              variant_sample_image_product_variant_id: variantId,
             })),
-            variant_sizes: variant.sizesWithQuantities.map(
-              (sizeObj: { size: string; quantity: number }) => ({
-                variant_size_id: uuidv4(),
-                variant_size_variant_id: variant.id,
-                variant_size_value: sizeObj.size,
-                variant_size_quantity: sizeObj.quantity,
-              })
-            ),
+            variant_sizes: variant.sizesWithQuantities.map((sizeObj) => ({
+              variant_size_id: uuidv4(),
+              variant_size_variant_id: variantId,
+              variant_size_value: sizeObj.size,
+              variant_size_quantity: sizeObj.quantity,
+            })),
           };
         })
       );
@@ -402,11 +302,11 @@ export const formattedUpdateProductResponse = async (
         product_name: prod.name,
         product_slug: slugify(prod.name),
         product_description: prod.description,
+        product_size_guide_url: sizeGuideUrl ?? prod.sizeGuideUrl ?? null,
         product_price: prod.price,
         product_sale_percentage: 0,
         product_category_id: prod.category,
         product_team_id: teamId,
-        product_size_guide_url: sizeGuideUrl,
         product_variants,
       };
     })
@@ -414,8 +314,105 @@ export const formattedUpdateProductResponse = async (
 
   return {
     formattedProducts:
-      formattedProducts as unknown as typeProductCreateSchema[],
+      formattedProducts as unknown as typeProductCreateSchema[], // cast only once, because we know it's correct
   };
+};
+
+export const formattedUpdateProductResponse = async (
+  product: ProductFormType,
+  supabaseClient: SupabaseClient,
+  teamId: string,
+  productId: string
+) => {
+  const formattedProducts = await Promise.all(
+    product.products.map(async (prod) => {
+      let sizeGuideUrl: string | undefined;
+
+      // Upload size guide if new file exists
+      if (prod.sizeGuide instanceof File && prod.sizeGuide.size > 0) {
+        const rawFileName = prod.sizeGuide.name;
+        const cleanFileName = rawFileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const filePath = `uploads/${Date.now()}_${cleanFileName}`;
+
+        const { error } = await supabaseClient.storage
+          .from("PRODUCT_IMAGE")
+          .upload(filePath, prod.sizeGuide, { upsert: true });
+
+        if (error) throw new Error(error.message);
+
+        sizeGuideUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+      }
+
+      const product_variants = await Promise.all(
+        prod.variants.map(async (variant) => {
+          const variantId = variant.id || uuidv4(); // Always fallback
+          const imageUrls: string[] = [];
+
+          // Upload new variant images
+          if (variant.images && variant.images.length > 0) {
+            for (const image of variant.images) {
+              if (!image) continue;
+
+              const rawFileName =
+                image instanceof File ? image.name : "unnamed_file";
+              const cleanFileName = rawFileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+              const filePath = `uploads/${Date.now()}_${cleanFileName}`;
+
+              const { error: uploadError } = await supabaseClient.storage
+                .from("PRODUCT_IMAGE")
+                .upload(filePath, image, { upsert: true });
+
+              if (uploadError) throw new Error(uploadError.message);
+
+              const publicUrl = `https://umypvsozlsjtjfsakqxg.supabase.co/storage/v1/object/public/PRODUCT_IMAGE/${filePath}`;
+              imageUrls.push(publicUrl);
+            }
+          } else if (variant.publicUrl && variant.publicUrl.length > 0) {
+            // Use existing publicUrl if available
+            imageUrls.push(...variant.publicUrl);
+          }
+
+          return {
+            product_variant_id: variantId,
+            product_variant_product_id: productId,
+            product_variant_color: variant.color,
+            product_variant_is_deleted: variant.isDeleted || false,
+            product_variant_slug: slugifyVariant(
+              slugify(prod.name),
+              slugify(variant.color)
+            ),
+            product_variant_size_guide_url: prod.sizeGuideUrl || sizeGuideUrl,
+            variant_sample_images: imageUrls.map((url) => ({
+              variant_sample_image_image_url: url,
+              variant_sample_image_product_variant_id: variantId, // <-- Always use variantId here
+            })),
+            variant_sizes: variant.sizesWithQuantities.map((sizeObj) => ({
+              variant_size_id: uuidv4(),
+              variant_size_variant_id: variantId,
+              variant_size_value: sizeObj.size,
+              variant_size_quantity: sizeObj.quantity,
+            })),
+          };
+        })
+      );
+
+      return {
+        product_id: productId,
+        product_name: prod.name,
+        product_slug: slugify(prod.name),
+        product_description: prod.description || "",
+        product_price: prod.price,
+        product_sale_percentage: 0,
+        product_category_id: prod.category,
+        product_team_id: teamId,
+        product_size_guide_url: prod.sizeGuideUrl || sizeGuideUrl,
+        product_variants:
+          product_variants as unknown as ProductVariantFormType[],
+      };
+    })
+  );
+
+  return formattedProducts;
 };
 
 export const formatDateToYYYYMMDD = (date: Date | string): string => {

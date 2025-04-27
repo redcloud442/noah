@@ -6,10 +6,10 @@ const ProductCategoryPage = () => {
     <div className="p-4 space-y-4">
       <div className="space-y-1 pb-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Product Categories
+          Product Collections   
         </h1>
         <p className="text-muted-foreground">
-          View and manage all product categories in the system.
+          View and manage all product collections in the system.
         </p>
       </div>
 

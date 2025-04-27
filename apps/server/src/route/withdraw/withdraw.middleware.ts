@@ -99,7 +99,7 @@ export const withdrawActionMiddleware = async (c: Context, next: Next) => {
   }
 
   const params = await c.req.json();
-  console.log(params);
+
   const { error } = withdrawalActionSchema.safeParse(params);
 
   if (error) {

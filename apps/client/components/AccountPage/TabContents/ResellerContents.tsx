@@ -84,7 +84,6 @@ const ResellerContents = () => {
     }
   };
 
-  // Countdown for resend button
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -107,13 +106,12 @@ const ResellerContents = () => {
             </Link>
           </div>
         </div>
-      ) : userData?.teamMemberProfile.team_member_request_reseller ? (
+      ) : !userData?.teamMemberProfile.team_member_request_reseller ? (
         // 🔄 Requested but waiting for approval
         <div className="p-6 max-w-3xl mx-auto text-center space-y-6">
           <div className="flex flex-col items-center gap-3">
             <h2 className="text-xl font-medium text-yellow-600">
-              Please wait while your request to become a reseller is being
-              processed...
+              You are not yet eligible to become a Noir Reseller
             </h2>
             <p className="text-muted-foreground">
               Once you&apos;re eligible, you will be notified and gain full
@@ -127,7 +125,7 @@ const ResellerContents = () => {
           <div className="flex flex-col items-center gap-3">
             <Sparkles className="w-12 h-12 text-yellow-400 animate-pulse" />
             <h2 className="text-2xl font-bold text-primary text-yellow-500">
-              Become a NOAH Reseller
+              Become a Noir Reseller
             </h2>
             <p className="text-muted-foreground max-w-md">
               Join our growing community of resellers and unlock exclusive

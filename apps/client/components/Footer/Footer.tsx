@@ -1,8 +1,7 @@
 import { siteConfig } from "@/components/config/site";
 import Link from "next/link";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import SubscribeNowForm from "./SubscribeNowForm/SubscribeNowForm";
 
 export const Footer = () => {
   return (
@@ -23,26 +22,14 @@ export const Footer = () => {
               Get the latest updates, promotions, and trends directly to your
               inbox.
             </p>
-            <form className="flex flex-col sm:flex-row items-start justify-start gap-3">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="px-4 py-2 rounded bg-white text-black w-64"
-              />
-              <Button
-                type="submit"
-                className="px-6 py-2 bg-white text-black rounded hover:bg-gray-200 font-medium"
-              >
-                Subscribe
-              </Button>
-            </form>
+            <SubscribeNowForm />
           </div>
         </div>
 
         {/* 📬 Subscribe Section */}
 
         {/* Navigation Links */}
-        <div className="flex flex-col justify-end   space-y-4 text-start">
+        <div className="flex flex-col justify-end space-y-4 text-center sm:text-start">
           <Link href="/about" className="hover:text-gray-300">
             About Us
           </Link>

@@ -1,10 +1,13 @@
 import type { user_table } from "@prisma/client";
 import axios from "axios";
+import { Resend } from "resend";
 import prisma from "../../utils/prisma.js";
 import type {
   CheckoutFormData,
   PaymentCreatePaymentFormData,
 } from "../../utils/schema.js";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const createPaymentIntent = async (
   params: CheckoutFormData,
@@ -376,6 +379,33 @@ export const getPayment = async (params: {
             },
             cart_user_id: orderDetails?.order_user_id ?? undefined,
           },
+        });
+
+        await resend.emails.send({
+          from: "Payment Success <support@help.noir-clothing.com>",
+          to: orderDetails?.order_email ?? "",
+          subject:
+            "🎉 Congratulations! Your Payment is Successful – Welcome to NOAH Resellers!",
+          text: `Congratulations on becoming a reseller! Your payment was successful. You can track your order here: ${orderDetails?.order_number ?? "Tracking link not available."}`,
+          html: `
+              <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                <h2 style="color: #10B981; font-size: 24px;">🎉 Congratulations!</h2>
+                <p style="font-size: 16px;">We're thrilled to welcome you as a <strong>NOAH Reseller</strong>.</p>
+                <p style="font-size: 16px;">
+                  Your payment was <strong>successfully processed</strong>! You’re now officially part of an amazing community earning rewards, exclusive commissions, and early access to limited offers.
+                </p>
+                <p style="font-size: 16px;">
+                  You can track your order status anytime using the link below:
+                </p>
+                <p style="margin: 20px 0;">
+                  <a href="${orderDetails?.order_number ?? "#"}" style="display: inline-block; padding: 10px 20px; background-color: #10B981; color: white; text-decoration: none; border-radius: 5px;">
+                    Track Your Order
+                  </a>
+                </p>
+                <br />
+                <p style="font-weight: bold;">– The Noir Clothing Team</p>
+              </div>
+            `,
         });
       } else {
         await prisma.variant_size_table.updateMany({

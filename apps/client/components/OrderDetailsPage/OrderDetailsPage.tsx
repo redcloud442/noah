@@ -56,7 +56,7 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   return (
     <div className="min-h-screen h-full px-0 sm:px-6 text-black relative">
       <div className="space-y-1">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+        <h1 className="text-4xl font-bold tracking-tight text-black">
           Order Number: {order.order_number}
         </h1>
         <p className="text-muted-foreground">

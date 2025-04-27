@@ -38,7 +38,7 @@ const UserActionModal = ({
         type,
       });
 
-      if (type === "promote") {
+      if (type === "promote" && role !== "RESELLER") {
         setRequest((prev) =>
           prev.map((user) =>
             user.user_id === userId

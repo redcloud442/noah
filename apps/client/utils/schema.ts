@@ -115,20 +115,13 @@ export type ProductCategoryForm = z.infer<typeof productCategorySchema>;
 export const productSchema = z.object({
   products: z.array(
     z.object({
+      id: z.string().optional(),
       name: z.string().min(1, "Product name is required"),
       price: z.coerce.number().min(1, "Price must be greater than 0"),
-      description: z.string(),
+      description: z.string().optional(),
       category: z.string().min(1, "Category is required"),
-      sizeGuide: z
-        .instanceof(File)
-        .refine((file) => !!file, { message: "File is required" })
-        .refine(
-          (file) =>
-            ["image/jpeg", "image/png", "image/jpg"].includes(file.type) &&
-            file.size <= 12 * 1024 * 1024, // 12MB limit
-          { message: "File must be a valid image and less than 12MB." }
-        ),
-      sizeGuideUrl: z.string().optional(),
+      sizeGuide: z.any().optional().nullable(),
+      sizeGuideUrl: z.string().nullable().or(z.literal("")),
       variants: z.array(
         z.object({
           id: z.string().uuid("ID must be a valid UUID"),
@@ -139,18 +132,8 @@ export const productSchema = z.object({
               quantity: z.number().min(1, "Quantity is required"),
             })
           ),
-          images: z.array(
-            z
-              .instanceof(File)
-              .refine((file) => !!file, { message: "File is required" })
-              .refine(
-                (file) =>
-                  ["image/jpeg", "image/png", "image/jpg"].includes(
-                    file.type
-                  ) && file.size <= 12 * 1024 * 1024, // 12MB limit
-                { message: "File must be a valid image and less than 12MB." }
-              )
-          ),
+          images: z.array(z.any()).optional().nullable(),
+
           publicUrl: z.array(z.string()).optional(),
           isDeleted: z.boolean().optional(),
         })
@@ -177,10 +160,12 @@ export const productVariantSchema = z.object({
   ),
 });
 
+export type ProductVariantFormType = z.infer<typeof productVariantSchema>;
+
 export const productCreateSchema = z.object({
   product_category_id: z.string(),
   product_description: z.string(),
-  product_id: z.number(),
+  product_id: z.string().optional(),
   product_name: z.string(),
   product_price: z.number(),
   product_sale_percentage: z.number(),

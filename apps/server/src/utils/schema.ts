@@ -185,7 +185,14 @@ export const productPublicSchema = z.object({
   search: z.string().optional(),
   category: z.string().optional(),
   sort: z
-    .enum(["newest", "oldest", "price_asc", "price_desc", "featured"])
+    .enum([
+      "newest",
+      "oldest",
+      "price_asc",
+      "price_desc",
+      "featured",
+      "best_seller",
+    ])
     .optional(),
   take: z.coerce.number().min(1).max(15),
   skip: z.coerce.number().min(1),

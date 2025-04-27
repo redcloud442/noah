@@ -33,7 +33,9 @@ const CreateProductPage = () => {
 
   const { userData } = useUserDataStore();
   const [categories, setCategories] = useState<product_category_table[]>([]);
-  const [sizeGuidePreviewUrl, setSizeGuidePreviewUrl] = useState<string>("");
+  const [sizeGuidePreviewUrls, setSizeGuidePreviewUrls] = useState<
+    Record<number, string>
+  >({});
 
   const {
     control,
@@ -232,9 +234,12 @@ const CreateProductPage = () => {
                     <ImageDropzone
                       onDropImages={(file) => {
                         field.onChange(file);
-                        setSizeGuidePreviewUrl(URL.createObjectURL(file));
+                        setSizeGuidePreviewUrls((prev) => ({
+                          ...prev,
+                          [productIndex]: URL.createObjectURL(file),
+                        }));
                       }}
-                      previewUrl={sizeGuidePreviewUrl}
+                      previewUrl={sizeGuidePreviewUrls[productIndex] || ""}
                     />
                   )}
                 />

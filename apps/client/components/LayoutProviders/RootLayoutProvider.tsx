@@ -10,7 +10,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import { toast } from "sonner";
 import { Footer } from "../Footer/Footer";
 import { NavigationBar } from "../NavigationBar/NavigationBar";
 import { MobileNavigationBar } from "../NavigationBar/NavigationBarSmallScreen";
@@ -50,26 +49,22 @@ export function Providers({
 
   const fetchUser = async () => {
     try {
-      if (user) {
-        const { userProfile, teamMemberProfile } = await authService.getUser();
-
+      const { userProfile, teamMemberProfile } = await authService.getUser();
+      if (userProfile) {
         setUserData({ userProfile, teamMemberProfile });
       }
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error fetching user");
       }
     }
   };
 
   useEffect(() => {
     fetchUser();
-  }, [user, teamName]);
+  }, [teamName]);
 
   const isAdmin = useMemo(() => {
-    return user?.user_metadata.role === "ADMIN";
+    return user?.user_metadata?.role === "ADMIN";
   }, [user]);
 
   return (

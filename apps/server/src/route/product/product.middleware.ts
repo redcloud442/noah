@@ -137,7 +137,7 @@ export const productUpdateMiddleware = async (c: Context, next: Next) => {
 
   c.set("params", validate.data);
 
-  return await next();
+  await next();
 };
 
 export const productCollectionSlugMiddleware = async (

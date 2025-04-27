@@ -36,6 +36,7 @@ const sortOptions = [
   { label: "Newest", value: "newest" },
   { label: "Oldest", value: "oldest" },
   { label: "Featured", value: "featured" },
+  { label: "Best Seller", value: "best_seller" },
 ];
 
 const ShopPage = ({ variants: initialVariants }: Props) => {
