@@ -26,12 +26,26 @@ export const cartService = {
     const result = await apiClient.get("/cart");
 
     if (result.status !== 200) {
-      throw new Error("Login failed");
+      throw new Error("Error fetching cart");
     }
 
     return result.data;
   },
 
+  getQuantity: async (params: {
+    items: {
+      product_variant_id: string;
+      product_variant_size: string;
+    }[];
+  }) => {
+    const result = await apiClient.post("/cart/quantity", params);
+
+    if (result.status !== 200) {
+      throw new Error("Error fetching cart quantity");
+    }
+
+    return result.data;
+  },
   delete: async (id: string) => {
     const result = await apiClient.delete(`/cart/${id}`);
 

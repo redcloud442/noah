@@ -24,7 +24,7 @@ app.use("/user/*", protectionMiddleware);
 app.route("/user", user);
 
 // Cart
-app.use("/cart/*", protectionMiddleware);
+
 app.route("/cart", cart);
 
 // Payment

@@ -24,8 +24,8 @@ export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
   const router = useRouter();
   const { teamName } = useParams();
 
-  const handleOrderNumberClick = (orderNumber: string) => {
-    router.push(`/${teamName}/admin/orders/${orderNumber}`);
+  const handleOrderNumberClick = (email: string) => {
+    router.push(`/${teamName}/admin/user/${email}`);
   };
 
   const handleCopyUserEmail = (userEmail: string) => {
@@ -48,7 +48,7 @@ export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
       ),
       cell: ({ row }) => (
         <div
-          onClick={() => handleOrderNumberClick(row.getValue("order_number"))}
+          onClick={() => handleOrderNumberClick(row.getValue("user_email"))}
           className="text-center hover:underline cursor-pointer"
         >
           {row.getValue("user_email")}

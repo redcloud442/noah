@@ -6,12 +6,13 @@ import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
 import { ProductType, ProductVariantType } from "@/utils/types";
 import { product_table } from "@prisma/client";
-import { Badge, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
 export const VariantSelectionToast = ({
@@ -116,7 +117,7 @@ export const VariantSelectionToast = ({
 
     toast.custom(
       () => (
-        <div className="bg-white text-black p-6 shadow-xl border border-gray-200 w-full">
+        <div className="bg-white text-black p-6 shadow-xl border rounded-none border-gray-200 w-full">
           <h1 className="text-base font-semibold text-green-800 pb-2">
             Added to cart successfully!
           </h1>
@@ -199,7 +200,7 @@ export const VariantSelectionToast = ({
   };
 
   return (
-    <div className="p-6 border bg-white rounded-lg shadow-lg w-full max-w-2xl text-black min-h-[500px]">
+    <div className="p-6 border bg-white shadow-lg w-full max-w-2xl text-black min-h-[500px]">
       <h4 className="font-bold text-lg uppercase">
         {product.product_name} - {selectedVariant?.product_variant_color}
       </h4>

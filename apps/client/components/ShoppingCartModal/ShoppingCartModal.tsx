@@ -41,10 +41,36 @@ const ShoppingCartModal = () => {
   const REFERRAL_CODE = searchParams.get("REFERRAL_CODE") as string;
   const router = useRouter();
   const pathname = usePathname();
+  const [currentStock, setCurrentStock] = useState<
+    {
+      variant_size_variant_id: string;
+      variant_size_value: string;
+      variant_size_quantity: number;
+    }[]
+  >([]);
 
   const generateCheckoutNumber = () => {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
   };
+
+  const fetchCartQuantity = async () => {
+    try {
+      if (cart.products.length === 0) return;
+      const updatedCart = await cartService.getQuantity({
+        items: cart.products.map((product: Product) => ({
+          product_variant_id: product.product_variant_id,
+          product_variant_size: product.product_variant_size,
+        })),
+      });
+      setCurrentStock(updatedCart);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartQuantity();
+  }, [cart]);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -124,6 +150,11 @@ const ShoppingCartModal = () => {
   };
 
   const handleCheckout = async () => {
+    if (hasInvalidProduct) {
+      toast.error("Please check your cart for invalid products");
+      return;
+    }
+
     const checkoutNumber = generateCheckoutNumber();
 
     await authService.createCheckoutToken(checkoutNumber);
@@ -139,6 +170,16 @@ const ShoppingCartModal = () => {
       `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
     );
   };
+
+  const hasInvalidProduct = cart.products.some((product) => {
+    const stock = currentStock.find(
+      (s) =>
+        s.variant_size_variant_id === product.product_variant_id &&
+        s.variant_size_value === product.product_size
+    );
+    if (!stock) return true;
+    return product.product_quantity > stock.variant_size_quantity;
+  });
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -246,6 +287,7 @@ const ShoppingCartModal = () => {
 
             <Button
               onClick={handleCheckout}
+              disabled={hasInvalidProduct}
               className="w-full "
               variant="default"
             >

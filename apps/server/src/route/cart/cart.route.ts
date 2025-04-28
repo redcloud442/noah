@@ -1,12 +1,15 @@
 import { Hono } from "hono";
+import { protectionMiddleware } from "../../middleware/protection.middleware.js";
 import {
   cartDeleteController,
   cartGetController,
+  cartGetQuantityController,
   cartPostController,
   cartPutController,
 } from "./cart.controller.js";
 import {
   cartDeleteMiddleware,
+  cartGetQuantityMiddleware,
   cartMiddleware,
   cartPostMiddleware,
   cartPutMiddleware,
@@ -14,12 +17,19 @@ import {
 
 const cart = new Hono();
 
-cart.get("/", cartMiddleware, cartGetController);
+cart.get("/", protectionMiddleware, cartMiddleware, cartGetController);
 
-cart.post("/", cartPostMiddleware, cartPostController);
+cart.post("/quantity", cartGetQuantityMiddleware, cartGetQuantityController);
 
-cart.put("/:id", cartPutMiddleware, cartPutController);
+cart.post("/", protectionMiddleware, cartPostMiddleware, cartPostController);
 
-cart.delete("/:id", cartDeleteMiddleware, cartDeleteController);
+cart.put("/:id", protectionMiddleware, cartPutMiddleware, cartPutController);
+
+cart.delete(
+  "/:id",
+  protectionMiddleware,
+  cartDeleteMiddleware,
+  cartDeleteController
+);
 
 export default cart;

@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import {
   cartDeleteModel,
   cartGetModel,
+  cartGetQuantityModel,
   cartPostModel,
   cartPutModel,
 } from "./cart.model.js";
@@ -50,6 +51,18 @@ export const cartPutController = async (c: Context) => {
     const user = c.get("user");
 
     const cart = await cartPutModel(id, product_quantity);
+
+    return c.json(cart, 200);
+  } catch (error) {
+    return c.json({ message: "Error" }, 500);
+  }
+};
+
+export const cartGetQuantityController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const cart = await cartGetQuantityModel(params);
 
     return c.json(cart, 200);
   } catch (error) {

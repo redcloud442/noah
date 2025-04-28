@@ -39,6 +39,7 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
   const [selectedSize, setSelectedSize] = useState(
     product.product_variants[0]?.variant_sizes[0].variant_size_value
   );
+  const sizeOrder = ["S", "M", "L", "XL", "XXL"];
   const [isLoading, setIsLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const allImages = variantInfo.variant_sample_images || [];
@@ -240,20 +241,26 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
         <div className="mt-4">
           <h3 className="text-sm font-semibold">Size:</h3>
           <div className="flex gap-3 mt-2">
-            {variantInfo.variant_sizes.map((variant) => (
-              <Button
-                key={variant.variant_size_id}
-                disabled={variant.variant_size_quantity === 0}
-                onClick={() => setSelectedSize(variant.variant_size_value)}
-                className={`px-4 py-2 border rounded-md ${
-                  selectedSize === variant.variant_size_value
-                    ? "scale-110 bg-gray-400"
-                    : ""
-                }`}
-              >
-                {variant.variant_size_value}
-              </Button>
-            ))}
+            {variantInfo.variant_sizes
+              .sort(
+                (a, b) =>
+                  sizeOrder.indexOf(a.variant_size_value) -
+                  sizeOrder.indexOf(b.variant_size_value)
+              )
+              .map((variant) => (
+                <Button
+                  key={variant.variant_size_id}
+                  disabled={variant.variant_size_quantity === 0}
+                  onClick={() => setSelectedSize(variant.variant_size_value)}
+                  className={`px-4 py-2 border rounded-md ${
+                    selectedSize === variant.variant_size_value
+                      ? "scale-110 bg-gray-400"
+                      : ""
+                  }`}
+                >
+                  {variant.variant_size_value}
+                </Button>
+              ))}
           </div>
         </div>
 

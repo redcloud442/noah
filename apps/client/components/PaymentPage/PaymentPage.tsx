@@ -281,7 +281,7 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
             <Button
               type="submit"
               variant="secondary"
-              disabled={!selectedMethod}
+              disabled={!selectedMethod || isSubmitting}
               className="w-full text-white"
             >
               {isSubmitting ? (

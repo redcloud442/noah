@@ -75,7 +75,7 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        {isAdmin && isInAdminPath ? (
+        {isAdmin || isInAdminPath ? (
           children
         ) : (
           <>

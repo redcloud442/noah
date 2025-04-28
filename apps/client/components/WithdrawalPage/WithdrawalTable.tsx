@@ -61,6 +61,7 @@ const ResellerTable = () => {
   const [isFetchingList, setIsFetchingList] = useState(false);
   const [count, setCount] = useState<Record<string, number>>({});
   const [showFilters, setShowFilters] = useState(false);
+
   const [cacheData, setCacheData] = useState<{
     [key: string]: {
       data: WithdrawalType[];
@@ -69,7 +70,11 @@ const ResellerTable = () => {
   }>({});
 
   const fetchRequest = useCallback(
-    async (values?: FilterFormValues, refresh: boolean = false) => {
+    async (
+      values?: FilterFormValues,
+      refresh: boolean = false,
+      tabValue?: string
+    ) => {
       try {
         if (!userData?.teamMemberProfile.team_member_team_id) return;
 
@@ -105,7 +110,9 @@ const ResellerTable = () => {
           },
           sortDirection: sorting[0]?.desc ? "desc" : "asc",
           columnAccessor: sorting[0]?.id || "user_email",
-          status: status as "PENDING" | "APPROVED" | "REJECTED",
+          status: tabValue
+            ? (tabValue as "PENDING" | "APPROVED" | "REJECTED")
+            : (status as "PENDING" | "APPROVED" | "REJECTED"),
           teamId: userData.teamMemberProfile.team_member_team_id,
         });
 
@@ -238,7 +245,7 @@ const ResellerTable = () => {
     setActivePage(1);
 
     reset();
-    fetchRequest(undefined, true);
+    fetchRequest(undefined, true, tabValue);
   };
 
   const handleFilter = async () => {

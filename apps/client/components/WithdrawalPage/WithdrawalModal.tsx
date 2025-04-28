@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import useUserDataStore from "@/lib/userDataStore";
 import { withdrawalService } from "@/services/withdrawal";
 import { WithdrawalType } from "@/utils/types";
 import { Loader2 } from "lucide-react"; // Optional loading spinner icon
@@ -37,6 +38,7 @@ const WithdrawalModal = ({
 }: WithdrawalModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { userData } = useUserDataStore();
 
   const handleAction = async () => {
     setIsLoading(true);
@@ -50,7 +52,13 @@ const WithdrawalModal = ({
       setRequest((prev) =>
         prev.map((withdrawal) =>
           withdrawal.reseller_withdrawal_id === withdrawalId
-            ? { ...withdrawal, reseller_withdrawal_status: status }
+            ? {
+                ...withdrawal,
+                reseller_withdrawal_status: status,
+                reseller_withdrawal_action_by:
+                  userData?.userProfile.user_email ?? "",
+                reseller_withdrawal_updated_at: new Date(),
+              }
             : withdrawal
         )
       );

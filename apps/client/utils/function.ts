@@ -128,6 +128,9 @@ export const findProductBySlug = async (slug: string, prisma: PrismaClient) => {
               variant_size_quantity: true,
               variant_size_variant_id: true,
             },
+            orderBy: {
+              variant_size_value: "desc",
+            },
           },
           variant_sample_images: {
             select: {
@@ -151,7 +154,11 @@ export const findProductBySlug = async (slug: string, prisma: PrismaClient) => {
       product_variant_is_deleted: false,
     },
     include: {
-      variant_sizes: true,
+      variant_sizes: {
+        orderBy: {
+          variant_size_value: "asc",
+        },
+      },
       variant_sample_images: true,
     },
   });

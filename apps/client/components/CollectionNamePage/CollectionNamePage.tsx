@@ -92,6 +92,12 @@ export const HoverImageCard = ({
     };
   }, [isHovered, imageUrls]);
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
   const handleAddToCart = () => {
     toast.custom((t) => (
       <VariantSelectionToast
@@ -125,7 +131,7 @@ export const HoverImageCard = ({
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
@@ -134,14 +140,44 @@ export const HoverImageCard = ({
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
+            </Button>
+          </Link>
         </div>
+        {/* Badges */}
         {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
-          <div className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
+          <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
             New
-          </div>
+          </Badge>
         )}
+
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
+
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}
@@ -250,6 +286,15 @@ export const HoverVariantCard = ({
               className="bg-white text-black"
             >
               Shop
+            </Button>
+          </Link>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
             </Button>
           </Link>
         </div>
@@ -367,7 +412,7 @@ export const HoverVariantTypeCard = ({
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
@@ -376,6 +421,15 @@ export const HoverVariantTypeCard = ({
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
+            </Button>
+          </Link>
         </div>
 
         {new Date(product.product_created_at).getTime() >

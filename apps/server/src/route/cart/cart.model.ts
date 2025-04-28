@@ -1,5 +1,6 @@
 import type { typeCartSchema } from "../../schema/schema.js";
 import prisma from "../../utils/prisma.js";
+import type { CartGetQuantityParams } from "../../utils/schema.js";
 
 export const cartGetModel = async (user: any) => {
   const cart = await prisma.cart_table.findMany({
@@ -94,4 +95,24 @@ export const cartPutModel = async (id: string, product_quantity: number) => {
   });
 
   return { message: "Cart updated" };
+};
+
+export const cartGetQuantityModel = async (params: CartGetQuantityParams) => {
+  const cart = await prisma.variant_size_table.findMany({
+    where: {
+      variant_size_variant_id: {
+        in: params.items.map((item) => item.product_variant_id),
+      },
+      variant_size_value: {
+        in: params.items.map((item) => item.product_variant_size),
+      },
+    },
+    select: {
+      variant_size_variant_id: true,
+      variant_size_value: true,
+      variant_size_quantity: true,
+    },
+  });
+
+  return cart;
 };

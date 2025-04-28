@@ -193,9 +193,7 @@ const CheckOutNumberPage = () => {
           description: "You will be redirected to the payment page",
         });
 
-        setTimeout(() => {
-          router.push(`/payment/pn/${params.checkoutNumber}`);
-        }, 2000);
+        router.push(`/payment/pn/${params.checkoutNumber}`);
       }
     } catch (error) {
       console.error("Error submitting payment:", error);
@@ -347,6 +345,7 @@ const CheckOutNumberPage = () => {
                     {...register("phone", { required: true })}
                     type="text"
                     placeholder="Phone"
+                    maxLength={10}
                     className="pl-12" // Adjust padding to prevent overlap with +63
                   />
                 </div>

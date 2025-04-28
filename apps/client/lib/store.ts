@@ -23,6 +23,7 @@ interface Store {
   cart: Cart;
   addToCart: (product: Product) => void;
   setCart: (cart: Cart) => void;
+  setNewQuantity: (product: Product) => void;
 }
 
 export const useCartStore = create<Store>((set) => ({
@@ -58,6 +59,30 @@ export const useCartStore = create<Store>((set) => ({
         cart: {
           products: updatedProducts,
           count: updatedProducts.reduce(
+            (sum, p) => sum + p.product_quantity,
+            0
+          ),
+        },
+      };
+    }),
+
+  setNewQuantity: (product) =>
+    set((state) => {
+      const existingProductIndex = state.cart.products.findIndex(
+        (p) =>
+          p.product_variant_id === product.product_variant_id &&
+          p.product_variant_size === product.product_variant_size
+      );
+
+      if (existingProductIndex !== -1) {
+        state.cart.products[existingProductIndex].product_quantity =
+          product.product_quantity;
+      }
+
+      return {
+        cart: {
+          products: state.cart.products,
+          count: state.cart.products.reduce(
             (sum, p) => sum + p.product_quantity,
             0
           ),

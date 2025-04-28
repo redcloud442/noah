@@ -7,6 +7,7 @@ import {
   cartPutSchema,
 } from "../../schema/schema.js";
 import { rateLimit } from "../../utils/redis.js";
+import { cartGetQuantitySchema } from "../../utils/schema.js";
 
 export const cartMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
@@ -34,6 +35,32 @@ export const cartMiddleware = async (c: Context, next: Next) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
+  await next();
+};
+
+export const cartGetQuantityMiddleware = async (c: Context, next: Next) => {
+  const ip = c.req.header("x-forwarded-for");
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${ip}:cart-get-quantity`,
+    5,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  const params = await c.req.json();
+
+  const validated = cartGetQuantitySchema.safeParse(params);
+
+  if (!validated.success) {
+    return c.json({ message: "Invalid request" }, 400);
+  }
+
+  c.set("params", validated.data);
   await next();
 };
 

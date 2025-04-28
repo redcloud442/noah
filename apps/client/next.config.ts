@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
         destination: `${
           process.env.NODE_ENV === "development"
             ? "http://localhost:8080"
-            : "https://loadbalancer.primepinas.com"
+            : "http://localhost:8080"
         }/api/v1/:path*`,
       },
     ];

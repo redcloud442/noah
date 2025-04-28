@@ -42,7 +42,7 @@ const ProductCollection = ({ collections }: ProductCollectionProps) => {
               <CardTitle className="text-xl font-bold uppercase">
                 {collection.product_category_name}
               </CardTitle>
-              <CardDescription className="mt-2 text-gray-600">
+              <CardDescription className="mt-2 text-foreground">
                 {collection.product_category_description}
               </CardDescription>
             </CardContent>

@@ -200,3 +200,14 @@ export const productPublicSchema = z.object({
 });
 
 export type ProductPublicParams = z.infer<typeof productPublicSchema>;
+
+export const cartGetQuantitySchema = z.object({
+  items: z.array(
+    z.object({
+      product_variant_id: z.string(),
+      product_variant_size: z.string(),
+    })
+  ),
+});
+
+export type CartGetQuantityParams = z.infer<typeof cartGetQuantitySchema>;
