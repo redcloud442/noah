@@ -4,7 +4,7 @@ import useUserDataStore from "@/lib/userDataStore";
 import { cn } from "@/lib/utils";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
-import { ProductType, ProductVariantType } from "@/utils/types";
+import { Product, ProductType, ProductVariantType } from "@/utils/types";
 import { product_table } from "@prisma/client";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
@@ -44,8 +44,32 @@ export const VariantSelectionToast = ({
 
   const isSoldOut = selectedSizeData?.variant_size_quantity === 0;
 
-  const handleProceedToCheckout = async () => {
+  const handleCheckoutItems = async (cart_id: string) => {
+    try {
+      await cartService.checkout({ items: [cart_id] });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    }
+  };
+
+  const handleProceedToCheckout = async (item: Product) => {
     const checkoutNumber = generateCheckoutNumber();
+
+    if (userData) {
+      await handleCheckoutItems(item.cart_id);
+    } else {
+      const res = localStorage.getItem("shoppingCart");
+      const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+      existingCart.products = existingCart.products.map((product: Product) =>
+        product.cart_id === item.cart_id
+          ? { ...product, cart_is_checked_out: true }
+          : product
+      );
+      localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
+    }
 
     await authService.createCheckoutToken(checkoutNumber, referralCode);
 
@@ -88,8 +112,10 @@ export const VariantSelectionToast = ({
       return;
     }
 
+    const cartId = uuidv4();
+
     const cartItem = {
-      cart_id: uuidv4(),
+      cart_id: cartId,
       product_id: selectedVariant.product_variant_product_id,
       product_name: product.product_name,
       product_price: product.product_price,
@@ -102,16 +128,41 @@ export const VariantSelectionToast = ({
       product_variant_image:
         selectedVariant?.variant_sample_images[0]
           ?.variant_sample_image_image_url ?? "",
+      cart_is_checked_out: false,
     };
 
     if (!userData) {
-      localStorage.setItem(
-        "shoppingCart",
-        JSON.stringify({ products: [cartItem], count: cart.count + quantity })
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
       );
+
+      if (existingItemIndex !== -1) {
+        cart.products[existingItemIndex].product_quantity += quantity;
+      } else {
+        cart.products.push(cartItem);
+      }
+
+      localStorage.setItem("shoppingCart", JSON.stringify(cart));
       addToCart(cartItem);
     } else {
-      const created = await cartService.create({ ...cartItem });
+      const created = await cartService.create({
+        ...cartItem,
+        cart_id: cartId,
+      });
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
+      );
+
+      if (existingItemIndex !== -1) {
+        cart.products[existingItemIndex].product_quantity += quantity;
+      } else {
+        cart.products.push(cartItem);
+      }
+
       addToCart({ ...cartItem, cart_id: created.cart_id });
     }
 
@@ -159,7 +210,7 @@ export const VariantSelectionToast = ({
             <Button
               variant="default"
               className="w-full bg-black text-white hover:bg-gray-800"
-              onClick={handleProceedToCheckout}
+              onClick={() => handleProceedToCheckout(cartItem)}
             >
               Checkout
             </Button>
@@ -320,13 +371,39 @@ export const VariantTypeSelectionToast = ({
 
   const isSoldOut = selectedSizeData?.variant_size_quantity === 0;
 
-  const handleProceedToCheckout = async () => {
+  const handleCheckoutItems = async (cart_id: string) => {
+    try {
+      await cartService.checkout({ items: [cart_id] });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    }
+  };
+
+  const handleProceedToCheckout = async (item: Product) => {
     const checkoutNumber = generateCheckoutNumber();
+
+    if (userData) {
+      await handleCheckoutItems(item.cart_id);
+    } else {
+      const res = localStorage.getItem("shoppingCart");
+      const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+      existingCart.products = existingCart.products.map((product: Product) =>
+        product.cart_id === item.cart_id
+          ? { ...product, cart_is_checked_out: true }
+          : product
+      );
+      localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
+    }
 
     await authService.createCheckoutToken(checkoutNumber, referralCode);
 
-    router.push(`/checkout/cn/${checkoutNumber}`);
-    closeToast();
+    setTimeout(() => {
+      router.push(`/checkout/cn/${checkoutNumber}`);
+      closeToast();
+    }, 1000);
   };
 
   const handleAddToCart = async () => {
@@ -350,8 +427,10 @@ export const VariantTypeSelectionToast = ({
       return;
     }
 
+    const cartId = uuidv4();
+
     const cartItem = {
-      cart_id: uuidv4(),
+      cart_id: cartId,
       product_id: selectedVariant.product_variant_product_id,
       product_name: product.product_name,
       product_price: product.product_price,
@@ -364,16 +443,41 @@ export const VariantTypeSelectionToast = ({
       product_variant_image:
         selectedVariant?.variant_sample_images[0]
           ?.variant_sample_image_image_url ?? "",
+      cart_is_checked_out: false,
     };
 
     if (!userData) {
-      localStorage.setItem(
-        "shoppingCart",
-        JSON.stringify({ products: [cartItem], count: cart.count + quantity })
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
       );
+
+      if (existingItemIndex !== -1) {
+        cart.products[existingItemIndex].product_quantity += quantity;
+      } else {
+        cart.products.push(cartItem);
+      }
+
+      localStorage.setItem("shoppingCart", JSON.stringify(cart));
       addToCart(cartItem);
     } else {
-      const created = await cartService.create({ ...cartItem });
+      const created = await cartService.create({
+        ...cartItem,
+        cart_id: cartId,
+      });
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
+      );
+
+      if (existingItemIndex !== -1) {
+        cart.products[existingItemIndex].product_quantity += quantity;
+      } else {
+        cart.products.push(cartItem);
+      }
+
       addToCart({ ...cartItem, cart_id: created.cart_id });
     }
 
@@ -381,12 +485,12 @@ export const VariantTypeSelectionToast = ({
 
     toast.custom(
       () => (
-        <div className="bg-white text-black p-6 shadow-xl border border-gray-200 w-full">
+        <div className="bg-white text-black p-6 shadow-xl border rounded-none border-gray-200 w-full">
           <h1 className="text-base font-semibold text-green-800 pb-2">
             Added to cart successfully!
           </h1>
           <div className="flex justify-start gap-2 items-center">
-            <div className="w-20 h-20 rounded-md overflow-hidden relative">
+            <div className="w-20 h-20 overflow-hidden relative">
               <Image
                 src={cartItem.product_variant_image}
                 alt={product.product_name}
@@ -397,9 +501,7 @@ export const VariantTypeSelectionToast = ({
             </div>
 
             <div className="flex flex-col">
-              <p className="text-sm text-gray-600 uppercase">
-                {product.product_name} - {selectedVariant.product_variant_color}
-              </p>
+              <p className="text-sm text-gray-600">{product.product_name}</p>
               <p className="text-sm text-gray-600">Size: {selectedSize}</p>
               <p className="text-sm text-gray-600">
                 Color: {selectedVariant.product_variant_color}
@@ -413,9 +515,7 @@ export const VariantTypeSelectionToast = ({
               variant="outline"
               className="w-full bg-white text-black hover:bg-gray-100"
               onClick={() => {
-                router.push(
-                  `/cart${referralCode ? `?REFERRAL_CODE=${referralCode}` : ""}`
-                );
+                router.push("/cart");
                 closeToast();
               }}
             >
@@ -425,7 +525,7 @@ export const VariantTypeSelectionToast = ({
             <Button
               variant="default"
               className="w-full bg-black text-white hover:bg-gray-800"
-              onClick={handleProceedToCheckout}
+              onClick={() => handleProceedToCheckout(cartItem)}
             >
               Checkout
             </Button>

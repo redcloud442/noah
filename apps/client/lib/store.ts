@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 interface Product {
   cart_id: string;
+  cart_is_checked_out: boolean;
   product_id: string;
   product_name: string;
   product_price: number;
@@ -14,7 +15,7 @@ interface Product {
   product_variant_image: string;
 }
 
-interface Cart {
+export interface Cart {
   products: Product[];
   count: number;
 }
@@ -58,10 +59,7 @@ export const useCartStore = create<Store>((set) => ({
       return {
         cart: {
           products: updatedProducts,
-          count: updatedProducts.reduce(
-            (sum, p) => sum + p.product_quantity,
-            0
-          ),
+          count: state.cart.count + 1,
         },
       };
     }),

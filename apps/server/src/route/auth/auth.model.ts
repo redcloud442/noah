@@ -70,9 +70,10 @@ export const authLoginModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userData.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -84,6 +85,7 @@ export const authLoginModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userData.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -249,9 +251,10 @@ export const authCallbackModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userData.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -264,6 +267,7 @@ export const authCallbackModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userData.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -332,9 +336,10 @@ export const authRegisterModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: user.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -347,6 +352,7 @@ export const authRegisterModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: user.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -412,9 +418,10 @@ export const authSaveCartModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userId,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -427,6 +434,7 @@ export const authSaveCartModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userId,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }

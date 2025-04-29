@@ -372,7 +372,11 @@ export const getPayment = async (params: {
                 (item) => item.product_variant_id
               ),
             },
+            cart_size: {
+              in: orderDetails?.order_items.map((item) => item.size ?? ""),
+            },
             cart_user_id: orderDetails?.order_user_id ?? undefined,
+            cart_to_be_checked_out: true,
           },
         });
 

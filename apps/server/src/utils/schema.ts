@@ -3,7 +3,7 @@ import { z } from "zod";
 //checkout schema
 export const checkoutSchema = z.object({
   checkoutNumber: z.string().min(8).max(8),
-  referralCode: z.string().optional(),
+  referralCode: z.string().optional().nullable(),
 });
 
 //payment schema

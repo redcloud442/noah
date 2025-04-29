@@ -32,6 +32,17 @@ const CartPage = () => {
     }[]
   >([]);
 
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+
+  const handleSelectItem = (cartId: string) => {
+    setSelectedItems(
+      (prev) =>
+        prev.includes(cartId)
+          ? prev.filter((id) => id !== cartId) // Unselect if already selected
+          : [...prev, cartId] // Add to selected if not yet
+    );
+  };
+
   useEffect(() => {
     const handleFetchCart = async () => {
       try {
@@ -40,7 +51,7 @@ const CartPage = () => {
           const cart = await cartService.get();
           setCart(cart);
         } else {
-          const res = localStorage.getItem("cart");
+          const res = localStorage.getItem("shoppingCart");
           if (res) {
             const cart = JSON.parse(res);
             setCart(cart);
@@ -57,11 +68,15 @@ const CartPage = () => {
     handleFetchCart();
   }, [setCart, userData]);
 
+  useEffect(() => {
+    setSelectedItems(cart.products.map((product) => product.cart_id));
+  }, [cart]);
+
   const fetchCartQuantity = async () => {
     try {
       if (cart.products.length === 0) return;
       const updatedCart = await cartService.getQuantity({
-        items: cart.products.map((product: Product) => ({
+        items: cart.products.map((product) => ({
           product_variant_id: product.product_variant_id,
           product_variant_size: product.product_size,
         })),
@@ -76,7 +91,7 @@ const CartPage = () => {
 
   useEffect(() => {
     fetchCartQuantity();
-  }, []);
+  }, [cart]);
 
   const handleRemoveItem = async (cartId: string) => {
     const previousCart = cart;
@@ -90,7 +105,7 @@ const CartPage = () => {
       if (userData) {
         await cartService.delete(cartId);
       } else {
-        const res = localStorage.getItem("cart");
+        const res = localStorage.getItem("shoppingCart");
         if (res) {
           const cart = JSON.parse(res);
           const updatedCart = {
@@ -100,7 +115,7 @@ const CartPage = () => {
             ),
             count: cart.count - 1,
           };
-          localStorage.setItem("cart", JSON.stringify(updatedCart));
+          localStorage.setItem("shoppingCart", JSON.stringify(updatedCart));
         }
       }
     } catch (error) {
@@ -126,7 +141,7 @@ const CartPage = () => {
       if (userData) {
         await cartService.update(cartId, newQuantity);
       } else {
-        const res = localStorage.getItem("cart");
+        const res = localStorage.getItem("shoppingCart");
         if (res) {
           const cart = JSON.parse(res);
           const updatedCart = {
@@ -148,9 +163,34 @@ const CartPage = () => {
     }
   };
 
+  const handleCheckoutItems = async () => {
+    try {
+      if (userData) {
+        await cartService.checkout({ items: selectedItems });
+      } else {
+        const res = localStorage.getItem("shoppingCart");
+        const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+        existingCart.products = existingCart.products.map((product: Product) =>
+          selectedItems.includes(product.cart_id)
+            ? { ...product, cart_is_checked_out: true }
+            : product
+        );
+
+        localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    }
+  };
+
   const handleCheckout = async () => {
     setSubmitting(true);
     const checkoutNumber = generateCheckoutNumber();
+
+    await handleCheckoutItems();
 
     await authService.createCheckoutToken(checkoutNumber);
     setTimeout(() => {
@@ -176,6 +216,25 @@ const CartPage = () => {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-8">
         <div className="flex-1 bg-white shadow-md rounded-lg p-6 w-full">
           <h2 className="text-2xl font-bold mb-4">Cart Items</h2>
+          {/* SELECT ALL CHECKBOX */}
+          <div className="flex items-center mb-4 space-x-2">
+            <input
+              type="checkbox"
+              checked={
+                selectedItems.length === cart.products.length &&
+                cart.products.length > 0
+              }
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedItems(cart.products.map((p) => p.cart_id)); // select all
+                } else {
+                  setSelectedItems([]); // unselect all
+                }
+              }}
+              className="w-5 h-5 accent-black"
+            />
+            <span className="text-sm font-medium">Select All</span>
+          </div>
 
           {cart.products.length === 0 ? (
             <p className="text-gray-600 text-center">Your cart is empty.</p>
@@ -209,6 +268,12 @@ const CartPage = () => {
                       key={product.cart_id}
                       className="relative p-4 flex bg-white text-black items-center space-x-2"
                     >
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(product.cart_id)}
+                        onChange={() => handleSelectItem(product.cart_id)}
+                        className="w-5 h-5 accent-black"
+                      />
                       <Button
                         className="absolute top-2 right-2"
                         variant="destructive"
@@ -314,6 +379,9 @@ const CartPage = () => {
                 <span className="font-medium">
                   ₱
                   {cart.products
+                    .filter((product) =>
+                      selectedItems.includes(product.cart_id)
+                    )
                     .reduce(
                       (total, product) =>
                         total +
@@ -328,6 +396,9 @@ const CartPage = () => {
                 <span>
                   ₱
                   {cart.products
+                    .filter((product) =>
+                      selectedItems.includes(product.cart_id)
+                    )
                     .reduce(
                       (total, product) =>
                         total +

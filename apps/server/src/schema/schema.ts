@@ -37,6 +37,7 @@ export const registerSchema = z.object({
 });
 
 export const cartPostSchema = z.object({
+  cart_id: z.string().uuid(),
   product_id: z.string().uuid(),
   product_name: z.string(),
   product_price: z.number(),
@@ -59,6 +60,13 @@ export const cartPutSchema = z.object({
   id: z.string().uuid(),
   product_quantity: z.number(),
 });
+
+export const cartCheckoutSchema = z.object({
+  items: z.array(z.string().uuid()),
+  cartItems: z.array(cartPostSchema).optional(),
+});
+
+export type typeCartCheckoutSchema = z.infer<typeof cartCheckoutSchema>;
 
 export type typeCartPutSchema = z.infer<typeof cartPutSchema>;
 

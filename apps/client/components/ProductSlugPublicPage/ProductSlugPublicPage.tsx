@@ -40,9 +40,11 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
     product.product_variants[0]?.variant_sizes[0].variant_size_value
   );
   const sizeOrder = ["S", "M", "L", "XL", "XXL"];
+  const allImages = variantInfo.variant_sample_images || [];
+
   const [isLoading, setIsLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const allImages = variantInfo.variant_sample_images || [];
+
   const [selectedImage, setSelectedImage] = useState(
     allImages?.[0]?.variant_sample_image_image_url || "/placeholder.png"
   );
@@ -95,6 +97,7 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
         product_variant_image:
           variantInfo?.variant_sample_images[0]
             ?.variant_sample_image_image_url ?? "",
+        cart_is_checked_out: false,
       };
 
       if (!userData) {
@@ -120,13 +123,51 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
     toast.success("Added to cart successfully!");
   };
 
+  const handleCheckoutItems = async () => {
+    try {
+      const cartUid = uuidv4();
+      await cartService.checkout({
+        items: [cartUid],
+        cartItems: [
+          {
+            cart_id: cartUid,
+            cart_is_checked_out: true,
+            product_variant_id: variantInfo.product_variant_id,
+            product_quantity: quantity,
+            product_variant_size: selectedSize,
+            product_variant_color: variantInfo.product_variant_color,
+            product_variant_quantity:
+              variantInfo.variant_sizes.find(
+                (s) => s.variant_size_value === selectedSize
+              )?.variant_size_quantity ?? 0,
+            product_variant_image:
+              variantInfo?.variant_sample_images[0]
+                ?.variant_sample_image_image_url ?? "",
+            product_id: variantInfo.product_variant_product_id,
+            product_name: product.product_name,
+            product_price: product.product_price,
+          },
+        ],
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error checking out items.");
+      }
+    }
+  };
+
   const handleProceedToCheckout = async () => {
     try {
       setIsLoading(true);
       const checkoutNumber = generateCheckoutNumber();
-      if (!userData) {
-        await authService.createCheckoutToken(checkoutNumber);
+
+      if (userData) {
+        await handleCheckoutItems();
       }
+
+      await authService.createCheckoutToken(checkoutNumber);
 
       router.push(`/checkout/cn/${checkoutNumber}`);
     } catch (error) {

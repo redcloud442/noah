@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCartStore } from "@/lib/store";
+import { Cart, useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { cartService } from "@/services/cart";
 import { paymentService } from "@/services/payment";
@@ -18,7 +18,7 @@ import axios from "axios";
 import { Banknote, CreditCard, Loader2, Smartphone, Trash } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import PolicyModal from "../PolicyModal/PolicyModal";
@@ -31,8 +31,12 @@ import { Label } from "../ui/label";
 const CheckOutNumberPage = () => {
   const params = useParams();
   const router = useRouter();
-  const { cart, setCart } = useCartStore();
+  const { cart } = useCartStore();
   const { userData } = useUserDataStore();
+  const [cartToBeCheckedOut, setCartToBeCheckedOut] = useState<Cart>({
+    products: [],
+    count: 0,
+  });
 
   const {
     register,
@@ -57,18 +61,18 @@ const CheckOutNumberPage = () => {
   });
 
   const handleRemoveItem = async (cartId: string) => {
-    const previousCart = cart;
-    setCart({
-      ...cart,
-      products: cart.products.filter((item) => item.cart_id !== cartId),
-      count: cart.count - 1,
-    });
+    const previousCart = cartToBeCheckedOut;
+    setCartToBeCheckedOut((prev) => ({
+      ...prev,
+      products: prev.products.filter((item) => item.cart_id !== cartId),
+      count: prev.count - 1,
+    }));
 
     try {
       if (userData) {
         await cartService.delete(cartId);
       } else {
-        const res = localStorage.getItem("cart");
+        const res = localStorage.getItem("shoppingCart");
         if (res) {
           const cart = JSON.parse(res);
           const updatedCart = {
@@ -78,14 +82,14 @@ const CheckOutNumberPage = () => {
             ),
             count: cart.count - 1,
           };
-          localStorage.setItem("cart", JSON.stringify(updatedCart));
+          localStorage.setItem("shoppingCart", JSON.stringify(updatedCart));
         }
       }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Error deleting item"
       );
-      setCart(previousCart);
+      setCartToBeCheckedOut(previousCart);
     }
   };
 
@@ -112,13 +116,18 @@ const CheckOutNumberPage = () => {
     const fetchProducts = async () => {
       try {
         if (userData) {
-          const cart = await cartService.get();
-          setCart(cart);
+          const cart = await cartService.checkedOut();
+          setCartToBeCheckedOut(cart);
         } else {
-          const res = localStorage.getItem("cart");
+          const res = localStorage.getItem("shoppingCart");
           if (res) {
             const cart = JSON.parse(res);
-            setCart(cart);
+
+            cart.products = cart.products.filter(
+              (product: Product) => product.cart_is_checked_out
+            );
+
+            setCartToBeCheckedOut(cart);
           }
         }
       } catch (error) {
@@ -126,7 +135,7 @@ const CheckOutNumberPage = () => {
       }
     };
     fetchProducts();
-  }, [userData]);
+  }, [userData, cart]);
 
   useEffect(() => {
     const fetchRegions = async () => {
@@ -199,22 +208,22 @@ const CheckOutNumberPage = () => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      const { productVariant, ...rest } = data;
+      const { ...rest } = data;
 
       const res = await paymentService.create({
         ...rest,
-        productVariant: productVariant.map((variant) => ({
+        productVariant: cartToBeCheckedOut.products.map((variant) => ({
           product_variant_id: variant.product_variant_id,
-          product_variant_quantity: variant.product_variant_quantity,
-          product_variant_price: variant.product_variant_price,
-          product_variant_size: variant.product_variant_size,
+          product_variant_quantity: variant.product_quantity,
+          product_variant_price: variant.product_price,
+          product_variant_size: variant.product_size,
           product_variant_color: variant.product_variant_color,
         })),
       });
 
       if (!userData) {
         localStorage.removeItem("shoppingCart");
-        setCart({
+        setCartToBeCheckedOut({
           products: [],
           count: 0,
         });
@@ -233,6 +242,22 @@ const CheckOutNumberPage = () => {
       }
     }
   };
+
+  const SubTotal = useMemo(() => {
+    return cartToBeCheckedOut.products.reduce(
+      (total, product) =>
+        total + product.product_price * product.product_quantity,
+      0
+    );
+  }, [cartToBeCheckedOut]);
+
+  const Total = useMemo(() => {
+    return cartToBeCheckedOut.products.reduce(
+      (total, product) =>
+        total + product.product_price * product.product_quantity,
+      0
+    );
+  }, [cartToBeCheckedOut]);
 
   return (
     <div className="min-h-screen h-full mt-20 p-4 bg-gray-100 text-black">
@@ -529,9 +554,9 @@ const CheckOutNumberPage = () => {
 
         <div className="bg-white p-6 shadow-md rounded-md space-y-4">
           <h2 className="text-xl font-semibold">Order Summary</h2>
-          {cart.products.map((product) => (
+          {cartToBeCheckedOut.products.map((product) => (
             <div
-              key={product.product_id}
+              key={product.cart_id}
               className="flex items-center bg-white text-black gap-4 relative"
             >
               <div className="relative">
@@ -589,32 +614,14 @@ const CheckOutNumberPage = () => {
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>
-                ₱
-                {cart.products
-                  .reduce(
-                    (total, product) =>
-                      total + product.product_price * product.product_quantity,
-                    0
-                  )
-                  .toLocaleString()}
-              </span>
+              <span>₱{SubTotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
             </div>
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>
-                ₱
-                {cart.products
-                  .reduce(
-                    (total, product) =>
-                      total + product.product_price * product.product_quantity,
-                    0
-                  )
-                  .toLocaleString()}
-              </span>
+              <span>₱{Total.toLocaleString()}</span>
             </div>
           </div>
         </div>

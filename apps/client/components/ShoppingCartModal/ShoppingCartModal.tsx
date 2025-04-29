@@ -57,7 +57,7 @@ const ShoppingCartModal = () => {
     try {
       if (cart.products.length === 0 || !open) return;
       const updatedCart = await cartService.getQuantity({
-        items: cart.products.map((product: Product) => ({
+        items: cart.products.map((product) => ({
           product_variant_id: product.product_variant_id,
           product_variant_size: product.product_size ?? "",
         })),
@@ -75,16 +75,12 @@ const ShoppingCartModal = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        if (!userData) {
-          const storedCart = localStorage.getItem("shoppingCart");
-
-          if (storedCart) {
-            setCart(JSON.parse(storedCart));
-          }
+        if (userData) {
+          const cart = await cartService.get();
+          setCart(cart);
         } else {
-          const response = await cartService.get();
-
-          localStorage.removeItem("shoppingCart");
+          const res = localStorage.getItem("shoppingCart");
+          const response = res ? JSON.parse(res) : { products: [], count: 0 };
 
           setCart(response);
         }
@@ -149,10 +145,34 @@ const ShoppingCartModal = () => {
     }
   };
 
+  const handleCheckoutItems = async (cart_id: string[]) => {
+    try {
+      await cartService.checkout({ items: cart_id });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    }
+  };
   const handleCheckout = async () => {
     if (hasInvalidProduct) {
       toast.error("Please check your cart for invalid products");
       return;
+    }
+
+    if (userData) {
+      const cartIds = cart.products.map((item) => item.cart_id);
+      await handleCheckoutItems(cartIds);
+    } else {
+      const res = localStorage.getItem("shoppingCart");
+      const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+      existingCart.products = existingCart.products.map((product: Product) => ({
+        ...product,
+        cart_is_checked_out: true,
+      }));
+
+      localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
     }
 
     const checkoutNumber = generateCheckoutNumber();
@@ -181,7 +201,6 @@ const ShoppingCartModal = () => {
     return product.product_quantity > stock.variant_size_quantity;
   });
 
-  console.log(currentStock);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       {pathname !== "/cart" && pathname !== "/checkout" ? (
@@ -215,7 +234,7 @@ const ShoppingCartModal = () => {
           <div className="mt-4 space-y-4">
             {cart?.products?.map((item) => (
               <Card
-                key={item.product_id}
+                key={item.cart_id}
                 className="p-4 shadow-sm gap-2 flex w-full items-center"
               >
                 <Image
@@ -269,7 +288,10 @@ const ShoppingCartModal = () => {
                       Quantity: {item.product_quantity}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Price: ₱ {item.product_price * item.product_quantity}
+                      Price: ₱{" "}
+                      {(
+                        item.product_price * item.product_quantity
+                      ).toLocaleString()}
                     </p>
                   </div>
                 </div>
