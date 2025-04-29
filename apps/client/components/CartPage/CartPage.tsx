@@ -63,7 +63,7 @@ const CartPage = () => {
       const updatedCart = await cartService.getQuantity({
         items: cart.products.map((product: Product) => ({
           product_variant_id: product.product_variant_id,
-          product_variant_size: product.product_variant_size,
+          product_variant_size: product.product_size,
         })),
       });
       setCurrentStock(updatedCart);

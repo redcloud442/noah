@@ -26,9 +26,15 @@ const page = async ({
     return redirect("/");
   }
 
-  if (!checkoutNumber) {
-    return redirect("/");
-  }
+  //   const order = !!(await prisma.order_table.findUnique({
+  //     where: {
+  //       order_number: checkoutNumber,
+  //     },
+  //   }));
+
+  //   if (!order) {
+  //     return redirect("/");
+  //   }
 
   return <CheckOutNumberPage />;
 };

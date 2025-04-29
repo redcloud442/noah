@@ -7,19 +7,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { cartService } from "@/services/cart";
 import { paymentService } from "@/services/payment";
 import { CheckoutFormData, paymentSchema } from "@/utils/schema";
+import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { Banknote, CreditCard, Loader2, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Loader2, Smartphone, Trash } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import PolicyModal from "../PolicyModal/PolicyModal";
 import ReturnPolicyPage from "../ReturnPolicyPage/ReturnPolicyPage";
 import TermsOfServicePage from "../TermsOfService/TermsOfServicePage";
@@ -32,7 +33,6 @@ const CheckOutNumberPage = () => {
   const router = useRouter();
   const { cart, setCart } = useCartStore();
   const { userData } = useUserDataStore();
-  const { toast } = useToast();
 
   const {
     register,
@@ -55,6 +55,39 @@ const CheckOutNumberPage = () => {
       order_number: params.checkoutNumber as string,
     },
   });
+
+  const handleRemoveItem = async (cartId: string) => {
+    const previousCart = cart;
+    setCart({
+      ...cart,
+      products: cart.products.filter((item) => item.cart_id !== cartId),
+      count: cart.count - 1,
+    });
+
+    try {
+      if (userData) {
+        await cartService.delete(cartId);
+      } else {
+        const res = localStorage.getItem("cart");
+        if (res) {
+          const cart = JSON.parse(res);
+          const updatedCart = {
+            ...cart,
+            products: cart.products.filter(
+              (item: Product) => item.cart_id !== cartId
+            ),
+            count: cart.count - 1,
+          };
+          localStorage.setItem("cart", JSON.stringify(updatedCart));
+        }
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error deleting item"
+      );
+      setCart(previousCart);
+    }
+  };
 
   const [provices, setProvices] = useState<
     {
@@ -188,15 +221,16 @@ const CheckOutNumberPage = () => {
       }
 
       if (res) {
-        toast({
-          title: "Payment on process",
-          description: "You will be redirected to the payment page",
-        });
+        toast.success("Payment on process");
 
         router.push(`/payment/pn/${params.checkoutNumber}`);
       }
     } catch (error) {
-      console.error("Error submitting payment:", error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error submitting payment");
+      }
     }
   };
 
@@ -498,7 +532,7 @@ const CheckOutNumberPage = () => {
           {cart.products.map((product) => (
             <div
               key={product.product_id}
-              className="flex items-center bg-white text-black gap-4 "
+              className="flex items-center bg-white text-black gap-4 relative"
             >
               <div className="relative">
                 {/* Product Image */}
@@ -540,6 +574,14 @@ const CheckOutNumberPage = () => {
                     product.product_price * product.product_quantity
                   ).toLocaleString()}
                 </p>
+                <Button
+                  className="absolute top-2 right-2"
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleRemoveItem(product.cart_id)}
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}

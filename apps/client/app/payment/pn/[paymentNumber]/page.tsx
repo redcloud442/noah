@@ -17,10 +17,11 @@ const page = async ({
   const payment = await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
+      order_status: "PENDING",
     },
   });
 
-  if (!payment) {
+  if (payment?.order_status !== "PENDING") {
     return redirect("/");
   }
 

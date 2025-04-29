@@ -31,7 +31,7 @@ export const VariantSelectionToast = ({
   const generateCheckoutNumber = () => {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
   };
-
+  const sizeOrder = ["S", "M", "L", "XL", "XXL"];
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const { userData } = useUserDataStore();
@@ -49,8 +49,10 @@ export const VariantSelectionToast = ({
 
     await authService.createCheckoutToken(checkoutNumber, referralCode);
 
-    router.push(`/checkout/cn/${checkoutNumber}`);
-    closeToast();
+    setTimeout(() => {
+      router.push(`/checkout/cn/${checkoutNumber}`);
+      closeToast();
+    }, 1000);
   };
 
   const handleChangeSize = (size: string) => {
@@ -135,6 +137,9 @@ export const VariantSelectionToast = ({
             <div className="flex flex-col">
               <p className="text-sm text-gray-600">{product.product_name}</p>
               <p className="text-sm text-gray-600">Size: {selectedSize}</p>
+              <p className="text-sm text-gray-600">
+                Color: {selectedVariant.product_variant_color}
+              </p>
               <p className="text-sm text-gray-600">Quantity: {quantity}</p>
             </div>
           </div>
@@ -230,19 +235,25 @@ export const VariantSelectionToast = ({
       </p>
 
       <div className="mt-2 flex justify-center items-center flex-wrap gap-2">
-        {selectedVariant?.variant_sizes.map((variant) => (
-          <Button
-            key={variant.variant_size_id}
-            onClick={() => handleChangeSize(variant.variant_size_value)}
-            className={cn(
-              "text-sm px-4 py-2 bg-white text-black ring-1 ring-gray-300",
-              selectedSize === variant.variant_size_value &&
-                "ring-2 ring-green-500"
-            )}
-          >
-            {variant.variant_size_value}
-          </Button>
-        ))}
+        {selectedVariant?.variant_sizes
+          .sort(
+            (a, b) =>
+              sizeOrder.indexOf(a.variant_size_value) -
+              sizeOrder.indexOf(b.variant_size_value)
+          )
+          .map((variant) => (
+            <Button
+              key={variant.variant_size_id}
+              onClick={() => handleChangeSize(variant.variant_size_value)}
+              className={cn(
+                "text-sm px-4 py-2 bg-white text-black ring-1 ring-gray-300",
+                selectedSize === variant.variant_size_value &&
+                  "ring-2 ring-green-500"
+              )}
+            >
+              {variant.variant_size_value}
+            </Button>
+          ))}
       </div>
 
       <div className="flex justify-center items-center w-full gap-2 mt-4">
@@ -296,7 +307,7 @@ export const VariantTypeSelectionToast = ({
   const generateCheckoutNumber = () => {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
   };
-
+  const sizeOrder = ["S", "M", "L", "XL", "XXL"];
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const { userData } = useUserDataStore();
@@ -390,6 +401,9 @@ export const VariantTypeSelectionToast = ({
                 {product.product_name} - {selectedVariant.product_variant_color}
               </p>
               <p className="text-sm text-gray-600">Size: {selectedSize}</p>
+              <p className="text-sm text-gray-600">
+                Color: {selectedVariant.product_variant_color}
+              </p>
               <p className="text-sm text-gray-600">Quantity: {quantity}</p>
             </div>
           </div>
@@ -502,19 +516,25 @@ export const VariantTypeSelectionToast = ({
       </div>
 
       <div className="mt-2 flex justify-center items-center flex-wrap gap-2">
-        {selectedVariant?.variant_sizes.map((variant) => (
-          <Button
-            key={variant.variant_size_id}
-            onClick={() => handleChangeSize(variant.variant_size_value)}
-            className={cn(
-              "text-sm px-4 py-2 bg-white text-black ring-1 ring-gray-300",
-              selectedSize === variant.variant_size_value &&
-                "ring-2 ring-green-500"
-            )}
-          >
-            {variant.variant_size_value}
-          </Button>
-        ))}
+        {selectedVariant?.variant_sizes
+          .sort(
+            (a, b) =>
+              sizeOrder.indexOf(a.variant_size_value) -
+              sizeOrder.indexOf(b.variant_size_value)
+          )
+          .map((variant) => (
+            <Button
+              key={variant.variant_size_id}
+              onClick={() => handleChangeSize(variant.variant_size_value)}
+              className={cn(
+                "text-sm px-4 py-2 bg-white text-black ring-1 ring-gray-300",
+                selectedSize === variant.variant_size_value &&
+                  "ring-2 ring-green-500"
+              )}
+            >
+              {variant.variant_size_value}
+            </Button>
+          ))}
       </div>
 
       <div className="flex justify-center items-center w-full gap-2 mt-4">

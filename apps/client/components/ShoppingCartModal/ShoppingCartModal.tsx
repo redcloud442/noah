@@ -55,11 +55,11 @@ const ShoppingCartModal = () => {
 
   const fetchCartQuantity = async () => {
     try {
-      if (cart.products.length === 0) return;
+      if (cart.products.length === 0 || !open) return;
       const updatedCart = await cartService.getQuantity({
         items: cart.products.map((product: Product) => ({
           product_variant_id: product.product_variant_id,
-          product_variant_size: product.product_variant_size,
+          product_variant_size: product.product_size ?? "",
         })),
       });
       setCurrentStock(updatedCart);
@@ -70,7 +70,7 @@ const ShoppingCartModal = () => {
 
   useEffect(() => {
     fetchCartQuantity();
-  }, [cart]);
+  }, [cart, open]);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -181,6 +181,7 @@ const ShoppingCartModal = () => {
     return product.product_quantity > stock.variant_size_quantity;
   });
 
+  console.log(currentStock);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       {pathname !== "/cart" && pathname !== "/checkout" ? (
@@ -259,7 +260,7 @@ const ShoppingCartModal = () => {
                   </div>
                   <div className="grid grid-cols-1">
                     <p className="text-sm text-gray-500">
-                      Size: {item.product_variant_size}
+                      Size: {item.product_size}
                     </p>
                     <p className="text-sm text-gray-500">
                       Color: {item.product_variant_color}
