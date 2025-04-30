@@ -11,7 +11,11 @@ import { Cart, useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { cartService } from "@/services/cart";
 import { paymentService } from "@/services/payment";
-import { CheckoutFormData, paymentSchema } from "@/utils/schema";
+import {
+  AddressCreateFormData,
+  CheckoutFormData,
+  paymentSchema,
+} from "@/utils/schema";
 import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -27,8 +31,13 @@ import TermsOfServicePage from "../TermsOfService/TermsOfServicePage";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Skeleton } from "../ui/skeleton";
 
-const CheckOutNumberPage = () => {
+type CheckOutNumberPageProps = {
+  formattedAddress: AddressCreateFormData;
+};
+
+const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   const params = useParams();
   const router = useRouter();
   const { cart } = useCartStore();
@@ -37,6 +46,7 @@ const CheckOutNumberPage = () => {
     products: [],
     count: 0,
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -48,14 +58,14 @@ const CheckOutNumberPage = () => {
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      email: "",
-      firstName: "",
-      lastName: "",
-      address: "",
-      province: "",
-      city: "",
-      postalCode: "",
-      phone: "",
+      email: formattedAddress.email,
+      firstName: formattedAddress.firstName,
+      lastName: formattedAddress.lastName,
+      address: formattedAddress.address,
+      province: formattedAddress.province,
+      city: formattedAddress.city,
+      postalCode: formattedAddress.postalCode,
+      phone: formattedAddress.phone,
       order_number: params.checkoutNumber as string,
     },
   });
@@ -115,6 +125,7 @@ const CheckOutNumberPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
         if (userData) {
           const cart = await cartService.checkedOut();
           setCartToBeCheckedOut(cart);
@@ -132,6 +143,8 @@ const CheckOutNumberPage = () => {
         }
       } catch (error) {
         console.error("Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchProducts();
@@ -143,6 +156,15 @@ const CheckOutNumberPage = () => {
         const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
 
         setProvices(res.data);
+
+        if (formattedAddress.province) {
+          const provinceData = res.data.find(
+            (p: { name: string }) => p.name === formattedAddress.province
+          );
+          if (provinceData) {
+            setValue("province", provinceData.code);
+          }
+        }
       } catch (error) {
         console.error("Error fetching regions:", error);
       }
@@ -318,7 +340,12 @@ const CheckOutNumberPage = () => {
                   control={control}
                   defaultValue=""
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange}>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }}
+                      defaultValue={formattedAddress.province}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Province" />
                       </SelectTrigger>
@@ -342,7 +369,12 @@ const CheckOutNumberPage = () => {
                     control={control}
                     defaultValue=""
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                        defaultValue={formattedAddress.city}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="City" />
                         </SelectTrigger>
@@ -364,7 +396,12 @@ const CheckOutNumberPage = () => {
                     control={control}
                     defaultValue=""
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                        defaultValue={formattedAddress.barangay}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Barangay" />
                         </SelectTrigger>
@@ -554,62 +591,70 @@ const CheckOutNumberPage = () => {
 
         <div className="bg-white p-6 shadow-md rounded-md space-y-4">
           <h2 className="text-xl font-semibold">Order Summary</h2>
-          {cartToBeCheckedOut.products.map((product) => (
-            <div
-              key={product.cart_id}
-              className="flex items-center bg-white text-black gap-4 relative"
-            >
-              <div className="relative">
-                {/* Product Image */}
-                <Image
-                  src={
-                    product.product_variant_image ||
-                    "/assets/model/QR_59794.jpg"
-                  }
-                  alt={product.product_name}
-                  width={80}
-                  height={80}
-                  className="w-20 h-20 object-contain rounded-xl"
-                />
+          {isLoading ? (
+            <>
+              <Skeleton className="w-full bg-gray-200 h-[80px] rounded-md" />
+              <Skeleton className="w-1/2 bg-gray-200 h-[80px] rounded-md" />
+              <Skeleton className="w-1/3 bg-gray-200 h-[80px] rounded-md" />
+            </>
+          ) : (
+            cartToBeCheckedOut.products.map((product) => (
+              <div
+                key={product.cart_id}
+                className="flex items-center bg-white text-black gap-4 relative"
+              >
+                <div className="relative">
+                  {/* Product Image */}
+                  <Image
+                    src={
+                      product.product_variant_image ||
+                      "/assets/model/QR_59794.jpg"
+                    }
+                    alt={product.product_name}
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-contain rounded-xl"
+                  />
 
-                {/* Quantity Badge */}
-                <div className="absolute -top-4 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {product.product_quantity}
+                  {/* Quantity Badge */}
+                  <div className="absolute -top-4 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    {product.product_quantity}
+                  </div>
+                </div>
+
+                {/* Product Details */}
+                <div className="flex-1">
+                  <p className="font-semibold text-lg uppercase">
+                    {product.product_name} {product.product_variant_color}
+                  </p>
+
+                  <p className="text-gray-500 text-sm">
+                    Size: {product.product_size}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Quantity: {product.product_quantity}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Color: {product.product_variant_color}
+                  </p>
+                  <p className="text-gray-700 font-bold">
+                    ₱
+                    {(
+                      product.product_price * product.product_quantity
+                    ).toLocaleString()}
+                  </p>
+                  <Button
+                    className="absolute top-2 right-2"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveItem(product.cart_id)}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-
-              {/* Product Details */}
-              <div className="flex-1">
-                <p className="font-semibold text-lg uppercase">
-                  {product.product_name} {product.product_variant_color}
-                </p>
-
-                <p className="text-gray-500 text-sm">
-                  Size: {product.product_size}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Quantity: {product.product_quantity}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Color: {product.product_variant_color}
-                </p>
-                <p className="text-gray-700 font-bold">
-                  ₱
-                  {(
-                    product.product_price * product.product_quantity
-                  ).toLocaleString()}
-                </p>
-                <Button
-                  className="absolute top-2 right-2"
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemoveItem(product.cart_id)}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
 
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between">

@@ -85,7 +85,6 @@ const AddressContent = ({
                 <div className="flex items-center gap-2">
                   {!address.user_address_is_default && (
                     <Button
-                      variant="outline"
                       size="sm"
                       onClick={() =>
                         handleSetDefaultAddress(address.user_address_id)

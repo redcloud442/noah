@@ -23,9 +23,8 @@ import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
-
 import { Product } from "@/utils/types";
-import { Trash } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -48,6 +47,7 @@ const ShoppingCartModal = () => {
       variant_size_quantity: number;
     }[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateCheckoutNumber = () => {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -155,40 +155,52 @@ const ShoppingCartModal = () => {
     }
   };
   const handleCheckout = async () => {
-    if (hasInvalidProduct) {
-      toast.error("Please check your cart for invalid products");
-      return;
+    try {
+      if (hasInvalidProduct) {
+        toast.error("Please check your cart for invalid products");
+        return;
+      }
+
+      setIsLoading(true);
+
+      if (userData) {
+        const cartIds = cart.products.map((item) => item.cart_id);
+        await handleCheckoutItems(cartIds);
+      } else {
+        const res = localStorage.getItem("shoppingCart");
+        const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+        existingCart.products = existingCart.products.map(
+          (product: Product) => ({
+            ...product,
+            cart_is_checked_out: true,
+          })
+        );
+
+        localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
+      }
+
+      const checkoutNumber = generateCheckoutNumber();
+
+      await authService.createCheckoutToken(checkoutNumber);
+
+      if (!checkoutNumber) {
+        toast.error("Error generating checkout number");
+        return;
+      }
+
+      setOpen(false);
+
+      router.push(
+        `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-    if (userData) {
-      const cartIds = cart.products.map((item) => item.cart_id);
-      await handleCheckoutItems(cartIds);
-    } else {
-      const res = localStorage.getItem("shoppingCart");
-      const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
-
-      existingCart.products = existingCart.products.map((product: Product) => ({
-        ...product,
-        cart_is_checked_out: true,
-      }));
-
-      localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
-    }
-
-    const checkoutNumber = generateCheckoutNumber();
-
-    await authService.createCheckoutToken(checkoutNumber);
-
-    if (!checkoutNumber) {
-      toast.error("Error generating checkout number");
-      return;
-    }
-
-    setOpen(false);
-
-    router.push(
-      `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
-    );
   };
 
   const hasInvalidProduct = cart.products.some((product) => {
@@ -310,11 +322,15 @@ const ShoppingCartModal = () => {
 
             <Button
               onClick={handleCheckout}
-              disabled={hasInvalidProduct}
+              disabled={hasInvalidProduct || isLoading}
               className="w-full "
               variant="default"
             >
-              Proceed to Checkout
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Proceed to Checkout"
+              )}
             </Button>
           </div>
         )}
