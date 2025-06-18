@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,16 +8,16 @@ import loginSchema from "@/lib/zod";
 import { authService } from "@/services/auth";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import PolicyModal from "../PolicyModal/PolicyModal";
 import RegisterModal from "../RegisterModal/RegisterModal";
-import TermsOfServicePage from "../TermsOfService/TermsOfServicePage";
 
 export const LoginForm = ({
   className,
@@ -45,10 +46,13 @@ export const LoginForm = ({
 
       const { email, password } = formData;
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      if (loginError) {
+        throw new Error(loginError.message);
+      }
 
       const { redirectTo } = await authService.login(
         email,
@@ -58,15 +62,13 @@ export const LoginForm = ({
         cart?.products ?? []
       );
 
-      if (error) {
-        toast.error(error.message);
-      }
-
       localStorage.removeItem("shoppingCart");
 
       router.push(redirectTo);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || error);
+      } else if (error instanceof Error) {
         toast.error(error.message);
       } else {
         toast.error("Something went wrong");
@@ -98,28 +100,6 @@ export const LoginForm = ({
     }
   };
 
-  const handleSignInWithFacebook = async () => {
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
-          queryParams: {
-            cart: JSON.stringify(cart?.products ?? []),
-          },
-        },
-      });
-
-      localStorage.removeItem("shoppingCart");
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error signing in with Facebook");
-      }
-    }
-  };
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <form onSubmit={handleSubmit(handleSubmitLoginForm)}>
@@ -129,8 +109,8 @@ export const LoginForm = ({
               <Image
                 src="/assets/logo/NOIR_Logo_White_png.png"
                 alt="Noir Luxury"
-                width={80}
-                height={80}
+                width={100}
+                height={100}
                 className="cursor-pointer relative"
               />
             </div>
@@ -146,7 +126,9 @@ export const LoginForm = ({
                 name="email"
                 render={({ field }) => (
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-white">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -164,7 +146,9 @@ export const LoginForm = ({
                 name="password"
                 render={({ field }) => (
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-white">
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
@@ -187,35 +171,10 @@ export const LoginForm = ({
 
           <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
-              OR
+              OR OR
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Button
-              onClick={handleSignInWithFacebook}
-              variant="outline"
-              type="button"
-              className="w-full"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                x="0px"
-                y="0px"
-                width="100"
-                height="100"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  fill="#039be5"
-                  d="M24 5A19 19 0 1 0 24 43A19 19 0 1 0 24 5Z"
-                ></path>
-                <path
-                  fill="#fff"
-                  d="M26.572,29.036h4.917l0.772-4.995h-5.69v-2.73c0-2.075,0.678-3.915,2.619-3.915h3.119v-4.359c-0.548-0.074-1.707-0.236-3.897-0.236c-4.573,0-7.254,2.415-7.254,7.917v3.323h-4.701v4.995h4.701v13.729C22.089,42.905,23.032,43,24,43c0.875,0,1.729-0.08,2.572-0.194V29.036z"
-                ></path>
-              </svg>
-              Continue with Facebook
-            </Button>
+          <div className="grid gap-4 sm:grid-cols-1">
             <Button
               onClick={handleSignInWithGoogle}
               variant="outline"
@@ -253,12 +212,12 @@ export const LoginForm = ({
         </div>
       </form>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary  ">
-        By clicking login or register, you agree to our{" "}
-        <PolicyModal
-          title="Terms of Service"
-          description="Noir Clothing Philippines Corporation"
-          content={<TermsOfServicePage />}
-        />{" "}
+        By clicking continue, you agree to our{" "}
+        <Link href="/">Terms of Service</Link> and{" "}
+        <Link href="https://www.noirlxury.com/privacy-policy">
+          Privacy Policy
+        </Link>
+        .
       </div>
     </div>
   );

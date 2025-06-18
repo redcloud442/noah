@@ -98,10 +98,21 @@ export const addressUpdateModel = async (params: {
   });
 };
 
-export const addressSetDefaultModel = async (params: { id: string }) => {
-  const { id } = params;
+export const addressSetDefaultModel = async (params: {
+  id: string;
+  userId: string;
+}) => {
+  const { id, userId } = params;
 
   await prisma.$transaction(async (tx) => {
+    await tx.user_address_table.updateMany({
+      where: {
+        user_address_user_id: userId,
+      },
+      data: {
+        user_address_is_default: false,
+      },
+    });
     await tx.user_address_table.update({
       where: {
         user_address_id: id,

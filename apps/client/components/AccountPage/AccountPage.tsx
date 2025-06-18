@@ -12,7 +12,7 @@ const AccountPage = ({ tab }: AccountPageProps) => {
   const { userData } = useUserDataStore();
 
   return (
-    <div className="flex flex-col justify-center px-6 text-black space-y-6">
+    <div className="flex flex-col justify-center text-black space-y-6">
       <div className="flex items-end justify-between gap-2">
         <h1 className="scroll-m-20 text-xl font-extrabold tracking-tight lg:text-3xl">
           Account Dashboard

@@ -167,6 +167,26 @@ export const productCollectionSlugMiddleware = async (
 
   c.set("params", validate.data);
 
+  await next();
+};
+
+export const productGetCategoriesMiddleware = async (
+  c: Context,
+  next: Next
+) => {
+  const user = await adminAuthProtection(c);
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:product-get-all`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
   return await next();
 };
 

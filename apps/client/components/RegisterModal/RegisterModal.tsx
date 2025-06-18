@@ -84,7 +84,9 @@ const RegisterModal = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* First Name */}
           <div>
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="firstName" className="text-white">
+              First Name
+            </Label>
             <Controller
               name="firstName"
               control={control}
@@ -104,7 +106,9 @@ const RegisterModal = () => {
 
           {/* Last Name */}
           <div>
-            <Label htmlFor="lastName">Last Name</Label>
+            <Label htmlFor="lastName" className="text-white">
+              Last Name
+            </Label>
             <Controller
               name="lastName"
               control={control}
@@ -124,7 +128,9 @@ const RegisterModal = () => {
 
           {/* Email */}
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-white">
+              Email
+            </Label>
             <Controller
               name="email"
               control={control}
@@ -145,7 +151,9 @@ const RegisterModal = () => {
 
           {/* Password */}
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-white">
+              Password
+            </Label>
             <Controller
               name="password"
               control={control}

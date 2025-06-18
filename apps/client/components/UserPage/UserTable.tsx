@@ -1,27 +1,23 @@
 "use client";
 
-import { formatDateToLocal } from "@/utils/function";
 import {
   ColumnFiltersState,
   getCoreRowModel,
   getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  Header,
   SortingState,
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 
 import useUserDataStore from "@/lib/userDataStore";
-import { UserType } from "@/utils/types";
 import ReusableTable from "../ReusableTable/ReusableTable";
 import {
   DropdownMenu,
@@ -33,14 +29,13 @@ import { UserColumn } from "./UserColumn";
 
 import { Separator } from "@/components/ui/separator";
 import { userService } from "@/services/user";
+import { useQuery } from "@tanstack/react-query";
 
 type FilterFormValues = {
   search: string;
-  dateFilter: { start: string; end: string };
+  dateFilter: { start?: string; end?: string };
   sortDirection: string;
   columnAccessor: string;
-  take: number;
-  skip: number;
 };
 
 const UserTable = () => {
@@ -49,48 +44,14 @@ const UserTable = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [requestData, setRequestData] = useState<UserType[]>([]);
   const [activePage, setActivePage] = useState(1);
-  const [isFetchingList, setIsFetchingList] = useState(false);
-  const [count, setCount] = useState(0);
 
-  const fetchRequest = async (values?: FilterFormValues) => {
-    try {
-      if (!userData?.teamMemberProfile.team_member_team_id) return;
-      setIsFetchingList(true);
-
-      const { search, dateFilter } = values || getValues();
-
-      const startDate = dateFilter.start
-        ? new Date(dateFilter.start)
-        : undefined;
-      const formattedStartDate = startDate ? formatDateToLocal(startDate) : "";
-
-      const { data, count } = await userService.getUserList({
-        take: 15,
-        skip: activePage,
-        search,
-        dateFilter: {
-          start: formattedStartDate,
-          end: formattedStartDate,
-        },
-        sortDirection: sorting[0]?.desc ? "desc" : "asc",
-        columnAccessor: sorting[0]?.id || "user_email",
-        teamId: userData.teamMemberProfile.team_member_team_id,
-      });
-
-      setRequestData(data);
-      setCount(count);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error("Failed to fetch withdrawal list");
-      }
-    } finally {
-      setIsFetchingList(false);
-    }
-  };
+  const [formValue, setFormValue] = useState<FilterFormValues>({
+    search: "",
+    sortDirection: "asc",
+    columnAccessor: "user_email",
+    dateFilter: { start: "", end: "" },
+  });
 
   const { register, handleSubmit, getValues } = useForm<FilterFormValues>({
     defaultValues: {
@@ -102,17 +63,37 @@ const UserTable = () => {
     },
   });
 
-  const { columns } = UserColumn({ setRequest: setRequestData });
+  const { data, refetch, isFetching } = useQuery({
+    queryKey: ["users", formValue.search, activePage],
+    queryFn: () => {
+      const { search, dateFilter, sortDirection, columnAccessor } = getValues();
+      return userService.getUserList({
+        take: 15,
+        skip: activePage,
+        search,
+        dateFilter,
+        sortDirection,
+        teamId: userData?.teamMemberProfile.team_member_team_id,
+        columnAccessor,
+      });
+    },
+    enabled: !!userData?.teamMemberProfile.team_member_team_id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+
+  const { columns } = useMemo(
+    () => UserColumn({ formValue, activePage }),
+    [formValue, activePage]
+  );
 
   const table = useReactTable({
-    data: requestData || [],
+    data: data?.data || [],
     columns,
     onSortingChange: setSorting,
     manualFiltering: true,
-    enableSorting: true,
-    enableColumnResizing: true,
-    enableColumnPinning: true,
-    enableGlobalFilter: true,
+    manualSorting: true,
+    autoResetPageIndex: false,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -128,65 +109,41 @@ const UserTable = () => {
     },
   });
 
-  useEffect(() => {
-    fetchRequest();
-  }, [userData, activePage, sorting]);
-
-  const pageCount = Math.ceil((count || 0) / 15);
+  const pageCount = Math.ceil((data?.count || 0) / 15);
 
   const tableColumns = useMemo(() => {
-    return table.getAllColumns().map((column) => {
-      const header = column.columnDef.header;
-      let columnLabel = column.id || "Unnamed Column";
+    return table
+      .getAllColumns()
+      .filter((column) => column.getCanHide())
+      .map((column) => {
+        const header = column.columnDef.header;
+        let columnLabel = column.id;
 
-      if (typeof header === "string") {
-        columnLabel = header;
-      } else if (typeof header === "function") {
-        const renderedHeader = header({
-          column,
-          header: column.columnDef.header as unknown as Header<
-            UserType,
-            unknown
-          >,
-          table,
-        });
-
-        if (React.isValidElement(renderedHeader)) {
-          const props = renderedHeader.props as { children: string | string[] };
-          if (typeof props.children === "string") {
-            columnLabel = props.children;
-          } else if (Array.isArray(props.children)) {
-            columnLabel = props.children
-              .map((child) => (typeof child === "string" ? child : ""))
-              .join("");
-          }
+        if (typeof header === "string") {
+          columnLabel = header;
         }
-      }
+        // Skip complex header parsing unless absolutely needed
 
-      return {
-        label: columnLabel,
-        accessorFn: column.id,
-        getCanHide: column.getCanHide,
-        getIsVisible: column.getIsVisible,
-        toggleVisibility: column.toggleVisibility,
-      };
-    });
-  }, [table]);
+        return {
+          label: columnLabel,
+          accessorFn: column.id,
+          getCanHide: column.getCanHide,
+          getIsVisible: column.getIsVisible,
+          toggleVisibility: column.toggleVisibility,
+        };
+      });
+  }, [table.getAllColumns()]);
 
-  const handleFetch = async (data: FilterFormValues) => {
-    try {
-      setActivePage(1);
-      fetchRequest(data);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      }
-    }
-  };
+  const handleFetch = useCallback(
+    async (data: FilterFormValues) => {
+      setFormValue(data);
+    },
+    [setFormValue]
+  );
 
   const handleRefresh = async () => {
     setActivePage(1);
-    fetchRequest();
+    refetch();
   };
 
   return (
@@ -205,7 +162,7 @@ const UserTable = () => {
               />
               <Button
                 type="submit"
-                disabled={isFetchingList}
+                disabled={isFetching}
                 size="sm"
                 variant="outline"
                 className="flex items-center gap-1"
@@ -213,7 +170,7 @@ const UserTable = () => {
                 <Search className="w-4 h-4" /> Search
               </Button>
               <Button
-                disabled={isFetchingList}
+                disabled={isFetching}
                 onClick={handleRefresh}
                 type="button"
                 size="sm"
@@ -258,7 +215,7 @@ const UserTable = () => {
           columns={columns}
           activePage={activePage}
           totalCount={pageCount}
-          isFetchingList={isFetchingList}
+          isFetchingList={isFetching}
           setActivePage={setActivePage}
           pageCount={pageCount}
         />

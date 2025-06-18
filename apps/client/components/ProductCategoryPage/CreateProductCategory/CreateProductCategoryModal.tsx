@@ -123,7 +123,9 @@ const CreateProductCategoryModal = ({ setCollections }: Props) => {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
           <div>
-            <Label htmlFor="name">Product Category Name</Label>
+            <Label htmlFor="name" className="text-white">
+              Product Category Name
+            </Label>
             <Input id="name" {...register("productCategoryName")} />
             {errors.productCategoryName && (
               <p className="text-sm text-red-500">
@@ -133,7 +135,9 @@ const CreateProductCategoryModal = ({ setCollections }: Props) => {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-white">
+              Description
+            </Label>
             <Textarea
               id="description"
               {...register("productCategoryDescription")}

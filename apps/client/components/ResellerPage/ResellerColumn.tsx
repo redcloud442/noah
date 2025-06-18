@@ -4,7 +4,6 @@ import { UserType } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -15,12 +14,24 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import UserActionModal from "../UserPage/UserActionModal";
-
-type ResellerColumnProps = {
-  setRequest: Dispatch<SetStateAction<UserType[]>>;
+type FilterFormValues = {
+  search: string;
+  dateFilter: { start: string; end: string };
+  sortDirection: string;
+  columnAccessor: string;
+  activePage: number;
+  take: number;
 };
 
-export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
+type ResellerColumnProps = {
+  formValue: FilterFormValues;
+  activePage: number;
+};
+
+export const ResellerColumn = ({
+  formValue,
+  activePage,
+}: ResellerColumnProps) => {
   const router = useRouter();
   const { teamName } = useParams();
 
@@ -124,7 +135,8 @@ export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
                   <UserActionModal
                     type="ban"
                     userId={user.user_id}
-                    setRequest={setRequest}
+                    formValue={formValue}
+                    activePage={activePage}
                   />
 
                   {user.team_member_role !== "MEMBER" && (
@@ -132,7 +144,8 @@ export const ResellerColumn = ({ setRequest }: ResellerColumnProps) => {
                       type="promote"
                       userId={user.user_id}
                       role="MEMBER"
-                      setRequest={setRequest}
+                      activePage={activePage}
+                      formValue={formValue}
                     />
                   )}
                 </div>

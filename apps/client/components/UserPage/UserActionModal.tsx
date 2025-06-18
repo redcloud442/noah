@@ -8,60 +8,96 @@ import {
 } from "@/components/ui/dialog";
 import { userService } from "@/services/user";
 import { UserType } from "@/utils/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react"; // Optional loading spinner icon
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner"; // Optional toast notification
 import { Button } from "../ui/button";
+
+type FilterFormValues = {
+  search: string;
+  dateFilter: { start?: string; end?: string };
+  sortDirection: string;
+  columnAccessor: string;
+};
 
 type UserActionModalProps = {
   role?: "ADMIN" | "MEMBER" | "RESELLER";
   type: "ban" | "promote";
   userId: string;
-  setRequest: Dispatch<SetStateAction<UserType[]>>;
+  formValue: FilterFormValues;
+  activePage: number;
 };
 
 const UserActionModal = ({
   role,
   type,
   userId,
-  setRequest,
+  formValue,
+  activePage,
 }: UserActionModalProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const handleAction = async () => {
-    setIsLoading(true);
-    try {
-      await userService.userAction({
-        userId,
-        role: role || undefined,
-        type,
-      });
+  const queryKey = ["users", formValue.search, activePage];
+  const resellerQueryKey = ["reseller", formValue.search, activePage];
 
-      if (type === "promote" && role !== "RESELLER") {
-        setRequest((prev) =>
-          prev.map((user) =>
-            user.user_id === userId
-              ? { ...user, team_member_role: role || user.team_member_role }
-              : user
-          )
-        );
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: {
+      userId: string;
+      role?: "ADMIN" | "MEMBER" | "RESELLER";
+      type: "ban" | "promote";
+    }) => userService.userAction(data),
+    onMutate: (data) => {
+      const { userId, role, type } = data;
+
+      queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData(queryKey);
+
+      if (previousData) {
+        queryClient.setQueryData(queryKey, (old: { data: UserType[] }) => {
+          return {
+            ...old,
+            data: old.data.map((user: UserType) => {
+              if (user.user_id === userId) {
+                return {
+                  ...user,
+                  team_member_role:
+                    type === "ban" ? "MEMBER" : role || user.team_member_role,
+                };
+              }
+              return user;
+            }),
+          };
+        });
       }
 
-      setOpen(false);
+      return { previousData };
+    },
 
+    onSuccess: () => {
       toast.success(
         `${type === "ban" ? "Banned" : "Promoted"} ${role} successfully!`
       );
-    } catch (error) {
+    },
+    onError: (error) => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
         toast.error("Something went wrong.");
       }
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: resellerQueryKey });
+
+      setOpen(false);
+    },
+  });
+
+  const handleAction = () => {
+    mutate({ userId, role, type });
   };
 
   return (
@@ -88,11 +124,11 @@ const UserActionModal = ({
         </DialogHeader>
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" disabled={isLoading}>
+          <Button variant="outline" disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleAction} disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleAction} disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirm
           </Button>
         </div>

@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { formatDateToYYYYMMDD } from "@/utils/function";
 import { WithdrawalType } from "@/utils/types";
+import { QueryKey } from "@tanstack/react-query";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
 import { Badge } from "../ui/badge";
 import {
   DropdownMenu,
@@ -16,20 +16,11 @@ import WithdrawalModal from "./WithdrawalModal";
 
 type WithdrawalColumnProps = {
   status: "PENDING" | "APPROVED" | "REJECTED";
-  setRequest: Dispatch<SetStateAction<WithdrawalType[]>>;
-  setCacheData: Dispatch<
-    SetStateAction<{
-      [key: string]: {
-        data: WithdrawalType[];
-        total: Record<string, number>;
-      };
-    }>
-  >;
+  queryKey: QueryKey;
 };
 export const WithdrawalColumn = ({
   status,
-  setRequest,
-  setCacheData,
+  queryKey,
 }: WithdrawalColumnProps) => {
   const columns: ColumnDef<WithdrawalType>[] = [
     {
@@ -204,8 +195,7 @@ export const WithdrawalColumn = ({
                             withdrawalId={data.reseller_withdrawal_id}
                             resellerId={data.reseller_withdrawal_reseller_id}
                             status={"APPROVED"}
-                            setRequest={setRequest}
-                            setCacheData={setCacheData}
+                            queryKey={queryKey}
                           />
                         )}
 
@@ -214,8 +204,7 @@ export const WithdrawalColumn = ({
                             withdrawalId={data.reseller_withdrawal_id}
                             resellerId={data.reseller_withdrawal_reseller_id}
                             status={"REJECTED"}
-                            setRequest={setRequest}
-                            setCacheData={setCacheData}
+                            queryKey={queryKey}
                           />
                         )}
                       </div>

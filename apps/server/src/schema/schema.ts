@@ -145,8 +145,8 @@ export const userPostSchema = z.object({
   }),
   sortDirection: z.string().optional(),
   columnAccessor: z.string().optional(),
-  take: z.number(),
-  skip: z.number(),
+  take: z.coerce.number().min(1).max(15),
+  skip: z.coerce.number().min(0),
   teamId: z.string().uuid(),
 });
 

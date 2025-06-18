@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import type { typeProductCreateSchema } from "../../schema/schema.js";
 import { slugifyVariant } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 import type { ProductPublicParams } from "../../utils/schema.js";
 
 const resendClient = new Resend(process.env.RESEND_API_KEY);
@@ -323,26 +324,17 @@ export const productCollectionSlugModel = async (params: {
   teamId?: string;
 }) => {
   const { collectionSlug, take, skip, search, teamId } = params;
-
   const filter: Prisma.product_tableWhereInput = {};
-  const offset = (skip - 2) * take;
+  const offset = (skip - 1) * take;
 
-  const productCategory = await prisma.product_category_table.findFirst({
+  const productCategory = await prisma.product_category_table.findFirstOrThrow({
     where: {
-      product_category_name: collectionSlug,
+      product_category_name: {
+        contains: collectionSlug,
+        mode: "insensitive",
+      },
     },
   });
-
-  if (!productCategory) {
-    throw new Error("Product category not found");
-  }
-
-  if (search) {
-    filter.product_name = {
-      contains: search,
-      mode: "insensitive",
-    };
-  }
 
   if (teamId) {
     filter.product_team_id = teamId;
@@ -396,8 +388,33 @@ export const productCollectionSlugModel = async (params: {
   return {
     data: products,
     count,
-    hasMore: count > offset + products.length,
   };
+};
+
+export const productGetCategoriesModel = async () => {
+  const cacheKey = "product-get-categories";
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
+  const categories = await prisma.product_category_table.findMany({
+    select: {
+      product_category_id: true,
+      product_category_name: true,
+      product_category_description: true,
+      product_category_image: true,
+    },
+    orderBy: {
+      product_category_created_at: "desc",
+    },
+  });
+
+  await redis.set(cacheKey, JSON.stringify(categories), { ex: 60 * 10 });
+
+  return categories;
 };
 
 export const productGetAllProductModel = async (params: {
@@ -407,10 +424,10 @@ export const productGetAllProductModel = async (params: {
   teamId?: string;
   category?: string;
 }) => {
-  const { take, skip, search, teamId, category } = params;
+  const { take, skip, search, teamId } = params;
 
   const filter: Prisma.product_variant_tableWhereInput = {};
-  const offset = (skip - 1) * take;
+  const offset = Math.max((skip - 1) * take, 0);
 
   if (search) {
     filter.product_variant_product = {
@@ -428,12 +445,6 @@ export const productGetAllProductModel = async (params: {
 
     filter.product_variant_is_deleted = {
       equals: false,
-    };
-  }
-
-  if (category) {
-    filter.product_variant_product = {
-      product_category_id: category,
     };
   }
 
@@ -585,4 +596,99 @@ export const productPublicModel = async (params: ProductPublicParams) => {
     count,
     hasMore: count > offset + products.length,
   };
+};
+
+export const productGetAllProductCollectionsModel = async () => {
+  const cacheKey = "product-get-all-product-collections";
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
+  const [collections, freshDrops, featuredProducts] = await Promise.all([
+    prisma.product_category_table.findMany({
+      select: {
+        product_category_id: true,
+        product_category_name: true,
+        product_category_description: true,
+        product_category_image: true,
+        product_category_slug: true,
+      },
+    }),
+    prisma.product_variant_table.findMany({
+      where: {
+        product_variant_is_deleted: false,
+      },
+      select: {
+        product_variant_id: true,
+        product_variant_color: true,
+        product_variant_slug: true,
+        product_variant_product: {
+          select: {
+            product_id: true,
+            product_name: true,
+            product_slug: true,
+            product_description: true,
+          },
+        },
+        variant_sample_images: {
+          select: {
+            variant_sample_image_id: true,
+            variant_sample_image_image_url: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        product_variant_product: {
+          product_created_at: "desc",
+        },
+      },
+      take: 5,
+    }),
+    prisma.product_variant_table.findMany({
+      where: {
+        product_variant_is_deleted: false,
+        product_variant_is_featured: true,
+      },
+      select: {
+        product_variant_id: true,
+        product_variant_color: true,
+        product_variant_slug: true,
+        product_variant_product: {
+          select: {
+            product_id: true,
+            product_name: true,
+            product_slug: true,
+            product_description: true,
+          },
+        },
+        variant_sample_images: {
+          select: {
+            variant_sample_image_id: true,
+            variant_sample_image_image_url: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        product_variant_product: {
+          product_created_at: "desc",
+        },
+      },
+      take: 5,
+    }),
+  ]);
+
+  const returnData = {
+    collections,
+    freshDrops,
+    featuredProducts,
+  };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 * 60 * 24 });
+
+  return returnData;
 };

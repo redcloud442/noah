@@ -1,6 +1,5 @@
 "use client";
 
-import { formatDateToLocal } from "@/utils/function";
 import {
   ColumnFiltersState,
   getCoreRowModel,
@@ -13,9 +12,8 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
@@ -33,14 +31,15 @@ import { ResellerColumn } from "./ResellerColumn";
 
 import { Separator } from "@/components/ui/separator";
 import { userService } from "@/services/user";
+import { useQuery } from "@tanstack/react-query";
 
 type FilterFormValues = {
   search: string;
   dateFilter: { start: string; end: string };
   sortDirection: string;
   columnAccessor: string;
+  activePage: number;
   take: number;
-  skip: number;
 };
 
 const ResellerTable = () => {
@@ -49,50 +48,38 @@ const ResellerTable = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [requestData, setRequestData] = useState<UserType[]>([]);
   const [activePage, setActivePage] = useState(1);
-  const [isFetchingList, setIsFetchingList] = useState(false);
-  const [count, setCount] = useState(0);
 
-  const fetchRequest = async (values?: FilterFormValues) => {
-    try {
-      if (!userData?.teamMemberProfile.team_member_team_id) return;
-      setIsFetchingList(true);
+  const [formValue, setFormValue] = useState<FilterFormValues>({
+    search: "",
+    dateFilter: {
+      start: "",
+      end: "",
+    },
+    sortDirection: "asc",
+    columnAccessor: "user_email",
+    take: 15,
+    activePage: activePage,
+  });
 
-      const { search, dateFilter } = values || getValues();
-
-      const startDate = dateFilter.start
-        ? new Date(dateFilter.start)
-        : undefined;
-      const formattedStartDate = startDate ? formatDateToLocal(startDate) : "";
-
-      const { data, count } = await userService.getUserListReseller({
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ["reseller", formValue.search, activePage],
+    queryFn: () =>
+      userService.getUserListReseller({
         take: 15,
         skip: activePage,
-        search,
-        dateFilter: {
-          start: formattedStartDate,
-          end: formattedStartDate,
-        },
-        sortDirection: sorting[0]?.desc ? "desc" : "asc",
-        columnAccessor: sorting[0]?.id || "user_email",
-        teamId: userData.teamMemberProfile.team_member_team_id,
-      });
+        search: formValue.search,
+        teamId: userData?.teamMemberProfile.team_member_team_id,
+        sortDirection: formValue.sortDirection,
+        columnAccessor: formValue.columnAccessor,
+        dateFilter: formValue.dateFilter,
+      }),
+    enabled: !!userData?.teamMemberProfile.team_member_team_id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
 
-      setRequestData(data);
-      setCount(count);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error("Failed to fetch withdrawal list");
-      }
-    } finally {
-      setIsFetchingList(false);
-    }
-  };
-
-  const { register, handleSubmit, getValues } = useForm<FilterFormValues>({
+  const { register, handleSubmit } = useForm<FilterFormValues>({
     defaultValues: {
       search: "",
       dateFilter: {
@@ -102,12 +89,17 @@ const ResellerTable = () => {
     },
   });
 
-  const { columns } = ResellerColumn({ setRequest: setRequestData });
+  const { columns } = useMemo(
+    () => ResellerColumn({ formValue, activePage }),
+    [formValue, activePage]
+  );
 
   const table = useReactTable({
-    data: requestData || [],
+    data: data?.data || [],
     columns,
     onSortingChange: setSorting,
+    manualSorting: true,
+    autoResetPageIndex: false,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -123,11 +115,7 @@ const ResellerTable = () => {
     },
   });
 
-  useEffect(() => {
-    fetchRequest();
-  }, [userData, activePage, sorting]);
-
-  const pageCount = Math.ceil((count || 0) / 15);
+  const pageCount = Math.ceil((data?.count || 0) / 15);
 
   const tableColumns = useMemo(() => {
     return table.getAllColumns().map((column) => {
@@ -169,19 +157,12 @@ const ResellerTable = () => {
   }, [table]);
 
   const handleFetch = async (data: FilterFormValues) => {
-    try {
-      setActivePage(1);
-      fetchRequest(data);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      }
-    }
+    setFormValue(data);
   };
 
   const handleRefresh = async () => {
     setActivePage(1);
-    fetchRequest();
+    refetch();
   };
 
   return (
@@ -200,7 +181,7 @@ const ResellerTable = () => {
               />
               <Button
                 type="submit"
-                disabled={isFetchingList}
+                disabled={isFetching}
                 size="sm"
                 variant="outline"
                 className="flex items-center gap-1"
@@ -208,7 +189,7 @@ const ResellerTable = () => {
                 <Search className="w-4 h-4" /> Search
               </Button>
               <Button
-                disabled={isFetchingList}
+                disabled={isFetching}
                 onClick={handleRefresh}
                 type="button"
                 size="sm"
@@ -253,7 +234,7 @@ const ResellerTable = () => {
           columns={columns}
           activePage={activePage}
           totalCount={pageCount}
-          isFetchingList={isFetchingList}
+          isFetchingList={isFetching}
           setActivePage={setActivePage}
           pageCount={pageCount}
         />

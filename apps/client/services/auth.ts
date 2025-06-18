@@ -19,7 +19,7 @@ export const authService = {
     });
 
     if (result.status !== 200) {
-      throw new Error("Login failed");
+      throw new Error(result.data.error);
     }
 
     return result.data as {

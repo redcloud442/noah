@@ -13,9 +13,9 @@ import {
 
 const order = new Hono();
 
-order.get("/", orderGetMiddleware, orderGetController);
-
 order.get("/:id/items", orderGetItemsMiddleware, orderGetItemsController);
+
+order.get("/", orderGetMiddleware, orderGetController);
 
 order.post("/list", orderGetListMiddleware, orderGetListController);
 

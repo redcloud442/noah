@@ -1,7 +1,6 @@
 "use client";
 
 import useUserDataStore from "@/lib/userDataStore";
-import { formatDateToLocal } from "@/utils/function";
 import { WithdrawalType } from "@/utils/types";
 import {
   ColumnDef,
@@ -17,7 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CalendarIcon, ChevronDown, RefreshCw, Search } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ReusableTable from "../ReusableTable/ReusableTable";
@@ -32,7 +31,9 @@ import {
 import { Input } from "../ui/input";
 
 import { Separator } from "@/components/ui/separator";
+import { getWithdrawalQueryKey } from "@/lib/utils";
 import { withdrawalService } from "@/services/withdrawal";
+import { useQuery } from "@tanstack/react-query";
 import { Calendar } from "../ui/calendar";
 import { Label } from "../ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -46,8 +47,6 @@ type FilterFormValues = {
   status: string;
   sortDirection: string;
   columnAccessor: string;
-  take: number;
-  skip: number;
 };
 
 const ResellerTable = () => {
@@ -56,109 +55,83 @@ const ResellerTable = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [requestData, setRequestData] = useState<WithdrawalType[]>([]);
   const [activePage, setActivePage] = useState(1);
-  const [isFetchingList, setIsFetchingList] = useState(false);
-  const [count, setCount] = useState<Record<string, number>>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [formValues, setFormValues] = useState<FilterFormValues>({
+    search: "",
+    status: "PENDING",
+    dateFilter: { start: "", end: "" },
+    sortDirection: "asc",
+    columnAccessor: "user_email",
+  });
 
-  const [cacheData, setCacheData] = useState<{
-    [key: string]: {
-      data: WithdrawalType[];
-      total: Record<string, number>;
-    };
-  }>({});
-
-  const fetchRequest = useCallback(
-    async (
-      values?: FilterFormValues,
-      refresh: boolean = false,
-      tabValue?: string
-    ) => {
-      try {
-        if (!userData?.teamMemberProfile.team_member_team_id) return;
-
-        const { search, dateFilter, status } = values || getValues();
-        const cacheKey = `${search}-${dateFilter.start}-${dateFilter.end}-${status}-${activePage}`;
-
-        if (!refresh) {
-          if (cacheData[cacheKey]) {
-            setRequestData(cacheData[cacheKey].data);
-            setCount(cacheData[cacheKey].total);
-
-            return;
-          }
-        }
-
-        setIsFetchingList(true);
-
-        const startDate = dateFilter.start
-          ? new Date(dateFilter.start)
-          : undefined;
-
-        const formattedStartDate = startDate
-          ? formatDateToLocal(startDate)
-          : "";
-
-        const { data, total } = await withdrawalService.getWithdrawalList({
-          take: 15,
-          skip: activePage,
-          search,
-          dateFilter: {
-            start: formattedStartDate,
-            end: formattedStartDate,
-          },
-          sortDirection: sorting[0]?.desc ? "desc" : "asc",
-          columnAccessor: sorting[0]?.id || "user_email",
-          status: tabValue
-            ? (tabValue as "PENDING" | "APPROVED" | "REJECTED")
-            : (status as "PENDING" | "APPROVED" | "REJECTED"),
-          teamId: userData.teamMemberProfile.team_member_team_id,
-        });
-
-        if (!refresh) {
-          setCacheData((prev) => ({
-            ...prev,
-            [cacheKey]: { data, total },
-          }));
-        }
-
-        setRequestData(data);
-        setCount(total);
-      } catch (e) {
-        if (e instanceof Error) {
-          toast.error(e.message);
-        } else {
-          toast.error("Failed to fetch withdrawal list");
-        }
-      } finally {
-        setIsFetchingList(false);
-      }
-    },
-    [userData, activePage, sorting]
-  );
-
-  const { register, handleSubmit, getValues, reset, control, setValue, watch } =
+  const { control, register, handleSubmit, watch, reset, getValues, setValue } =
     useForm<FilterFormValues>({
       defaultValues: {
         search: "",
         status: "PENDING",
-        dateFilter: {
-          start: undefined,
-          end: undefined,
-        },
+        dateFilter: { start: "", end: "" },
       },
     });
 
+  const teamId = userData?.teamMemberProfile?.team_member_team_id || "";
+  const sort = sorting[0]?.desc ? "desc" : "asc";
+  const column = sorting[0]?.id || "user_email";
+
+  const status = watch("status");
+  const {
+    data: withdrawalData,
+    isFetching: isFetchingList,
+    refetch,
+  } = useQuery({
+    queryKey: getWithdrawalQueryKey({
+      search: formValues.search,
+      dateStart: formValues.dateFilter.start,
+      dateEnd: formValues.dateFilter.end,
+      status: status,
+      activePage: activePage,
+      sort,
+      column,
+      teamId,
+    }),
+    queryFn: () => {
+      const { search, dateFilter, status } = getValues();
+      return withdrawalService.getWithdrawalList({
+        take: 15,
+        skip: activePage,
+        search,
+        dateFilter: { start: dateFilter.start, end: dateFilter.end },
+        sortDirection: sort,
+        columnAccessor: column,
+        status: status as "PENDING" | "APPROVED" | "REJECTED",
+        teamId,
+      });
+    },
+    enabled: Boolean(teamId),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+
   const { columns } = WithdrawalColumn({
     status: watch("status") as "PENDING" | "APPROVED" | "REJECTED",
-    setRequest: setRequestData,
-    setCacheData,
+    queryKey: getWithdrawalQueryKey({
+      search: formValues.search,
+      dateStart: formValues.dateFilter.start,
+      dateEnd: formValues.dateFilter.end,
+      status: status,
+      activePage: activePage,
+      sort,
+      column,
+      teamId,
+    }),
   });
 
   const table = useReactTable<WithdrawalType>({
-    data: requestData || [],
+    data: withdrawalData?.data || [],
     columns: columns as ColumnDef<WithdrawalType>[],
+    manualFiltering: true,
+    manualSorting: true,
+    autoResetPageIndex: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -175,13 +148,7 @@ const ResellerTable = () => {
     },
   });
 
-  useEffect(() => {
-    fetchRequest();
-  }, [userData, activePage, sorting]);
-
-  const tabValue = watch("status");
-
-  const pageCount = Math.ceil((count[tabValue] || 0) / 15);
+  const pageCount = Math.ceil((withdrawalData?.count || 0) / 15);
 
   const tableColumns = useMemo(() => {
     return table.getAllColumns().map((column) => {
@@ -233,7 +200,7 @@ const ResellerTable = () => {
   const handleFetch = async (data: FilterFormValues) => {
     try {
       setActivePage(1);
-      fetchRequest(data);
+      setFormValues(data);
     } catch (e) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -245,16 +212,20 @@ const ResellerTable = () => {
     setActivePage(1);
 
     reset();
-    fetchRequest(undefined, true, tabValue);
+    setFormValues({
+      search: "",
+      status: "PENDING",
+      dateFilter: { start: "", end: "" },
+      sortDirection: "asc",
+      columnAccessor: "user_email",
+    });
+    refetch();
   };
 
   const handleFilter = async () => {
     try {
       setActivePage(1);
-      if (!showFilters) {
-        reset();
-      }
-      fetchRequest();
+      refetch();
     } catch (e) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -263,8 +234,7 @@ const ResellerTable = () => {
   };
 
   const handleTabChange = (value: string) => {
-    setValue("status", value);
-    fetchRequest();
+    setValue("status", value as "PENDING" | "APPROVED" | "REJECTED");
   };
 
   return (
@@ -393,13 +363,13 @@ const ResellerTable = () => {
         >
           <TabsList>
             <TabsTrigger value="PENDING">
-              PENDING ({count["PENDING"] || 0})
+              PENDING ({withdrawalData?.total?.PENDING || 0})
             </TabsTrigger>
             <TabsTrigger value="APPROVED">
-              APPROVED ({count["APPROVED"] || 0})
+              APPROVED ({withdrawalData?.total?.APPROVED || 0})
             </TabsTrigger>
             <TabsTrigger value="REJECTED">
-              REJECTED ({count["REJECTED"] || 0})
+              REJECTED ({withdrawalData?.total?.REJECTED || 0})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -407,7 +377,7 @@ const ResellerTable = () => {
           table={table}
           columns={columns as ColumnDef<WithdrawalType>[]}
           activePage={activePage}
-          totalCount={pageCount}
+          totalCount={withdrawalData?.total[status] || 0}
           isFetchingList={isFetchingList}
           setActivePage={setActivePage}
           pageCount={pageCount}

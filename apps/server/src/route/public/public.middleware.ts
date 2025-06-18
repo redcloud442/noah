@@ -34,3 +34,43 @@ export const productPublicMiddleware = async (c: Context, next: Next) => {
 
   return await next();
 };
+
+export const productGetAllProductCollectionsMiddleware = async (
+  c: Context,
+  next: Next
+) => {
+  const ip = c.req.header("cf-connecting-ip");
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${ip}:product-get-all-collections`,
+    20,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  return await next();
+};
+
+export const productGetAllProductOptionsMiddleware = async (
+  c: Context,
+  next: Next
+) => {
+  const ip = c.req.header("cf-connecting-ip");
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${ip}:product-get-all-collections`,
+    20,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  return await next();
+};

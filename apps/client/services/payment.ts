@@ -11,7 +11,7 @@ export const paymentService = {
     const result = await apiClient.post("/payment", params);
 
     if (result.status !== 200) {
-      throw new Error("Payment failed");
+      throw new Error(result.data.message);
     }
 
     return result as unknown as PaymentResponse;
@@ -20,7 +20,7 @@ export const paymentService = {
     const result = await apiClient.post("/payment/create-payment", params);
 
     if (result.status !== 200) {
-      throw new Error("Payment method failed");
+      throw new Error(result.data.message);
     }
 
     return result as unknown as PaymentMethodResponse;

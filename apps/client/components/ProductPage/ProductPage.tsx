@@ -2,13 +2,13 @@
 
 import useUserDataStore from "@/lib/userDataStore";
 import { productService } from "@/services/product";
-import { createClient } from "@/utils/supabase/client";
 import { VariantProductType } from "@/utils/types";
 import { product_category_table } from "@prisma/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCcwIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import CollectionVariantContent from "../CollectionSlugPage/CollectionVariantContent";
@@ -33,133 +33,111 @@ type FormData = {
 };
 
 const ProductPage = () => {
-  const supabase = createClient();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { teamName } = useParams();
 
-  const [categories, setCategories] = useState<product_category_table[]>([]);
-  const [products, setProducts] = useState<VariantProductType[]>([]);
-  const [count, setCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFeaturedLoading, setIsFeaturedLoading] = useState(false);
   const [activePage, setActivePage] = useState(1);
   const { register, handleSubmit, reset, getValues, control } =
     useForm<FormData>();
+
+  const [formValues, setFormValues] = useState<FormData>({
+    search: "",
+    product_category_id: "",
+  });
+
+  const queryKey = [
+    "products",
+    formValues.search,
+    formValues.product_category_id,
+    activePage,
+  ];
   const { userData } = useUserDataStore();
 
-  const search = getValues("search");
-  const category = getValues("product_category_id");
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => productService.getProductCategories(),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 10,
+  });
 
-  const handleFetchProduct = async () => {
-    try {
-      setIsLoading(true);
-      const data = await productService.getProducts({
+  const {
+    data: productsData,
+    isLoading: isProductsLoading,
+    refetch: refetchProducts,
+  } = useQuery({
+    queryKey,
+    queryFn: () => {
+      const { search, product_category_id } = getValues();
+      return productService.getProducts({
         take: 15,
         skip: activePage,
         search,
         teamId: userData?.teamMemberProfile?.team_member_team_id,
-        category,
+        category: product_category_id,
       });
+    },
+    enabled: !!userData?.teamMemberProfile?.team_member_team_id,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  });
 
-      setProducts(data.data);
-      setCount(data.count);
-      setIsLoading(false);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error("Error fetching products");
-      }
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onSubmit = async () => {
+  const onSubmit = async (data: FormData) => {
     setActivePage(1);
-    handleFetchProduct();
+    setFormValues(data);
   };
 
   const handleRefresh = useCallback(() => {
     setActivePage(1);
     reset();
-    handleFetchProduct();
+    refetchProducts();
   }, [reset]);
 
-  const handleChangePage = useCallback(
-    (page: number) => {
-      if (page !== activePage) {
-        setActivePage(page);
-        handleFetchProduct();
-      }
-    },
-    [activePage]
-  );
-
-  const handleSetFeatured = async (productId: string) => {
-    try {
-      setIsFeaturedLoading(true);
-      const { error } = await productService.setFeaturedProduct({
-        productId,
-      });
-
-      if (error) {
-        toast.error(error.message);
-      }
-
-      setProducts(
-        products.map((product) => {
-          if (product.product_variant_id === productId) {
-            return { ...product, product_variant_is_featured: true };
-          }
-          return product;
-        })
-      );
-
-      toast.success("Product set as featured");
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error setting featured");
-      }
-    } finally {
-      setIsFeaturedLoading(false);
-    }
+  const handleChangePage = (page: number) => {
+    setActivePage(page);
   };
 
-  useEffect(() => {
-    handleFetchProduct();
-  }, [activePage]);
+  const { mutate: setFeaturedProduct, isPending: isFeaturedLoading } =
+    useMutation({
+      mutationFn: (productId: string) =>
+        productService.setFeaturedProduct({ productId }),
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .schema("product_schema")
-          .from("product_category_table")
-          .select("*");
+      onMutate: (productId: string) => {
+        queryClient.cancelQueries({
+          queryKey,
+        });
 
-        if (error) {
-          toast.error(error.message);
-        }
+        const previousData = queryClient.getQueryData(queryKey);
 
-        setCategories(data || []);
-      } catch (error) {
+        queryClient.setQueryData(
+          queryKey,
+          (old: { data: VariantProductType[]; count: number }) => ({
+            ...old,
+            data: old.data.map((product: VariantProductType) =>
+              product.product_variant_id === productId
+                ? { ...product, product_variant_is_featured: true }
+                : product
+            ),
+          })
+        );
+
+        return { previousData };
+      },
+      onSuccess: () => {
+        toast.success("Product set as featured");
+      },
+      onError: (error) => {
         if (error instanceof Error) {
           toast.error(error.message);
         } else {
-          toast.error("Error fetching categories");
+          toast.error("Error setting featured");
         }
-      }
-    };
+      },
+    });
 
-    fetchCategories();
-  }, []);
-
-  const pageCount = Math.ceil((count || 0) / 15);
+  const pageCount = Math.ceil((productsData?.count || 0) / 15);
 
   return (
     <div className="flex flex-col gap-4 px-4">
@@ -195,7 +173,7 @@ const ProductPage = () => {
                   <SelectValue placeholder="Select Collections" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categoriesData?.map((category: product_category_table) => (
                     <SelectItem
                       key={category.product_category_id}
                       value={category.product_category_id}
@@ -208,13 +186,13 @@ const ProductPage = () => {
             )}
           />
 
-          <Button type="submit" variant="outline" disabled={isLoading}>
+          <Button type="submit" variant="outline" disabled={isProductsLoading}>
             <SearchIcon className="w-4 h-4" /> Search
           </Button>
           <Button
             variant="secondary"
             onClick={handleRefresh}
-            disabled={isLoading}
+            disabled={isProductsLoading}
           >
             {" "}
             <RefreshCcwIcon className="w-4 h-4" />
@@ -227,8 +205,8 @@ const ProductPage = () => {
           + Add Product
         </Button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {isLoading
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isProductsLoading
           ? Array.from({ length: 8 }).map((_, index) => (
               <Card key={index} className="shadow-md">
                 <CardHeader>
@@ -240,7 +218,7 @@ const ProductPage = () => {
                 </div>
               </Card>
             ))
-          : products.map((product: VariantProductType) => (
+          : productsData?.data.map((product: VariantProductType) => (
               <Card
                 key={product.product_variant_id}
                 className="relative group shadow-md hover:shadow-xl transition"
@@ -254,7 +232,7 @@ const ProductPage = () => {
                     {!product.product_variant_is_featured && (
                       <Button
                         onClick={() =>
-                          handleSetFeatured(product.product_variant_id)
+                          setFeaturedProduct(product.product_variant_id)
                         }
                         disabled={isFeaturedLoading}
                         variant="secondary"

@@ -16,7 +16,16 @@ import { AddressCreateFormData, addressCreateSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import axios from "axios";
-import { Loader2 } from "lucide-react";
+import {
+  Building,
+  Home,
+  Loader2,
+  Mail,
+  Map,
+  MapPin,
+  Phone,
+  User,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -32,24 +41,30 @@ const AddressPage = ({ type = "create", address }: Props) => {
 
   const { toast } = useToast();
 
-  const { register, handleSubmit, watch, control, setValue } =
-    useForm<AddressCreateFormData>({
-      resolver: zodResolver(addressCreateSchema),
-      defaultValues:
-        type === "create"
-          ? {
-              email: "",
-              firstName: "",
-              lastName: "",
-              address: "",
-              province: "",
-              city: "",
-              postalCode: "",
-              phone: "",
-              is_default: false,
-            }
-          : address,
-    });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<AddressCreateFormData>({
+    resolver: zodResolver(addressCreateSchema),
+    defaultValues:
+      type === "create"
+        ? {
+            email: "",
+            firstName: "",
+            lastName: "",
+            address: "",
+            province: "",
+            city: "",
+            postalCode: "",
+            phone: "",
+            is_default: false,
+          }
+        : address,
+  });
 
   const [provices, setProvices] = useState<
     {
@@ -134,12 +149,12 @@ const AddressPage = ({ type = "create", address }: Props) => {
       if (type === "create") {
         createAddress(data);
 
-        toast({
-          title: "Address created successfully",
-        });
-        setTimeout(() => {
-          router.push("/account/address");
-        }, 1000);
+        // toast({
+        //   title: "Address created successfully",
+        // });
+        // setTimeout(() => {
+        //   router.push("/account/address");
+        // }, 1000);
       } else {
         updateAddress({ data, addressId: params.addressId as string });
         toast({
@@ -161,140 +176,197 @@ const AddressPage = ({ type = "create", address }: Props) => {
   };
 
   return (
-    <div className=" p-4 bg-gray-100 text-black">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="max-w-6xl mx-auto items-start"
-      >
-        {/* Left Section: Delivery, Shipping, Payment */}
-        <div className="space-y-6 bg-white p-6 shadow-md rounded-md">
-          <h1 className="text-2xl font-bold">
-            {type === "create" ? "Create Address" : "Update Address"}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+            <MapPin className="w-8 h-8 text-blue-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {type === "create" ? "Add New Address" : "Update Address"}
           </h1>
-          {/* Delivery Section */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                {...register("email", { required: true })}
-                type="email"
-                placeholder="Email"
-              />
-            </div>
+          <p className="text-gray-600">
+            {type === "create"
+              ? "Add a delivery address for your orders"
+              : "Update your delivery address information"}
+          </p>
+        </div>
 
-            <div className="flex space-x-4">
-              <div className="flex-1">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  {...register("firstName", { required: true })}
-                  type="text"
-                  placeholder="First name"
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  {...register("lastName", { required: true })}
-                  type="text"
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                {...register("address", { required: true })}
-                type="text"
-                placeholder="Barangay / Apartment, Suite, etc."
-              />
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="w-full">
-                <Label htmlFor="region">State / Province</Label>
-                <Controller
-                  name="province"
-                  control={control}
-                  defaultValue={address?.province || ""} // Ensure default value is in Controller
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value); // Update form state
-                        setValue("city", ""); // Reset city
-                        setValue("barangay", ""); // Reset barangay
-                      }}
-                      defaultValue={address?.province}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Province" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {provices.map((province) => (
-                          <SelectItem key={province.code} value={province.code}>
-                            {province.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-between gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="city">City</Label>
-                  <Controller
-                    name="city"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value); // Update form state
-                          setValue("barangay", ""); // Reset barangay
-                        }}
-                        defaultValue={address?.city}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue
-                            placeholder="City"
-                            defaultValue={address?.city}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.code} value={city.code}>
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
+        >
+          <div className="p-8 space-y-8">
+            {/* Personal Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                  <User className="w-4 h-4 text-blue-600" />
                 </div>
-                <div className="flex-1">
-                  <Label htmlFor="barangay">Barangay</Label>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Personal Information
+                </h2>
+              </div>
+
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Email Address
+                  </Label>
+                  <Input
+                    {...register("email", { required: true })}
+                    type="email"
+                    placeholder="Enter your email address"
+                    className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-600">Email is required</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="firstName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      First Name
+                    </Label>
+                    <Input
+                      {...register("firstName", { required: true })}
+                      type="text"
+                      placeholder="Enter first name"
+                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                    />
+                    {errors.firstName && (
+                      <p className="text-sm text-red-600">
+                        First name is required
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="lastName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Last Name
+                    </Label>
+                    <Input
+                      {...register("lastName", { required: true })}
+                      type="text"
+                      placeholder="Enter last name"
+                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-red-600">
+                        Last name is required
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Phone className="w-4 h-4" />
+                    Phone Number
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                      <span className="text-sm font-medium">🇵🇭 +63</span>
+                    </div>
+                    <Input
+                      {...register("phone", { required: true })}
+                      type="text"
+                      placeholder="9XX XXX XXXX"
+                      className="h-12 pl-20 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                      maxLength={10}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (!value.startsWith("9")) {
+                          e.target.value = "9";
+                        }
+                      }}
+                    />
+                  </div>
+                  {errors.phone && (
+                    <p className="text-sm text-red-600">
+                      Phone number is required
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Address Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full">
+                  <Home className="w-4 h-4 text-green-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Address Details
+                </h2>
+              </div>
+
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="address"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Building className="w-4 h-4" />
+                    Street Address
+                  </Label>
+                  <Input
+                    {...register("address", { required: true })}
+                    type="text"
+                    placeholder="House/Unit number, Street name"
+                    className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-red-600">Address is required</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="province"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Map className="w-4 h-4" />
+                    Province
+                  </Label>
                   <Controller
-                    name="barangay"
+                    name="province"
                     control={control}
+                    defaultValue={address?.province || ""}
                     render={({ field }) => (
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
+                          setValue("city", "");
+                          setValue("barangay", "");
                         }}
-                        defaultValue={address?.barangay}
+                        defaultValue={address?.province}
                       >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Barangay" />
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
+                          <SelectValue placeholder="Select province" />
                         </SelectTrigger>
                         <SelectContent>
-                          {barangays.map((barangay) => (
+                          {provices.map((province) => (
                             <SelectItem
-                              key={barangay.code}
-                              value={barangay.code}
-                              defaultValue={address?.barangay}
+                              key={province.code}
+                              value={province.code}
                             >
-                              {barangay.name}
+                              {province.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -302,58 +374,139 @@ const AddressPage = ({ type = "create", address }: Props) => {
                     )}
                   />
                 </div>
-              </div>
-            </div>
 
-            <div className="flex justify-between gap-4">
-              <div className="flex-1">
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input
-                  {...register("postalCode", { required: true })}
-                  type="text"
-                  placeholder="Postal Code"
-                  maxLength={4}
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative w-full">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
-                    +63
-                  </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="city"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      City/Municipality
+                    </Label>
+                    <Controller
+                      name="city"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setValue("barangay", "");
+                          }}
+                          defaultValue={address?.city}
+                          disabled={!selectedProvince}
+                        >
+                          <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
+                            <SelectValue
+                              placeholder={
+                                !selectedProvince
+                                  ? "Select province first"
+                                  : "Select city"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cities.map((city) => (
+                              <SelectItem key={city.code} value={city.code}>
+                                {city.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="barangay"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Barangay
+                    </Label>
+                    <Controller
+                      name="barangay"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                          }}
+                          defaultValue={address?.barangay}
+                          disabled={!selectedCity}
+                        >
+                          <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
+                            <SelectValue
+                              placeholder={
+                                !selectedCity
+                                  ? "Select city first"
+                                  : "Select barangay"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {barangays.map((barangay) => (
+                              <SelectItem
+                                key={barangay.code}
+                                value={barangay.code}
+                              >
+                                {barangay.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="postalCode"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Postal Code
+                  </Label>
                   <Input
-                    {...register("phone", { required: true })}
+                    {...register("postalCode", { required: true })}
                     type="text"
-                    placeholder="Phone"
-                    className="pl-12"
-                    maxLength={10}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (!value.startsWith("9")) {
-                        e.target.value = "9";
-                      }
-                    }}
+                    placeholder="Enter postal code"
+                    className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
+                    maxLength={4}
                   />
+                  {errors.postalCode && (
+                    <p className="text-sm text-red-600">
+                      Postal code is required
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            className="w-full"
-            disabled={isCreating || isUpdating}
-          >
-            {isCreating || isUpdating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Processing...
-              </>
-            ) : (
-              <>{type === "create" ? "Create Address" : "Update Address"}</>
-            )}
-          </Button>
-        </div>
-      </form>
+
+          {/* Action Button */}
+          <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+            <Button
+              type="submit"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+              disabled={isCreating || isUpdating}
+            >
+              {isCreating || isUpdating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  {type === "create"
+                    ? "Creating Address..."
+                    : "Updating Address..."}
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-5 h-5 mr-2" />
+                  {type === "create" ? "Create Address" : "Update Address"}
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

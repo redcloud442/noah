@@ -1,6 +1,5 @@
 "use client";
 
-import { formatDateToLocal } from "@/utils/function";
 import {
   ColumnFiltersState,
   getCoreRowModel,
@@ -13,9 +12,8 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
@@ -33,6 +31,7 @@ import {
 import { OrderListColumn } from "./OrderListColumn";
 
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
 
 type FilterFormValues = {
   search: string;
@@ -45,62 +44,58 @@ const OrderListTable = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [requestData, setRequestData] = useState<OrderType[] | null>(null);
   const [activePage, setActivePage] = useState(1);
-  const [isFetchingList, setIsFetchingList] = useState(false);
-  const [count, setCount] = useState(0);
+  const [formValues, setFormValues] = useState<FilterFormValues>({
+    search: "",
+    dateFilter: {
+      start: "",
+      end: "",
+    },
+  });
 
-  const fetchRequest = async () => {
-    try {
-      if (!userData?.teamMemberProfile.team_member_team_id) return;
-      setIsFetchingList(true);
+  const queryKey = [
+    "orders",
+    formValues.search,
+    formValues.dateFilter,
+    activePage,
+  ];
 
+  const { register, getValues, handleSubmit, reset } =
+    useForm<FilterFormValues>({
+      defaultValues: {
+        search: "",
+        dateFilter: {
+          start: undefined,
+          end: undefined,
+        },
+      },
+    });
+
+  const { data, isFetching, refetch } = useQuery({
+    queryKey,
+    queryFn: () => {
       const { search, dateFilter } = getValues();
-
-      const startDate = dateFilter.start
-        ? new Date(dateFilter.start)
-        : undefined;
-      const formattedStartDate = startDate ? formatDateToLocal(startDate) : "";
-
-      const { orders, count: orderCount } = await ordersService.getAllOrders({
+      return ordersService.getAllOrders({
         take: 15,
         skip: activePage,
         search,
-        dateFilter: {
-          start: formattedStartDate,
-          end: formattedStartDate,
-        },
-        teamId: userData.teamMemberProfile.team_member_team_id,
+        dateFilter,
+        teamId: userData?.teamMemberProfile.team_member_team_id || "",
       });
-
-      setRequestData(orders);
-      setCount(orderCount);
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error("Failed to fetch withdrawal list");
-      }
-    } finally {
-      setIsFetchingList(false);
-    }
-  };
-
-  const { register, getValues } = useForm<FilterFormValues>({
-    defaultValues: {
-      search: "",
-      dateFilter: {
-        start: undefined,
-        end: undefined,
-      },
     },
+    enabled: !!userData?.teamMemberProfile.team_member_team_id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
 
   const { columns } = OrderListColumn();
 
   const table = useReactTable({
-    data: requestData || [],
+    data: data?.orders || [],
     columns,
+    manualFiltering: true,
+    manualSorting: true,
+    autoResetPageIndex: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -117,11 +112,11 @@ const OrderListTable = () => {
     },
   });
 
-  useEffect(() => {
-    fetchRequest();
-  }, [userData, activePage, sorting]);
+  const pageCount = Math.ceil((data?.count || 0) / 15);
 
-  const pageCount = Math.ceil((count || 0) / 15);
+  const onSubmit = (data: FilterFormValues) => {
+    setFormValues(data);
+  };
 
   const tableColumns = useMemo(() => {
     return table.getAllColumns().map((column) => {
@@ -162,11 +157,27 @@ const OrderListTable = () => {
     });
   }, [table]);
 
+  const handleRefresh = () => {
+    setActivePage(1);
+    reset();
+    setFormValues({
+      search: "",
+      dateFilter: {
+        start: "",
+        end: "",
+      },
+    });
+    refetch();
+  };
+
   return (
     <div className="w-full space-y-6">
       <Card className="w-full rounded-md p-6 shadow-lg">
         <div className="flex flex-wrap gap-6 items-start py-4">
-          <form className="flex flex-col gap-4 w-full max-w-2xl">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4 w-full max-w-2xl"
+          >
             <div className="flex flex-wrap gap-4 items-center w-full">
               <Input
                 {...register("search")}
@@ -175,7 +186,7 @@ const OrderListTable = () => {
               />
               <Button
                 type="submit"
-                disabled={isFetchingList}
+                disabled={isFetching}
                 size="sm"
                 variant="outline"
                 className="flex items-center gap-1"
@@ -183,7 +194,8 @@ const OrderListTable = () => {
                 <Search className="w-4 h-4" /> Search
               </Button>
               <Button
-                disabled={isFetchingList}
+                onClick={handleRefresh}
+                disabled={isFetching}
                 size="sm"
                 className="flex items-center gap-1 text-sm hover:text-black"
               >
@@ -226,7 +238,7 @@ const OrderListTable = () => {
           columns={columns}
           activePage={activePage}
           totalCount={pageCount}
-          isFetchingList={isFetchingList}
+          isFetchingList={isFetching}
           setActivePage={setActivePage}
           pageCount={pageCount}
         />

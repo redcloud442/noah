@@ -31,6 +31,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoBagOutline } from "react-icons/io5";
 import { toast } from "sonner";
+
 const ShoppingCartModal = () => {
   const [open, setOpen] = useState(false);
 
@@ -64,7 +65,11 @@ const ShoppingCartModal = () => {
       });
       setCurrentStock(updatedCart);
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error fetching cart");
+      }
     }
   };
 
