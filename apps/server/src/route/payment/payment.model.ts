@@ -242,7 +242,7 @@ export const createPaymentMethod = async (
           attributes: {
             payment_method: createPaymentMethod.data.data.id,
             client_key: createPaymentMethod.data.data.attributes.client_key,
-            return_url: `http://localhost:3001/payment/pn/${orderDetails.order_number}/redirect`,
+            return_url: `${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://www.noir-clothing.com"}/payment/pn/${orderDetails.order_number}/redirect`,
           },
         },
       },

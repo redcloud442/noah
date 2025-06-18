@@ -71,7 +71,7 @@ const DashboardPage = () => {
           pb={10}
           rightSection={
             <CopyButton
-              value={`${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://noir-clothing.com"}/shop?REFERRAL_CODE=${userData?.resellerProfile.reseller_code}`}
+              value={`${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://www.noir-clothing.com"}/shop?REFERRAL_CODE=${userData?.resellerProfile.reseller_code}`}
             >
               {({ copied, copy }) => (
                 <Button
@@ -85,7 +85,7 @@ const DashboardPage = () => {
               )}
             </CopyButton>
           }
-          value={`${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://noir-clothing.com"}/shop?REFERRAL_CODE=${userData?.resellerProfile.reseller_code}`}
+          value={`${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://www.noir-clothing.com"}/shop?REFERRAL_CODE=${userData?.resellerProfile.reseller_code}`}
           readOnly
         />
         <Grid gutter="xl">
