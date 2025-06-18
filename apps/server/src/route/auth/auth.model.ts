@@ -168,13 +168,10 @@ export const authCallbackModel = async (params: {
       user_first_name: firstName,
       user_last_name: lastName,
       team_member_table: {
-        connectOrCreate: {
-          where: { team_member_id: "16dcbf9a-1904-43f7-a98a-060f6903661d" },
-          create: {
-            team_member_role: "MEMBER",
-            team_member_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
-            team_member_active_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
-          },
+        create: {
+          team_member_role: "MEMBER",
+          team_member_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
+          team_member_active_team_id: "16dcbf9a-1904-43f7-a98a-060f6903661d",
         },
       },
     },
