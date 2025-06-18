@@ -136,12 +136,12 @@ export const WithdrawalColumn = ({
       },
     },
     {
-      accessorKey: "reseller_withdrawal_action_by",
+      accessorKey: "action_by",
       header: "Action By",
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            {row.getValue("reseller_withdrawal_action_by")}
+            {row.getValue("action_by") ? row.getValue("action_by") : "N/A"}
           </div>
         );
       },

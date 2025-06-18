@@ -1,34 +1,19 @@
-import prisma from "@/utils/prisma/prisma";
+import { ProductType } from "@/utils/types";
 import Link from "next/link";
 import { Suspense } from "react";
 import { HoverVariantCard } from "../CollectionNamePage/CollectionNamePage";
 import { Button } from "../ui/button";
 
-const ModelSection = async () => {
-  const products = await prisma.product_table.findMany({
-    orderBy: {
-      product_created_at: "desc",
-    },
-    include: {
-      product_variants: {
-        where: {
-          product_variant_is_deleted: false,
-        },
-        include: {
-          variant_sample_images: true,
-          variant_sizes: true,
-        },
-      },
-    },
-    take: 15,
-  });
+const ModelSection = ({ products }: { products: ProductType[] }) => {
   return (
     <div className="flex flex-wrap justify-center items-center w-full bg-white gap-4 p-4">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-black via-zinc-950 to-zinc-900 bg-clip-text text-transparent mb-4">
           Latest Collection
-        </h1>
-
+        </h2>
+        <div
+          className={`h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent transform transition-all duration-1000 delay-300 mb-4 `}
+        ></div>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
           Discover our carefully curated selection of premium products, crafted
           with attention to detail and modern aesthetics.

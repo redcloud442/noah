@@ -4,12 +4,10 @@ import { authService } from "@/services/auth";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Anchor,
   Button,
   ButtonGroup,
   Paper,
   PasswordInput,
-  Text,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -193,7 +191,7 @@ export const LoginPage = () => {
           </Button>
         </form>
 
-        <Text ta="center" mt="md">
+        {/* <Text ta="center" mt="md">
           Don&apos;t have an account?{" "}
           <Anchor<"a">
             href="#"
@@ -202,7 +200,7 @@ export const LoginPage = () => {
           >
             Register
           </Anchor>
-        </Text>
+        </Text> */}
       </Paper>
     </div>
   );

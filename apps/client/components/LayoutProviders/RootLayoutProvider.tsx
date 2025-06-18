@@ -93,7 +93,11 @@ function ClientLayout({
         collections={collections}
         featuredProducts={featuredProducts}
       />
-      <MobileNavigationBar collections={collections} />
+      <MobileNavigationBar
+        collections={collections}
+        freshDrops={freshDrops}
+        featuredProducts={featuredProducts}
+      />
       <main>{children}</main>
       <Footer />
       <Toaster />

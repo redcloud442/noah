@@ -10,6 +10,7 @@ import { product_table } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "../ui/badge";
@@ -91,6 +92,12 @@ export const HoverImageCard = ({
     };
   }, [isHovered, imageUrls]);
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
   const handleAddToCart = () => {
     toast.custom((t) => (
       <VariantSelectionToast
@@ -124,7 +131,7 @@ export const HoverImageCard = ({
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
@@ -133,14 +140,44 @@ export const HoverImageCard = ({
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
+            </Button>
+          </Link>
         </div>
+        {/* Badges */}
         {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
-          <div className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
+          <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
             New
-          </div>
+          </Badge>
         )}
+
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
+
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}
@@ -168,6 +205,7 @@ export const HoverVariantCard = ({
   product,
   currentDate,
 }: HoverVariantCardProps) => {
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -202,9 +240,19 @@ export const HoverVariantCard = ({
     ));
   };
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
+  const redirectToViewProduct = (productVariantSlug: string | null) => {
+    router.push(`/product/${productVariantSlug}`);
+  };
+
   return (
     <Card
-      className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
+      className="overflow-hidden bg-white shadow-lg rounded-none border border-gray-200 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -212,22 +260,25 @@ export const HoverVariantCard = ({
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
-          width={2000}
-          height={2000}
+          width={500}
+          height={500}
           quality={80}
-          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
+          onClick={() => redirectToViewProduct(variant.product_variant_slug)}
         />
 
-        {/* "Add to Cart" button - initially hidden */}
         <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
-          <Button
-            onClick={() => handleAddToCart()}
-            size="sm"
-            variant="outline"
-            className="bg-white text-black"
-          >
-            <PlusIcon className="w-4 h-4" /> Quick Add
-          </Button>
+          {!isSoldOut && (
+            <Button
+              onClick={() => handleAddToCart()}
+              size="sm"
+              variant="outline"
+              className="bg-white text-black"
+            >
+              <PlusIcon className="w-4 h-4" /> Quick Add
+            </Button>
+          )}
+
           <Link href={`/shop`}>
             <Button
               size="sm"
@@ -235,6 +286,15 @@ export const HoverVariantCard = ({
               className="bg-white text-black"
             >
               Shop
+            </Button>
+          </Link>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
             </Button>
           </Link>
         </div>
@@ -247,11 +307,25 @@ export const HoverVariantCard = ({
           </Badge>
         )}
 
-        {variant.product_variant_is_featured && (
-          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
-            Featured
-          </Badge>
-        )}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
+
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}
@@ -315,6 +389,12 @@ export const HoverVariantTypeCard = ({
     ));
   };
 
+  const isSoldOut = useMemo(
+    () =>
+      variant.variant_sizes.every((size) => size.variant_size_quantity === 0),
+    [variant.variant_sizes]
+  );
+
   return (
     <Card
       className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
@@ -325,14 +405,14 @@ export const HoverVariantTypeCard = ({
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
-          width={2000}
-          height={2000}
+          width={500}
+          height={500}
           quality={80}
-          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
+          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
         />
 
         {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={() => handleAddToCart()}
             size="sm"
@@ -341,9 +421,17 @@ export const HoverVariantTypeCard = ({
           >
             <PlusIcon className="w-4 h-4" /> Quick Add
           </Button>
+          <Link href={`/product/${variant.product_variant_slug}`}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-black"
+            >
+              View
+            </Button>
+          </Link>
         </div>
 
-        {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
           <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
@@ -351,11 +439,25 @@ export const HoverVariantTypeCard = ({
           </Badge>
         )}
 
-        {variant.product_variant_is_featured && (
-          <Badge className="absolute top-2 right-2 bg-green-500 text-xs px-2 py-1 rounded text-white">
-            Featured
-          </Badge>
-        )}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 text-center">
+          {isSoldOut && (
+            <Badge className="bg-gray-500 text-xs px-2 py-1 rounded text-white">
+              Sold Out
+            </Badge>
+          )}
+
+          {product.product_is_best_seller && (
+            <Badge className="bg-yellow-500 text-xs px-2 py-1 rounded text-white">
+              Best Seller
+            </Badge>
+          )}
+
+          {variant.product_variant_is_featured && (
+            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+              Featured
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Product Details */}

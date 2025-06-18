@@ -1,9 +1,10 @@
 "use client";
 
 import useUserDataStore from "@/lib/userDataStore";
-import { useCollectionQuery } from "@/query/collectionQuery";
+import { productService } from "@/services/product";
+import { product_category_table } from "@prisma/client";
 import { RefreshCcwIcon, SearchIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Card, CardHeader } from "../ui/card";
@@ -19,49 +20,46 @@ type FormData = {
 
 const ProductCategoryTable = () => {
   const [activePage, setActivePage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState<{
+    collections: product_category_table[];
+    count: number;
+  } | null>(null);
   const { register, handleSubmit, reset, getValues } = useForm<FormData>();
   const { userData } = useUserDataStore();
 
-  const search = getValues("search");
+  const hadleFetchCollections = async () => {
+    try {
+      if (!userData?.teamMemberProfile?.team_member_team_id) return;
+      setIsLoading(true);
+      const { search } = getValues();
+      const data = await productService.getCollections({
+        take: 15,
+        skip: activePage ?? 0,
+        search: search ?? "",
+        teamId: userData?.teamMemberProfile?.team_member_team_id,
+      });
+      setData(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const { data, isLoading, refetch } = useCollectionQuery(
-    15,
-    activePage,
-    search,
-    userData?.teamMemberProfile?.team_member_team_id
-  );
-
-  const onSubmit = useCallback(
-    (data: FormData) => {
-      if (data.search) {
-        setActivePage(1);
-        refetch();
-      } else {
-        setActivePage(1);
-        refetch();
-      }
-    },
-    [refetch]
-  );
+  useEffect(() => {
+    hadleFetchCollections();
+  }, [activePage, userData?.teamMemberProfile?.team_member_team_id]);
 
   const handleRefresh = useCallback(() => {
     setActivePage(1);
     reset();
-    refetch();
-  }, [reset, refetch]);
+    hadleFetchCollections();
+  }, [reset, hadleFetchCollections]);
 
-  const handleChangePage = useCallback(
-    (page: number) => {
-      if (page !== activePage) {
-        setActivePage(page);
-        refetch({
-          throwOnError: true,
-          cancelRefetch: true,
-        });
-      }
-    },
-    [activePage, refetch]
-  );
+  const handleChangePage = useCallback((page: number) => {
+    setActivePage(page);
+  }, []);
 
   const collections = data?.collections || [];
   const count = Math.ceil((data?.count || 0) / 15);
@@ -69,7 +67,10 @@ const ProductCategoryTable = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4">
-        <form className="flex w-full gap-2" onSubmit={handleSubmit(onSubmit)}>
+        <form
+          className="flex w-full gap-2"
+          onSubmit={handleSubmit(hadleFetchCollections)}
+        >
           <FloatingLabelInput
             label="Search"
             className="w-full max-w-xl"
@@ -93,11 +94,7 @@ const ProductCategoryTable = () => {
             <RefreshCcwIcon className="w-4 h-4" />
           </Button>
         </form>
-        <CreateProductCategoryModal
-          take={15}
-          skip={activePage}
-          search={search}
-        />
+        <CreateProductCategoryModal setCollections={setData} />
       </div>
 
       {isLoading ? (

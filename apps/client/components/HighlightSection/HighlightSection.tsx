@@ -40,13 +40,9 @@ const HighlightSection = () => {
 
   return (
     <section
-      className="w-full py-10 space-y-10 overflow-hidden"
+      className="w-full py-10 space-y-10 overflow-hidden bg-transparent"
       aria-label="Social media links"
     >
-      <h2 className="text-4xl text-center font-bold text-white">
-        Follow Us On
-      </h2>
-
       <div className="flex w-full animate-infinite-scroll space-x-16 whitespace-nowrap">
         {[...Array(3)].map((_, i) => (
           <ul

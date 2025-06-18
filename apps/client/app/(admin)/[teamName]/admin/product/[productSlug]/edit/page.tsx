@@ -19,10 +19,13 @@ const page = async ({
   const formattedVariantInfo = {
     products: [
       {
+        id: product.product_id,
         name: product.product_name,
         price: product.product_price,
         description: product.product_description || "",
         category: product.product_category_id,
+        sizeGuide: new File([], ""),
+        sizeGuideUrl: product.product_size_guide_url || "",
         variants: product.product_variants.map(
           (variant: {
             product_variant_id: string;

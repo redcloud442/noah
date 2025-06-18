@@ -90,6 +90,10 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
           router.push(result.data.nextAction.redirect.url);
         }
       }
+
+      toast.success(
+        "Payment created successfully, you will be redirected to the payment page shortly"
+      );
     } catch (error) {
       toast.error(
         error instanceof AxiosError

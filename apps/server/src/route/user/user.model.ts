@@ -34,6 +34,7 @@ export const getUserModel = async (params: {
         team_member_role: true,
         team_member_team_id: true,
         team_member_date_created: true,
+        team_member_request_reseller: true,
         team_member_team: {
           select: {
             team_id: true,
@@ -62,6 +63,8 @@ export const getUserModel = async (params: {
       team_member_role: teamMemberProfile?.team_member_role,
       team_member_team_id: teamMemberProfile?.team_member_team_id,
       team_member_team: teamMemberProfile?.team_member_team.team_name,
+      team_member_request_reseller:
+        teamMemberProfile?.team_member_request_reseller,
       team_member_team_group: teamMemberProfile?.team_member_team_group.map(
         (teamGroup: {
           team_group_member_id: string;
@@ -397,11 +400,11 @@ export const createResellerRequestModel = async (params: {
   const resellerCode = generateResellerCode();
 
   await redis.set(`reseller-request:${params.userId}`, resellerCode, {
-    ex: 300,
+    ex: 500,
   });
 
   const email = await resend.emails.send({
-    from: "Reseller Request Code <support@help.elevateglobal.app>",
+    from: "Reseller Request Code <support@help.noir-clothing.com>",
     to: params.userEmail,
     subject: "Your Reseller Request Code",
     text: `Your reseller request code is: ${resellerCode}`, // plain text fallback
@@ -416,7 +419,7 @@ export const createResellerRequestModel = async (params: {
         <p>Please keep this code safe and use it to complete your reseller request process.</p>
         <br />
         <p>Best regards,</p>
-        <p><strong>Elevate Global Team</strong></p>
+        <p><strong>Noir Clothing Team</strong></p>
       </div>
     `,
   });
@@ -493,7 +496,7 @@ export const verifyResellerCodeModel = async (params: {
   }
 
   const email = await resend.emails.send({
-    from: "Reseller Promotion <support@help.elevateglobal.app>",
+    from: "Reseller Promotion <support@help.noir-clothing.com>",
     to: params.userEmail,
     subject: "🎉 Congratulations! You're Now a NOAH Reseller",
     text: `Congratulations on becoming a reseller!`, // ✅ comma was missing here
@@ -506,8 +509,8 @@ export const verifyResellerCodeModel = async (params: {
           and early access to limited offers.
         </p>
         <br />
-        <p style="font-size: 16px;">Let’s elevate together!</p>
-        <p style="font-weight: bold;">– The Elevate Global Team</p>
+
+        <p style="font-weight: bold;">– The Noir Clothing Team</p>
       </div>
     `,
   });
@@ -607,4 +610,47 @@ export const userPatchModel = async (params: {
       }
     });
   }
+};
+
+export const userChangePasswordModel = async (params: {
+  userId: string;
+  password: string;
+}) => {
+  const { error } = await supabaseClient.auth.admin.updateUserById(
+    params.userId,
+    {
+      password: params.password,
+    }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { message: "Password updated successfully" };
+};
+
+export const userGenerateLoginLinkModel = async (params: { email: string }) => {
+  const { data, error } = await supabaseClient.auth.admin.generateLink({
+    email: params.email,
+    type: "magiclink",
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Failed to generate login link");
+  }
+
+  const link =
+    process.env.NODE_ENV === "development"
+      ? `http://localhost:3001/auth/callback?hashedToken=${data.properties.hashed_token}`
+      : `https://www.noir-clothing.com/auth/callback?hashedToken=${data.properties.hashed_token}`;
+
+  return {
+    message: "Login link generated successfully",
+    link: link,
+  };
 };

@@ -1,5 +1,6 @@
 import PaymentPage from "@/components/PaymentPage/PaymentPage";
 import prisma from "@/utils/prisma/prisma";
+import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,17 +17,26 @@ const page = async ({
   const payment = await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
+      order_status: "PENDING",
     },
   });
 
-  if (!payment) {
+  if (payment?.order_status !== "PENDING") {
     return redirect("/");
   }
 
-  const cookieStore = await cookies();
+  const checkoutToken = (await cookies()).get("checkout_token");
 
-  const cookieCheckout = cookieStore.get("checkout_token")?.value;
-  if (!cookieCheckout) {
+  const decoded = jwt.verify(
+    checkoutToken?.value ?? "",
+    process.env.JWT_SECRET!
+  ) as unknown as {
+    checkoutNumber: string;
+    role: string;
+    referralCode: string;
+  };
+
+  if (decoded.checkoutNumber !== paymentNumber) {
     return redirect("/");
   }
 

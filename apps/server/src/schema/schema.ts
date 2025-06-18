@@ -37,6 +37,7 @@ export const registerSchema = z.object({
 });
 
 export const cartPostSchema = z.object({
+  cart_id: z.string().uuid(),
   product_id: z.string().uuid(),
   product_name: z.string(),
   product_price: z.number(),
@@ -59,6 +60,13 @@ export const cartPutSchema = z.object({
   id: z.string().uuid(),
   product_quantity: z.number(),
 });
+
+export const cartCheckoutSchema = z.object({
+  items: z.array(z.string().uuid()),
+  cartItems: z.array(cartPostSchema).optional(),
+});
+
+export type typeCartCheckoutSchema = z.infer<typeof cartCheckoutSchema>;
 
 export type typeCartPutSchema = z.infer<typeof cartPutSchema>;
 
@@ -95,6 +103,7 @@ export const productCreateSchema = z.array(
     product_slug: z.string(),
     product_team_id: z.string(),
     product_variants: z.array(productVariantSchema),
+    product_size_guide_url: z.string().optional(),
   })
 );
 
@@ -116,11 +125,14 @@ export const orderGetListSchema = z.object({
   take: z.number(),
   skip: z.number(),
   search: z.string().optional(),
-  dateFilter: z.object({
-    start: z.string().optional(),
-    end: z.string().optional(),
-  }),
-  teamId: z.string().uuid(),
+  dateFilter: z
+    .object({
+      start: z.string().optional(),
+      end: z.string().optional(),
+    })
+    .optional(),
+  teamId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 export type typeOrderGetListSchema = z.infer<typeof orderGetListSchema>;
@@ -220,3 +232,20 @@ export const dashboardSchema = z.object({
 });
 
 export type typeDashboardSchema = z.infer<typeof dashboardSchema>;
+
+export const userChangePasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  userId: z.string().uuid(),
+});
+
+export type typeUserChangePasswordSchema = z.infer<
+  typeof userChangePasswordSchema
+>;
+
+export const newsletterSubscribeSchema = z.object({
+  email: z.string().email(),
+});
+
+export type typeNewsletterSubscribeSchema = z.infer<
+  typeof newsletterSubscribeSchema
+>;

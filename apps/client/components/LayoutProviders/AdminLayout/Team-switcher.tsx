@@ -18,8 +18,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import Image from "next/image";
 
-export function TeamSwitcher({ teams }: { teams: { team_name: string }[] }) {
+export function TeamSwitcher({
+  teams,
+}: {
+  teams: { team_name: string; team_image: string }[];
+}) {
   const { isMobile } = useSidebar();
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
@@ -32,14 +37,14 @@ export function TeamSwitcher({ teams }: { teams: { team_name: string }[] }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Image
-                  src={activeTeam.logo}
-                  alt={activeTeam.name}
+                  src={activeTeam.team_image}
+                  alt={activeTeam.team_name}
                   width={32}
                   height={32}
                 />
-              </div> */}
+              </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
                   {activeTeam.team_name}

@@ -4,7 +4,7 @@ import Link from "next/link";
 const ResellerSection = () => {
   return (
     <section
-      className="flex flex-col md:flex-row items-stretch justify-center w-full min-h-[600px] px-4 py-12"
+      className="flex flex-col md:flex-row items-stretch justify-center w-full min-h-[600px] px-4 py-12 bg-zinc-950"
       aria-label="Reseller program information"
     >
       {/* Left Section */}

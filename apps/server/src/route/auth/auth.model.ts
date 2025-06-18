@@ -1,11 +1,13 @@
 import type { User } from "@supabase/supabase-js";
 import { sign, verify } from "hono/jwt";
+import { Resend } from "resend";
 import { envConfig } from "../../env.js";
 import prisma from "../../utils/prisma.js";
 import { supabaseClient } from "../../utils/supabase.js";
 import type { Product } from "../../utils/types.js";
 
 const JWT_SECRET = envConfig.JWT_SECRET;
+const resendClient = new Resend(process.env.RESEND_API_KEY);
 
 export const authLoginModel = async (params: {
   email: string;
@@ -68,9 +70,10 @@ export const authLoginModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userData.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -82,6 +85,7 @@ export const authLoginModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userData.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -200,6 +204,17 @@ export const authCallbackModel = async (params: {
   }
 
   if (!isUserExists) {
+    await prisma.newsletter_table.create({
+      data: {
+        newsletter_email: email,
+      },
+    });
+
+    await resendClient.contacts.create({
+      audienceId: process.env.RESEND_AUDIENCE_ID!,
+      email: email,
+    });
+
     await supabaseClient.auth.admin.updateUserById(userId, {
       user_metadata: {
         role: "MEMBER",
@@ -234,9 +249,10 @@ export const authCallbackModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userData.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -249,6 +265,7 @@ export const authCallbackModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userData.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -299,6 +316,17 @@ export const authRegisterModel = async (params: {
       },
     });
 
+    await prisma.newsletter_table.create({
+      data: {
+        newsletter_email: email,
+      },
+    });
+
+    await resendClient.contacts.create({
+      audienceId: process.env.RESEND_AUDIENCE_ID!,
+      email: email,
+    });
+
     return userData;
   });
 
@@ -306,9 +334,10 @@ export const authRegisterModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: user.user_id,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -321,6 +350,7 @@ export const authRegisterModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: user.user_id,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }
@@ -386,9 +416,10 @@ export const authSaveCartModel = async (params: {
     for (const item of cart) {
       await prisma.cart_table.upsert({
         where: {
-          cart_user_id_cart_product_variant_id: {
+          cart_user_id_cart_product_variant_id_cart_size: {
             cart_user_id: userId,
             cart_product_variant_id: item.product_variant_id,
+            cart_size: item.product_size,
           },
         },
         update: {
@@ -401,6 +432,7 @@ export const authSaveCartModel = async (params: {
           cart_quantity: item.product_quantity,
           cart_user_id: userId,
           cart_product_variant_id: item.product_variant_id,
+          cart_size: item.product_size,
         },
       });
     }

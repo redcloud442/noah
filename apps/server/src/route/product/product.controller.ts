@@ -37,15 +37,16 @@ export const productGetController = async (c: Context) => {
       );
     }
   }
+  [];
 };
 
 export const productCreateController = async (c: Context) => {
   try {
     const params = c.get("params");
 
-    await productCreateModel(params);
+    const data = await productCreateModel(params);
 
-    return c.json({ message: "Product created successfully" }, 200);
+    return c.json(data, 200);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return c.json({ message: "Internal server error" }, 500);

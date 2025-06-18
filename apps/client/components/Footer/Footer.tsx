@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 
 export const Footer = () => {
   return (
-    <footer className="bg-zince-950 text-white relative overflow-hidden">
+    <footer className="bg-zinc-950 text-white relative overflow-hidden">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]"></div>

@@ -23,9 +23,8 @@ import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { authService } from "@/services/auth";
 import { cartService } from "@/services/cart";
-
 import { Product } from "@/utils/types";
-import { Trash } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,24 +41,51 @@ const ShoppingCartModal = () => {
   const REFERRAL_CODE = searchParams.get("REFERRAL_CODE") as string;
   const router = useRouter();
   const pathname = usePathname();
+  const [currentStock, setCurrentStock] = useState<
+    {
+      variant_size_variant_id: string;
+      variant_size_value: string;
+      variant_size_quantity: number;
+    }[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateCheckoutNumber = () => {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
   };
 
+  const fetchCartQuantity = async () => {
+    try {
+      if (cart.products.length === 0 || !open) return;
+      const updatedCart = await cartService.getQuantity({
+        items: cart.products.map((product) => ({
+          product_variant_id: product.product_variant_id,
+          product_variant_size: product.product_size ?? "",
+        })),
+      });
+      setCurrentStock(updatedCart);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error fetching cart");
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchCartQuantity();
+  }, [cart, open]);
+
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        if (!userData) {
-          const storedCart = localStorage.getItem("shoppingCart");
-
-          if (storedCart) {
-            setCart(JSON.parse(storedCart));
-          }
+        if (userData) {
+          const cart = await cartService.get();
+          setCart(cart);
         } else {
-          const response = await cartService.get();
-
-          localStorage.removeItem("shoppingCart");
+          const res = localStorage.getItem("shoppingCart");
+          const response = res ? JSON.parse(res) : { products: [], count: 0 };
 
           setCart(response);
         }
@@ -92,7 +118,7 @@ const ShoppingCartModal = () => {
           parsedCart.products = parsedCart.products.filter(
             (item: Product) => item.cart_id !== id
           );
-        localStorage.setItem("shoppingCart", JSON.stringify(parsedCart));
+          localStorage.setItem("shoppingCart", JSON.stringify(parsedCart));
         }
         setCart({
           ...cart,
@@ -124,22 +150,73 @@ const ShoppingCartModal = () => {
     }
   };
 
-  const handleCheckout = async () => {
-    const checkoutNumber = generateCheckoutNumber();
-
-    await authService.createCheckoutToken(checkoutNumber);
-
-    if (!checkoutNumber) {
-      toast.error("Error generating checkout number");
-      return;
+  const handleCheckoutItems = async (cart_id: string[]) => {
+    try {
+      await cartService.checkout({ items: cart_id });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
     }
-
-    setOpen(false);
-
-    router.push(
-      `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
-    );
   };
+  const handleCheckout = async () => {
+    try {
+      if (hasInvalidProduct) {
+        toast.error("Please check your cart for invalid products");
+        return;
+      }
+
+      setIsLoading(true);
+
+      if (userData) {
+        const cartIds = cart.products.map((item) => item.cart_id);
+        await handleCheckoutItems(cartIds);
+      } else {
+        const res = localStorage.getItem("shoppingCart");
+        const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
+
+        existingCart.products = existingCart.products.map(
+          (product: Product) => ({
+            ...product,
+            cart_is_checked_out: true,
+          })
+        );
+
+        localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
+      }
+
+      const checkoutNumber = generateCheckoutNumber();
+
+      await authService.createCheckoutToken(checkoutNumber);
+
+      if (!checkoutNumber) {
+        toast.error("Error generating checkout number");
+        return;
+      }
+
+      setOpen(false);
+
+      router.push(
+        `/checkout/cn/${checkoutNumber}${REFERRAL_CODE ? `?REFERRAL_CODE=${REFERRAL_CODE}` : ""}`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error checking out items"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const hasInvalidProduct = cart.products.some((product) => {
+    const stock = currentStock.find(
+      (s) =>
+        s.variant_size_variant_id === product.product_variant_id &&
+        s.variant_size_value === product.product_size
+    );
+    if (!stock) return true;
+    return product.product_quantity > stock.variant_size_quantity;
+  });
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -174,7 +251,7 @@ const ShoppingCartModal = () => {
           <div className="mt-4 space-y-4">
             {cart?.products?.map((item) => (
               <Card
-                key={item.product_id}
+                key={item.cart_id}
                 className="p-4 shadow-sm gap-2 flex w-full items-center"
               >
                 <Image
@@ -219,7 +296,7 @@ const ShoppingCartModal = () => {
                   </div>
                   <div className="grid grid-cols-1">
                     <p className="text-sm text-gray-500">
-                      Size: {item.product_variant_size}
+                      Size: {item.product_size}
                     </p>
                     <p className="text-sm text-gray-500">
                       Color: {item.product_variant_color}
@@ -228,7 +305,10 @@ const ShoppingCartModal = () => {
                       Quantity: {item.product_quantity}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Price: ₱ {item.product_price * item.product_quantity}
+                      Price: ₱{" "}
+                      {(
+                        item.product_price * item.product_quantity
+                      ).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -247,10 +327,15 @@ const ShoppingCartModal = () => {
 
             <Button
               onClick={handleCheckout}
+              disabled={hasInvalidProduct || isLoading}
               className="w-full "
               variant="default"
             >
-              Proceed to Checkout
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Proceed to Checkout"
+              )}
             </Button>
           </div>
         )}

@@ -297,9 +297,10 @@ const ProductPage = () => {
                             ?.variant_sample_image_image_url
                         }
                         alt={product.product_variant_product.product_name}
-                        width={600}
-                        height={400}
-                        className="object-cover w-full h-auto"
+                        width={500}
+                        height={500}
+                        quality={80}
+                        className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
                       />
                     ) : (
                       <div className="flex items-center justify-center w-full h-64 text-gray-400 text-sm">

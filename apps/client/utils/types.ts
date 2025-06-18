@@ -14,6 +14,8 @@ export type Product = {
   product_id: string;
   product_name: string;
   product_price: number;
+  product_size: string;
+  cart_is_checked_out: boolean;
   product_quantity: number;
   product_variant_id: string;
   product_variant_size: string;

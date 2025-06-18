@@ -180,7 +180,7 @@ const DashboardPage = () => {
               >
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
-                    Total Sales
+                    Total Orders
                   </Text>
                   <Badge color="blue" size="lg" variant="light">
                     Orders
@@ -216,15 +216,15 @@ const DashboardPage = () => {
               >
                 <Group justify="space-between">
                   <Text size="sm" c="dimmed">
-                    Sales Per Day
+                    Orders Per Day
                   </Text>
                   <Badge color="cyan" size="lg" variant="light">
-                    Daily Avg.
+                    Daily Orders.
                   </Badge>
                 </Group>
 
                 <Text fz={rem(32)} fw={700} c="indigo">
-                  {sales.today} day
+                  {sales.today} Orders
                 </Text>
 
                 <Divider my="xs" />

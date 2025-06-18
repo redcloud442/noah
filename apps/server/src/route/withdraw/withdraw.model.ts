@@ -157,6 +157,8 @@ export const withdrawalListModel = async (params: typeWithdrawalListSchema) => {
           team_member_user: {
             select: {
               user_email: true,
+              user_first_name: true,
+              user_last_name: true,
             },
           },
         },
@@ -206,15 +208,27 @@ export const withdrawalListModel = async (params: typeWithdrawalListSchema) => {
 };
 
 export const withdrawalActionModel = async (
-  params: typeWithdrawalActionSchema
+  params: typeWithdrawalActionSchema,
+  actionBy: string
 ) => {
   const { withdrawalId, resellerId, status } = params;
+
+  const memberId = await prisma.team_member_table.findFirst({
+    where: {
+      team_member_user_id: actionBy,
+    },
+    select: {
+      team_member_id: true,
+    },
+  });
 
   await prisma.$transaction(async (tx) => {
     const data = await tx.reseller_withdrawal_table.update({
       where: { reseller_withdrawal_id: withdrawalId },
       data: {
         reseller_withdrawal_status: status,
+        reseller_withdrawal_action_by: memberId?.team_member_id,
+        reseller_withdrawal_updated_at: new Date(),
       },
       select: {
         reseller_withdrawal_amount: true,

@@ -110,19 +110,20 @@ export const orderGetListModel = async (params: {
     end: string;
   };
   skip: number;
+  userId: string;
 }) => {
   const where: Prisma.order_tableWhereInput = {};
-  const { take, skip, teamId } = params;
+  const { take, skip, teamId, userId } = params;
 
   const offset = (skip - 1) * take;
 
   const { search, dateFilter } = params;
 
-  const startDate = dateFilter.start ? new Date(dateFilter.start) : undefined;
+  const startDate = dateFilter?.start ? new Date(dateFilter.start) : undefined;
 
   const formattedStartDate = startDate ? startDate : "";
 
-  const endDate = dateFilter.end ? new Date(dateFilter.end) : undefined;
+  const endDate = dateFilter?.end ? new Date(dateFilter.end) : undefined;
 
   const formattedEndDate = endDate ? endDate : "";
 
@@ -130,6 +131,10 @@ export const orderGetListModel = async (params: {
     where.order_number = {
       contains: search,
     };
+  }
+
+  if (userId) {
+    where.order_user_id = userId;
   }
 
   if (formattedStartDate) {
@@ -152,14 +157,10 @@ export const orderGetListModel = async (params: {
       order_created_at: true,
       order_phone: true,
       order_payment_method: true,
+      order_email: true,
       order_team: {
         select: {
           team_name: true,
-        },
-      },
-      order_user: {
-        select: {
-          user_email: true,
         },
       },
     },
@@ -182,7 +183,7 @@ export const orderGetListModel = async (params: {
     order_created_at: order.order_created_at,
     order_phone: order.order_phone,
     order_team: order.order_team.team_name,
-    order_user: order.order_user?.user_email,
+    order_email: order.order_email,
     order_payment_method: order.order_payment_method,
   }));
 

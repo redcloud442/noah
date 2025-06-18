@@ -109,8 +109,7 @@ export const resellerOrdersModel = async (params: {
       ] as keyof Prisma.order_tableOrderByWithRelationInput
     ] = sortDirection === "asc" ? "asc" : "desc";
   }
-
-  const offset = take * skip + 1;
+  const offset = skip * take;
 
   const orders = await prisma.order_table.findMany({
     where: {

@@ -10,7 +10,11 @@ import {
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { paymentService } from "@/services/payment";
-import { CheckoutFormData, paymentSchema } from "@/utils/schema";
+import {
+  AddressCreateFormData,
+  CheckoutFormData,
+  paymentSchema,
+} from "@/utils/schema";
 import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -37,10 +41,14 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-const CheckOutNumberPage = () => {
+type CheckOutNumberPageProps = {
+  formattedAddress: AddressCreateFormData;
+};
+
+const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   const params = useParams();
   const router = useRouter();
-  const { cart, setCart } = useCartStore();
+  const { cart } = useCartStore();
   const { userData } = useUserDataStore();
 
   const {
@@ -53,14 +61,14 @@ const CheckOutNumberPage = () => {
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      email: "",
-      firstName: "",
-      lastName: "",
-      address: "",
-      province: "",
-      city: "",
-      postalCode: "",
-      phone: "",
+      email: formattedAddress.email,
+      firstName: formattedAddress.firstName,
+      lastName: formattedAddress.lastName,
+      address: formattedAddress.address,
+      province: formattedAddress.province,
+      city: formattedAddress.city,
+      postalCode: formattedAddress.postalCode,
+      phone: formattedAddress.phone,
       order_number: params.checkoutNumber as string,
     },
   });
@@ -151,36 +159,34 @@ const CheckOutNumberPage = () => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      const { productVariant, ...rest } = data;
+      const { ...rest } = data;
 
       const res = await paymentService.create({
         ...rest,
-        productVariant: productVariant.map((variant) => ({
+        productVariant: cart.products.map((variant) => ({
           product_variant_id: variant.product_variant_id,
-          product_variant_quantity: variant.product_variant_quantity,
-          product_variant_price: variant.product_variant_price,
-          product_variant_size: variant.product_variant_size,
+          product_variant_quantity: variant.product_quantity,
+          product_variant_price: variant.product_price,
+          product_variant_size: variant.product_size,
           product_variant_color: variant.product_variant_color,
         })),
       });
 
       if (!userData) {
         localStorage.removeItem("cart");
-        setCart({
-          products: [],
-          count: 0,
-        });
       }
 
       if (res) {
         toast.success("Payment on process");
 
-        setTimeout(() => {
-          router.push(`/payment/pn/${params.checkoutNumber}`);
-        }, 2000);
+        router.push(`/payment/pn/${params.checkoutNumber}`);
       }
     } catch (error) {
-      console.error("Error submitting payment:", error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error submitting payment");
+      }
     }
   };
 
