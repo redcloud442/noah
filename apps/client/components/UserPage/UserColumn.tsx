@@ -5,7 +5,6 @@ import { UserType } from "@/utils/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -17,11 +16,18 @@ import {
 } from "../ui/dropdown-menu";
 import UserActionModal from "./UserActionModal";
 
+type FilterFormValues = {
+  search: string;
+  dateFilter: { start?: string; end?: string };
+  sortDirection: string;
+  columnAccessor: string;
+};
 type UserColumnProps = {
-  setRequest: Dispatch<SetStateAction<UserType[]>>;
+  formValue: FilterFormValues;
+  activePage: number;
 };
 
-export const UserColumn = ({ setRequest }: UserColumnProps) => {
+export const UserColumn = ({ formValue, activePage }: UserColumnProps) => {
   const router = useRouter();
   const { teamName } = useParams();
 
@@ -161,14 +167,16 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
                   <UserActionModal
                     type="ban"
                     userId={user.user_id}
-                    setRequest={setRequest}
+                    activePage={activePage}
+                    formValue={formValue}
                   />
                   {user.team_member_role !== "RESELLER" && (
                     <UserActionModal
                       type="promote"
                       userId={user.user_id}
                       role="RESELLER"
-                      setRequest={setRequest}
+                      activePage={activePage}
+                      formValue={formValue}
                     />
                   )}
 
@@ -177,7 +185,8 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
                       type="promote"
                       userId={user.user_id}
                       role="MEMBER"
-                      setRequest={setRequest}
+                      activePage={activePage}
+                      formValue={formValue}
                     />
                   )}
 
@@ -186,7 +195,8 @@ export const UserColumn = ({ setRequest }: UserColumnProps) => {
                       type="promote"
                       userId={user.user_id}
                       role="ADMIN"
-                      setRequest={setRequest}
+                      activePage={activePage}
+                      formValue={formValue}
                     />
                   )}
                 </div>

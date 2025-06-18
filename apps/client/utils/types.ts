@@ -22,13 +22,14 @@ export type Product = {
   product_variant_image: string;
 };
 
-export type OrderItem = {
+export type OrderItem = order_table & {
   order_item_id: string;
   order_item_name: string;
   order_item_price: number;
   order_item_quantity: number;
   order_item_image: string;
   order_item_size: string;
+  order_item_status: string;
   order_item_color: string;
   product_variant_name: string;
   product_variant_slug: string;

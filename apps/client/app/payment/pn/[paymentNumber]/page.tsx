@@ -1,6 +1,8 @@
 import PaymentPage from "@/components/PaymentPage/PaymentPage";
 import prisma from "@/utils/prisma/prisma";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
 const page = async ({
   params,
 }: {
@@ -18,6 +20,13 @@ const page = async ({
   });
 
   if (!payment) {
+    return redirect("/");
+  }
+
+  const cookieStore = await cookies();
+
+  const cookieCheckout = cookieStore.get("checkout_token")?.value;
+  if (!cookieCheckout) {
     return redirect("/");
   }
 

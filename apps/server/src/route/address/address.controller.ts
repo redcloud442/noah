@@ -61,9 +61,11 @@ export const addressUpdateController = async (c: Context) => {
 export const addressSetDefaultController = async (c: Context) => {
   try {
     const params = c.get("params");
+    const user = c.get("user");
 
     await addressSetDefaultModel({
       id: params,
+      userId: user.id,
     });
 
     return c.json("Set as default successfully", 200);

@@ -33,7 +33,7 @@ export const withdrawListController = async (c: Context) => {
 export const withdrawActionController = async (c: Context) => {
   try {
     const params = c.get("params");
-    console.log(params);
+
     await withdrawalActionModel(params);
 
     return c.json({ message: "Withdrawal action successful" }, 200);

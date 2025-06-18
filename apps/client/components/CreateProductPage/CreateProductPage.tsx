@@ -16,9 +16,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ProductFormType, productSchema } from "@/utils/schema";
 import { product_category_table } from "@prisma/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PhilippinePeso, PlusCircle, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -30,7 +30,8 @@ const CreateProductPage = () => {
   const router = useRouter();
 
   const { userData } = useUserDataStore();
-  const [categories, setCategories] = useState<product_category_table[]>([]);
+
+  const queryClient = useQueryClient();
 
   const {
     control,
@@ -68,30 +69,12 @@ const CreateProductPage = () => {
     name: "products",
   });
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabaseClient
-          .schema("product_schema")
-          .from("product_category_table")
-          .select("*");
-
-        if (error) {
-          toast.error(error.message);
-        }
-
-        setCategories(data || []);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("Error fetching categories");
-        }
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => productService.getProductCategories(),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 10,
+  });
 
   const onSubmit = async (data: ProductFormType) => {
     try {
@@ -104,6 +87,8 @@ const CreateProductPage = () => {
       await productService.createProduct(formattedProducts);
 
       toast.success("Product created successfully");
+
+      queryClient.invalidateQueries({ queryKey: ["product"] });
       router.push(
         `/${userData?.teamMemberProfile.team_member_team.toLocaleLowerCase()}/admin/product`
       );
@@ -199,14 +184,16 @@ const CreateProductPage = () => {
                       <SelectValue placeholder="Select Collections" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem
-                          key={category.product_category_id}
-                          value={category.product_category_id}
-                        >
-                          {category.product_category_name}
-                        </SelectItem>
-                      ))}
+                      {categoriesData?.map(
+                        (category: product_category_table) => (
+                          <SelectItem
+                            key={category.product_category_id}
+                            value={category.product_category_id}
+                          >
+                            {category.product_category_name}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                 )}

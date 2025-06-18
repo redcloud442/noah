@@ -32,6 +32,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoBagOutline } from "react-icons/io5";
 import { toast } from "sonner";
+
 const ShoppingCartModal = () => {
   const [open, setOpen] = useState(false);
 
@@ -91,7 +92,7 @@ const ShoppingCartModal = () => {
           parsedCart.products = parsedCart.products.filter(
             (item: Product) => item.cart_id !== id
           );
-          localStorage.setItem("shoppingCart", JSON.stringify(parsedCart));
+        localStorage.setItem("shoppingCart", JSON.stringify(parsedCart));
         }
         setCart({
           ...cart,

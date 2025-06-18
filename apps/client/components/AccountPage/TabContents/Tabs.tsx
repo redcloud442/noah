@@ -25,21 +25,21 @@ const TabButton = ({ tab }: { tab: string }) => {
   const orderQuery = useOrderQuery(15, activePage);
   const addressQuery = useAddressQuery(15, activePage);
 
-  const { data, isLoading } =
-    activeTab === "orders" ? orderQuery : addressQuery;
+  const data = activeTab === "orders" ? orderQuery.data : addressQuery.data;
 
   const orders =
     activeTab === "orders"
-      ? (data as { orders: order_table[]; count: number })?.orders || []
+      ? (data as unknown as { orders: order_table[]; count: number })?.orders ||
+        []
       : [];
 
   const address =
     activeTab === "address"
-      ? (data as { address: user_address_table[]; count: number })?.address ||
-        []
+      ? (data as unknown as { address: user_address_table[]; count: number })
+          ?.address || []
       : [];
 
-  const count = data?.count as number;
+  const count = (data as unknown as { count: number })?.count || 0;
 
   return (
     <div className="flex justify-start">
@@ -66,7 +66,7 @@ const TabButton = ({ tab }: { tab: string }) => {
             count={count}
             setActivePage={setActivePage}
             activePage={activePage}
-            isLoading={isLoading}
+            isLoading={orderQuery.isLoading}
           />
         </TabsContent>
 
@@ -76,7 +76,7 @@ const TabButton = ({ tab }: { tab: string }) => {
             count={count}
             setActivePage={setActivePage}
             activePage={activePage}
-            isLoading={isLoading}
+            isLoading={addressQuery.isLoading}
           />
         </TabsContent>
 

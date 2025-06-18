@@ -1,6 +1,3 @@
-"use client";
-
-import { ProductType } from "@/utils/types";
 import HeroSection from "../HeroSection/HeroSection";
 import HighlightSecond from "../HighlightSecond/HighlightSeccond";
 import HighlightSection from "../HighlightSection/HighlightSection";
@@ -8,20 +5,16 @@ import ModelSection from "../ModelSection/ModelSection";
 import ResellerSection from "../ResellerSection/ResellerSection";
 import SoloHighlight from "../SoloHighlight/SoloHighlight";
 
-type Variant = {
-  variants: ProductType[];
-};
-
-const HomeSection = ({ variants }: Variant) => {
+const HomeSection = () => {
   return (
-    <main className="flex flex-col w-full min-h-screen h-full">
+    <section className="flex flex-col w-full min-h-screen h-full">
       <HeroSection />
-      <ModelSection variants={variants} />
+      <ModelSection />
       <SoloHighlight />
       <HighlightSecond />
       <HighlightSection />
       <ResellerSection />
-    </main>
+    </section>
   );
 };
 

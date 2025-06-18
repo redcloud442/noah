@@ -1,87 +1,151 @@
 import { siteConfig } from "@/components/config/site";
 import Link from "next/link";
-import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import { FaEnvelope, FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 export const Footer = () => {
   return (
-    <footer className="bg-zinc-950 text-white py-10 relative">
-      <div className="container mx-auto flex flex-col items-center justify-between space-y-8 md:flex-row md:space-y-0 px-6">
-        {/* Brand Section */}
-        <div className="flex flex-col space-y-4 text-center">
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl font-bold">Noir</h1>
-            <p className="mt-2 text-sm text-white/90">
-              Elevate your style with Noir – where luxury meets fashion.
-            </p>
-          </div>
-
-          <div className="text-center md:text-left">
-            <p className="text-lg font-semibold mb-2">Subscribe Now</p>
-            <p className="text-sm text-white/80 mb-4">
-              Get the latest updates, promotions, and trends directly to your
-              inbox.
-            </p>
-            <form className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="px-4 py-2 rounded bg-white text-black w-64"
-              />
-              <Button
-                type="submit"
-                className="px-6 py-2 bg-white text-black rounded hover:bg-gray-200 font-medium"
-              >
-                Subscribe
-              </Button>
-            </form>
-          </div>
-        </div>
-
-        {/* 📬 Subscribe Section */}
-
-        {/* Navigation Links */}
-        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-8 text-center">
-          <Link href="/about" className="hover:text-gray-300">
-            About Us
-          </Link>
-          <Link href="/contact" className="hover:text-gray-300">
-            Contact
-          </Link>
-          <Link href="/privacy" className="hover:text-gray-300">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-gray-300">
-            Terms of Service
-          </Link>
-        </div>
-
-        {/* Social Media Icons */}
-        <div className="flex space-x-4">
-          <Link href={siteConfig.links.tiktok} target="_blank" rel="noreferrer">
-            <FaTiktok className="w-6 h-6 hover:text-gray-400" />
-          </Link>
-          <Link
-            href={siteConfig.links.facebook}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <FaFacebook className="w-6 h-6 hover:text-gray-400" />
-          </Link>
-          <Link
-            href={siteConfig.links.instagram}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <FaInstagram className="w-6 h-6 hover:text-gray-400" />
-          </Link>
-        </div>
+    <footer className="bg-zince-950 text-white relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]"></div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="mt-6 pt-4 text-center text-sm text-white/90">
-        © {new Date().getFullYear()} Noir. All Rights Reserved.
+      <div className="relative z-10">
+        {/* Main Footer Content */}
+        <div className="container mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            {/* Brand Section */}
+            <div className="lg:col-span-2 space-y-6">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Noir
+                </h1>
+                <p className="mt-3 text-lg text-gray-300 max-w-md leading-relaxed">
+                  Elevate your style with Noir – where luxury meets fashion.
+                  Discover timeless pieces that define elegance.
+                </p>
+              </div>
+
+              {/* Newsletter Signup */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <FaEnvelope className="text-white/80" />
+                  <h3 className="text-xl font-semibold">Stay in Style</h3>
+                </div>
+                <p className="text-gray-300 mb-6 leading-relaxed">
+                  Get exclusive access to new collections, style tips, and
+                  special offers.
+                </p>
+                <form className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 rounded-xl px-4 py-3"
+                  />
+                  <Button
+                    type="submit"
+                    className="bg-white text-black hover:bg-gray-100 font-semibold px-8 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    Subscribe
+                  </Button>
+                </form>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="space-y-6 sm:text-start text-center">
+              <h3 className="text-xl font-semibold text-white">Quick Links</h3>
+              <nav className="flex flex-col space-y-4">
+                <Link
+                  href="/about"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/contact"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
+                >
+                  Contact
+                </Link>
+                <Link
+                  href="/privacy"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href="/terms"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
+                >
+                  Terms of Service
+                </Link>
+              </nav>
+            </div>
+
+            {/* Social Media */}
+            <div className="space-y-6 sm:text-start text-center">
+              <h3 className="text-xl font-semibold text-white">Follow Us On</h3>
+              <div className="flex flex-col sm:items-start items-center space-y-4">
+                <Link
+                  href={siteConfig.links.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-200 group"
+                >
+                  <div className="p-3 bg-white/10 rounded-full group-hover:bg-white/20 transition-colors sm:block hidden">
+                    <FaInstagram className="w-5 h-5" />
+                  </div>
+                  <span className="group-hover:translate-x-1 transform transition-transform">
+                    Instagram
+                  </span>
+                </Link>
+
+                <Link
+                  href={siteConfig.links.facebook}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-200 group"
+                >
+                  <div className="p-3 bg-white/10 rounded-full group-hover:bg-white/20 transition-colors sm:block hidden">
+                    <FaFacebook className="w-5 h-5" />
+                  </div>
+                  <span className="group-hover:translate-x-1 transform transition-transform">
+                    Facebook
+                  </span>
+                </Link>
+
+                <Link
+                  href={siteConfig.links.tiktok}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-200 group"
+                >
+                  <div className="p-3 bg-white/10 rounded-full group-hover:bg-white/20 transition-colors sm:block hidden">
+                    <FaTiktok className="w-5 h-5" />
+                  </div>
+                  <span className="group-hover:translate-x-1 transform transition-transform">
+                    TikTok
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-white/10 bg-black/20 backdrop-blur-sm">
+          <div className="container mx-auto px-6 py-6">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <p className="text-gray-400 text-sm sm:text-start text-center">
+                © {new Date().getFullYear()} Noir. All rights reserved. Crafted
+                with passion for fashion.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );

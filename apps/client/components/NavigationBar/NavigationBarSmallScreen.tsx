@@ -1,6 +1,12 @@
 "use client";
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import useUserDataStore from "@/lib/userDataStore";
 import { createClient } from "@/utils/supabase/client";
 import { LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
@@ -71,6 +77,9 @@ export const MobileNavigationBar = ({
             </Button>
           </SheetTrigger>
           <SheetContent className="bg-black text-white px-6 py-6 space-y-6">
+            <SheetTitle className="text-white hidden"></SheetTitle>
+            <SheetDescription className="text-white hidden"></SheetDescription>
+
             <div className="space-y-3">
               <p className="text-sm uppercase font-semibold text-gray-400">
                 Collections
@@ -126,14 +135,13 @@ export const MobileNavigationBar = ({
                   </Link>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
+                    className="w-full justify-start p-0"
                     onClick={() => {
                       handleLogout();
                       setOpen(false);
                     }}
                   >
-                    <LogOut className="w-5 h-5 mr-2" />
+                    <LogOut className="w-5 h-5" />
                     Logout
                   </Button>
                 </>

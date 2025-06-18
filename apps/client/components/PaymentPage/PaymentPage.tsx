@@ -16,7 +16,8 @@ import {
   PaymentCreatePaymentFormData,
 } from "@/utils/schema";
 import { order_table } from "@prisma/client";
-import { Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
+import { Building2, Clock, CreditCard, Loader2, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FieldErrors, useForm } from "react-hook-form";
@@ -90,11 +91,11 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
         }
       }
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error creating payment method");
-      }
+      toast.error(
+        error instanceof AxiosError
+          ? error.response?.data.message || error.response?.data.error
+          : "Error creating payment method"
+      );
     }
   };
 
@@ -119,182 +120,341 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
   const cardErrors = errors as FieldErrors<z.infer<typeof cardPaymentSchema>>;
 
   return (
-    <div className="text-black min-h-screen bg-white h-full mt-24 pt-20">
-      <div className="max-w-5xl mx-auto bg-white p-6 shadow-md rounded-md border-2">
-        {/* Order Info */}
-        <div className="flex justify-between items-center border-b pb-4">
-          <h1 className="text-2xl font-bold">Order #{order.order_number}</h1>
-          <p className="text-sm text-gray-500">
-            {new Date(order.order_created_at).toLocaleString()}
-          </p>
-        </div>
+    <div className="min-h-screen pt-24">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen pt-10">
+        <div className="max-w-5xl mx-auto">
+          {/* Enhanced Header Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8">
+              <div className="flex justify-between items-start text-white">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">
+                    Complete Your Payment
+                  </h1>
+                  <div className="flex items-center text-slate-200">
+                    <span className="text-lg">Order #{order.order_number}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center text-slate-300 mb-2">
+                    <Clock className="w-4 h-4 mr-2" />
+                    <span className="text-sm">
+                      {new Date(order.order_created_at).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Payment Method Selection */}
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
-          <Accordion type="single" collapsible>
-            {/* Cards */}
-            <AccordionItem value="card">
-              <AccordionTrigger>Credit/Debit Card</AccordionTrigger>
-              <AccordionContent>
-                <CardContent className="grid grid-cols-2 gap-4 p-4">
-                  {paymentMethods.card.map((card) => (
-                    <label
-                      key={card}
-                      className={`border p-4 rounded-lg flex items-center cursor-pointer ${
-                        selectedMethod === card ? "border-blue-500" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        {...register("payment_method")}
-                        value={card}
-                        onChange={() => {
-                          setSelectedMethod(card);
-                          handleReset("card");
-                        }}
-                        className="hidden"
-                      />
-                      <span className="ml-2">{card}</span>
-                    </label>
-                  ))}
-                </CardContent>
-                {paymentMethod === "card" && (
-                  <div className="p-4">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      type="text"
-                      {...register("payment_details.card.card_number", {
-                        required: true,
-                      })}
-                    />
-                    {cardErrors.payment_details?.card?.card_number && (
-                      <p className="text-red-500 text-sm">
-                        Card number is required
+          {/* Enhanced Payment Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <Accordion type="single" collapsible className="space-y-4">
+              {/* Enhanced Cards Section */}
+              <AccordionItem
+                value="card"
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+              >
+                <AccordionTrigger className="hover:no-underline p-6 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-slate-800">
+                        Credit/Debit Card
+                      </h3>
+                      <p className="text-slate-500 text-sm">
+                        Pay securely with your card
                       </p>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          type="text"
-                          {...register("payment_details.card.card_expiry", {
-                            required: true,
-                          })}
-                        />
-                        {cardErrors.payment_details?.card?.card_expiry && (
-                          <p className="text-red-500 text-sm">
-                            Expiry date is required
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          type="text"
-                          {...register("payment_details.card.card_cvv", {
-                            required: true,
-                          })}
-                        />
-                        {cardErrors.payment_details?.card?.card_cvv && (
-                          <p className="text-red-500 text-sm">
-                            CVV is required
-                          </p>
-                        )}
-                      </div>
                     </div>
                   </div>
+                </AccordionTrigger>
+                <AccordionContent className="border-t border-slate-100">
+                  <CardContent className="p-6 bg-slate-50">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      {paymentMethods.card.map((card) => (
+                        <label
+                          key={card}
+                          className={`relative cursor-pointer group transition-all duration-200 ${
+                            selectedMethod === card
+                              ? "transform scale-105"
+                              : "hover:scale-102"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            {...register("payment_method")}
+                            value="card"
+                            onChange={() => {
+                              setSelectedMethod(card);
+                              handleReset("card");
+                            }}
+                            className="sr-only text-black"
+                          />
+                          <div
+                            className={`
+                            p-4 rounded-xl border-2 text-center transition-all duration-200 flex items-center justify-center
+                            ${
+                              selectedMethod === card
+                                ? "border-blue-500 bg-blue-50 shadow-lg"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                            }
+                          `}
+                          >
+                            <span className="font-semibold text-slate-800">
+                              {card}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+
+                    {paymentMethod === "card" && (
+                      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <h4 className="text-lg font-semibold text-slate-800 mb-4">
+                          Card Details
+                        </h4>
+                        <div className="space-y-4">
+                          <div>
+                            <Label
+                              htmlFor="cardNumber"
+                              className="text-sm font-medium text-slate-700 mb-2 block"
+                            >
+                              Card Number
+                            </Label>
+                            <Input
+                              id="cardNumber"
+                              type="text"
+                              placeholder="1234 5678 9012 3456"
+                              {...register("payment_details.card.card_number", {
+                                required: true,
+                              })}
+                              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
+                            />
+                            {cardErrors.payment_details?.card?.card_number && (
+                              <p className="text-red-500 text-sm mt-1">
+                                Card number is required
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label
+                                htmlFor="expiry"
+                                className="text-sm font-medium text-slate-700 mb-2 block"
+                              >
+                                Expiry Date
+                              </Label>
+                              <Input
+                                id="expiry"
+                                type="text"
+                                placeholder="MM/YY"
+                                {...register(
+                                  "payment_details.card.card_expiry",
+                                  {
+                                    required: true,
+                                  }
+                                )}
+                                className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
+                              />
+                              {cardErrors.payment_details?.card
+                                ?.card_expiry && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  Expiry date is required
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label
+                                htmlFor="cvv"
+                                className="text-sm font-medium text-slate-700 mb-2 block"
+                              >
+                                CVV
+                              </Label>
+                              <Input
+                                id="cvv"
+                                type="text"
+                                placeholder="123"
+                                {...register("payment_details.card.card_cvv", {
+                                  required: true,
+                                })}
+                                className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
+                              />
+                              {cardErrors.payment_details?.card?.card_cvv && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  CVV is required
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Enhanced E-Wallet Section */}
+              <AccordionItem
+                value="eWallet"
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+              >
+                <AccordionTrigger className="hover:no-underline p-6 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
+                      <Wallet className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-slate-800">
+                        E-Wallet
+                      </h3>
+                      <p className="text-slate-500 text-sm">
+                        Quick and convenient digital payments
+                      </p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="border-t border-slate-100">
+                  <CardContent className="p-6 bg-slate-50">
+                    <div className="grid grid-cols-3 gap-4">
+                      {paymentMethods.eWallet.map((wallet) => (
+                        <label
+                          key={wallet}
+                          className={`relative cursor-pointer group transition-all duration-200 ${
+                            selectedMethod === wallet
+                              ? "transform scale-105"
+                              : "hover:scale-102"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            {...register("payment_method")}
+                            value="e_wallet"
+                            onChange={() => {
+                              setSelectedMethod(wallet);
+                              handleReset(
+                                "e_wallet",
+                                wallet as "GCash" | "GrabPay" | "PayMaya"
+                              );
+                            }}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`
+                            p-4 rounded-xl border-2 text-center transition-all duration-200 flex items-center justify-center
+                            ${
+                              selectedMethod === wallet
+                                ? "border-green-500 bg-green-50 shadow-lg"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                            }
+                          `}
+                          >
+                            <span className="font-semibold text-slate-800">
+                              {wallet}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Enhanced Online Banking Section */}
+              <AccordionItem
+                value="onlineBanking"
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+              >
+                <AccordionTrigger className="hover:no-underline p-6 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-slate-800">
+                        Online Banking
+                      </h3>
+                      <p className="text-slate-500 text-sm">
+                        Direct bank transfers
+                      </p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="border-t border-slate-100">
+                  <CardContent className="p-6 bg-slate-50">
+                    <div className="grid grid-cols-2 gap-4">
+                      {paymentMethods.onlineBanking.map((bank) => (
+                        <label
+                          key={bank}
+                          className={`relative cursor-pointer group transition-all duration-200 ${
+                            selectedMethod === bank
+                              ? "transform scale-105"
+                              : "hover:scale-102"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            {...register("payment_method")}
+                            value="online_banking"
+                            onChange={() => {
+                              setSelectedMethod(bank);
+                              handleReset(
+                                "online_banking",
+                                bank as "BPI" | "UnionBank"
+                              );
+                            }}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`
+                            p-4 rounded-xl border-2 text-center transition-all duration-200 flex items-center justify-center
+                            ${
+                              selectedMethod === bank
+                                ? "border-purple-500 bg-purple-50 shadow-lg"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                            }
+                          `}
+                          >
+                            <span className="font-semibold text-slate-800">
+                              {bank}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </CardContent>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/* Enhanced Submit Button */}
+            <div className="pt-6">
+              <Button
+                type="submit"
+                disabled={!selectedMethod || isSubmitting}
+                className={`
+                  w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform text-white
+                  ${
+                    selectedMethod && !isSubmitting
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl hover:scale-105"
+                      : "bg-slate-400 cursor-not-allowed"
+                  }
+                `}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Pay Now"
                 )}
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* E-Wallet */}
-            <AccordionItem value="eWallet">
-              <AccordionTrigger>E-Wallet</AccordionTrigger>
-              <AccordionContent>
-                <CardContent className="grid grid-cols-3 gap-4 p-4">
-                  {paymentMethods.eWallet.map((wallet) => (
-                    <label
-                      key={wallet}
-                      className={`border p-4 rounded-lg flex items-center cursor-pointer ${
-                        selectedMethod === wallet ? "border-blue-500" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        {...register("payment_method")}
-                        value={wallet}
-                        onChange={() => {
-                          setSelectedMethod(wallet);
-                          handleReset(
-                            "e_wallet",
-                            wallet as "GCash" | "GrabPay" | "PayMaya"
-                          );
-                        }}
-                        className="hidden"
-                      />
-                      <span className="ml-2">{wallet}</span>
-                    </label>
-                  ))}
-                </CardContent>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Online Banking */}
-            <AccordionItem value="onlineBanking">
-              <AccordionTrigger>Online Banking</AccordionTrigger>
-              <AccordionContent>
-                <CardContent className="grid grid-cols-2 gap-4 p-4">
-                  {paymentMethods.onlineBanking.map((bank) => (
-                    <label
-                      key={bank}
-                      className={`border p-4 rounded-lg flex items-center cursor-pointer ${
-                        selectedMethod === bank ? "border-blue-500" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        {...register("payment_method")}
-                        value={bank}
-                        onChange={() => {
-                          setSelectedMethod(bank);
-                          handleReset(
-                            "online_banking",
-                            bank as "BPI" | "UnionBank"
-                          );
-                        }}
-                        className="hidden"
-                      />
-                      <span className="ml-2">{bank}</span>
-                    </label>
-                  ))}
-                </CardContent>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          {/* Submit Button */}
-          <div className="mt-6">
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={!selectedMethod}
-              className="w-full text-white"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Pay Now"
-              )}
-            </Button>
-          </div>
-        </form>
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

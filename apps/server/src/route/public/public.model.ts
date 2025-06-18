@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 import type { ProductPublicParams } from "../../utils/schema.js";
 
 export const productPublicModel = async (params: ProductPublicParams) => {
@@ -8,6 +9,14 @@ export const productPublicModel = async (params: ProductPublicParams) => {
   const filter: Prisma.product_variant_tableWhereInput = {};
   const sortFilter: Prisma.product_variant_tableOrderByWithRelationInput = {};
   const offset = (skip - 1) * take;
+
+  const cacheKey = `product_public_${search}_${category}_${sort}_${take}_${skip}`;
+
+  const cachedProducts = await redis.get(cacheKey);
+
+  if (cachedProducts) {
+    return cachedProducts;
+  }
 
   if (search) {
     filter.product_variant_product = {
@@ -45,10 +54,13 @@ export const productPublicModel = async (params: ProductPublicParams) => {
         product_price: "desc",
       };
     }
+
     if (sort === "featured") {
       sortFilter.product_variant_is_featured = "desc";
     }
   }
+
+  // Fetch paginated product variants
   const products = await prisma.product_variant_table.findMany({
     where: {
       product_variant_is_deleted: false,
@@ -64,16 +76,74 @@ export const productPublicModel = async (params: ProductPublicParams) => {
     skip: offset,
   });
 
-  const count = await prisma.product_table.count({
-    where: {
-      ...filter,
-      product_variants: { some: { product_variant_is_deleted: false } },
+  // Build filter for product_table.count()
+  const countWhere: Prisma.product_tableWhereInput = {
+    product_variants: {
+      some: {
+        product_variant_is_deleted: false,
+      },
     },
+  };
+
+  if (search) {
+    countWhere.product_name = {
+      contains: search,
+      mode: "insensitive",
+    };
+  }
+
+  if (category) {
+    countWhere.product_category_id = category;
+  }
+
+  const count = await prisma.product_table.count({
+    where: countWhere,
   });
 
-  return {
+  const returnData = {
     data: products,
     count,
     hasMore: count > offset + products.length,
   };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 60 * 5,
+  });
+
+  return returnData;
+};
+
+export const productGetAllProductOptionsModel = async () => {
+  const cacheKey = `product_all_product_options`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
+  const categories = await prisma.product_category_table.findMany();
+
+  const teams = await prisma.team_table.findMany();
+
+  const categoriesData = categories.map((item) => ({
+    label: item.product_category_name,
+    value: item.product_category_id,
+  }));
+
+  const teamsData = teams.map((item) => ({
+    label: item.team_name,
+    value: item.team_id,
+  }));
+
+  const returnData = {
+    categories: categoriesData,
+    teams: teamsData,
+  };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 60 * 5,
+  });
+
+  return returnData;
 };

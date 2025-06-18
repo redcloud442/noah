@@ -66,26 +66,24 @@ export const createPaymentIntent = async (
     }
   }
 
-  const dataAmount = amount + 10000;
+  const dataAmount = Math.round(amount * 100);
 
   const response = await axios.post(
     "https://api.paymongo.com/v1/payment_intents",
     {
       data: {
         attributes: {
-          amount: dataAmount,
-          payment_method_allowed: [
-            "qrph",
-            "card",
-            "dob",
-            "paymaya",
-            "billease",
-            "gcash",
-            "grab_pay",
-          ],
-          payment_method_options: { card: { request_three_d_secure: "any" } },
+          amount: dataAmount, // must be an integer in centavos
+          payment_method_allowed: ["card", "dob", "paymaya", "gcash"],
+          payment_method_options: {
+            card: {
+              request_three_d_secure: "any",
+            },
+          },
           currency: "PHP",
           capture_type: "automatic",
+          description: `Payment for order ${order_number}`,
+          statement_descriptor: "Order Payment",
         },
       },
     },
@@ -93,10 +91,14 @@ export const createPaymentIntent = async (
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        authorization: `Basic c2tfdGVzdF9HcDNBRzk3TWZqb2tqTG5IWG5qejkzcEY6`,
+        authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
       },
     }
   );
+
+  if (response.status !== 200) {
+    throw new Error("Failed to create payment intent");
+  }
 
   const data = response.data;
 
@@ -206,7 +208,6 @@ export const createPaymentMethod = async (
       }
     }
 
-    // Create Payment Method
     const createPaymentMethod = await axios.post(
       "https://api.paymongo.com/v1/payment_methods",
       {
@@ -237,7 +238,7 @@ export const createPaymentMethod = async (
         headers: {
           accept: "application/json",
           "content-type": "application/json",
-          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+          authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
         },
       }
     );
@@ -262,7 +263,7 @@ export const createPaymentMethod = async (
         headers: {
           accept: "application/json",
           "content-type": "application/json",
-          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+          authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
         },
       }
     );
@@ -303,7 +304,7 @@ export const getPayment = async (params: {
         headers: {
           accept: "application/json",
           "content-type": "application/json",
-          authorization: `Basic ${process.env.PAYMONGO_SECRET_KEY}`,
+          authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
         },
       }
     );

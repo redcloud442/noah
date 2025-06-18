@@ -27,7 +27,6 @@ export const authLoginController = async (c: Context) => {
 
     return c.json(result, 200);
   } catch (error) {
-    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };
@@ -58,7 +57,6 @@ export const authCallbackController = async (c: Context) => {
 
     return c.json(result, 200);
   } catch (error) {
-    console.log(error);
     return c.json({ message: "Error" }, 500);
   }
 };

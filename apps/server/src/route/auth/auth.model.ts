@@ -140,8 +140,6 @@ export const authCallbackModel = async (params: {
 
   let redirectTo = "http://localhost:3001/account";
 
-  const supabase = supabaseClient;
-
   const isUserExists = await prisma.user_table.findUnique({
     where: {
       user_id: userId,
@@ -223,7 +221,7 @@ export const authCallbackModel = async (params: {
   }
 
   if (userData.team_member_table[0].team_member_role === "ADMIN") {
-    redirectTo = `/${userData.team_member_table[0].team_member_team.team_name.toLowerCase()}/admin`;
+    redirectTo = `http://localhost:3001/${userData.team_member_table[0].team_member_team.team_name.toLowerCase()}/admin`;
   } else {
     redirectTo = `http://localhost:3001/account`;
   }

@@ -1,7 +1,6 @@
 import EditProductPage from "@/components/EditProductPage/EditProductPage";
 import { findProductBySlugAdmin } from "@/utils/function";
 import prisma from "@/utils/prisma/prisma";
-import { protectionAdminMiddleware } from "@/utils/protectionMiddleware";
 import { redirect } from "next/navigation";
 
 const page = async ({
@@ -9,8 +8,6 @@ const page = async ({
 }: {
   params: Promise<{ productSlug: string; teamName: string }>;
 }) => {
-  await protectionAdminMiddleware();
-
   const { productSlug, teamName } = await params;
 
   const { product } = await findProductBySlugAdmin(productSlug, prisma);

@@ -3,13 +3,23 @@
 import useUserDataStore from "@/lib/userDataStore";
 import { ordersService } from "@/services/orders";
 import { formatDate } from "@/utils/function";
-import { Order } from "@/utils/types";
+import { OrderItem } from "@/utils/types";
 import { order_table } from "@prisma/client";
+import { useQuery } from "@tanstack/react-query";
+import {
+  CreditCard,
+  MapPin,
+  Package,
+  Receipt,
+  Truck,
+  User,
+} from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Separator } from "../ui/separator";
 import { Skeleton } from "../ui/skeleton";
 
 type OrderDetailsPageProps = {
@@ -18,224 +28,341 @@ type OrderDetailsPageProps = {
 
 const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   const { userData } = useUserDataStore();
-  const [orderDetails, setOrderDetails] = useState<Order>({
-    ...order,
-    order_total: order.order_total || 0,
-    order_date: new Date().toISOString(),
-    order_items: [],
+
+  const { data: orderItems = [], isLoading } = useQuery<OrderItem[]>({
+    queryKey: ["orderItems", order.order_number, userData?.userProfile.user_id],
+    queryFn: async () => {
+      const items = await ordersService.getOrderItems(order.order_number);
+      return [items];
+    },
+    enabled: !!userData && !!order.order_number,
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        if (!userData) return;
-        setIsLoading(true);
-        const response = await ordersService.getOrderItems(order.order_number);
-
-        setOrderDetails({
-          ...orderDetails,
-          order_items: response,
-        });
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [order, userData]);
-
-  const subtotal = orderDetails.order_items.reduce(
+  const subtotal = orderItems.reduce(
     (total, product) =>
       total + product.order_item_price * product.order_item_quantity,
     0
   );
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "PAID":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "PENDING":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "CANCELLED":
+        return "bg-red-50 text-red-700 border-red-200";
+      case "PROCESSING":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
   return (
-    <div className="min-h-screen h-full px-0 sm:px-6 text-black relative">
-      <div className="space-y-1">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Order Number: {order.order_number}
-        </h1>
-        <p className="text-muted-foreground">
-          View and manage all orders in the system. You can search for orders by
-          order number, user email, or payment method.
-        </p>
-      </div>
-      <div className="w-full sm:p-6 rounded-md flex flex-col xl:flex-row gap-6 h-auto">
-        <div className="w-full md:w-1/2 space-y-6 bg-white p-6 rounded-md h-fit">
-          <div className="flex justify-between items-center border-b pb-2">
-            <h1 className="text-2xl font-bold pb-2">
-              Order Details # {order.order_number}
-            </h1>
+    <div className="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8 text-black">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Receipt className="h-6 w-6 text-black" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold">
+                    Order #{order.order_number}
+                  </h1>
+                  <p className="text-sm">
+                    Placed on {formatDate(order.order_created_at)}
+                  </p>
+                </div>
+              </div>
+            </div>
             <Badge
-              className={`${
-                order.order_status === "PAID"
-                  ? "bg-green-100 text-green-700"
-                  : order.order_status === "PENDING"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-              } font-semibold`}
+              className={`${getStatusColor(order.order_status)} px-4 py-2 text-sm font-medium border w-fit`}
             >
               {order.order_status}
             </Badge>
           </div>
-
-          {/* Order Summary */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Order Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Order Date</Label>
-                <Input readOnly value={formatDate(order.order_created_at)} />
-              </div>
-              <div>
-                <Label>Payment Method</Label>
-                <Input
-                  readOnly
-                  value={order.order_payment_method?.toUpperCase() || "N/A"}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Delivery Section */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Delivery Information</h2>
-            <div>
-              <Label>Email</Label>
-              <Input readOnly type="email" value={order.order_email} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>First Name</Label>
-                <Input readOnly value={order.order_first_name} />
-              </div>
-              <div>
-                <Label>Last Name</Label>
-                <Input readOnly value={order.order_last_name} />
-              </div>
-            </div>
-            <div>
-              <Label>Address</Label>
-              <Input readOnly value={order.order_address} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>City</Label>
-                <Input readOnly value={order.order_city} />
-              </div>
-              <div>
-                <Label>Barangay</Label>
-                <Input readOnly value={order.order_barangay || "N/A"} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>State / Province</Label>
-                <Input readOnly value={order.order_state} />
-              </div>
-              <div>
-                <Label>Postal Code</Label>
-                <Input readOnly value={order.order_postal_code} />
-              </div>
-            </div>
-            <div>
-              <Label>Phone Number</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
-                  +63
-                </span>
-                <Input
-                  readOnly
-                  type="text"
-                  className="pl-12"
-                  value={order.order_phone}
-                />
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="w-full md:w-1/2 space-y-4">
-          <div className="bg-white p-6 shadow-md rounded-md space-y-4">
-            <h2 className="text-xl font-semibold">Order Summary</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Order Items */}
+            <Card className="shadow-sm border-0 bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg text-black">
+                  <Package className="h-5 w-5 text-black" />
+                  Order Items
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-4">
+                        <Skeleton className="w-20 h-20 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                          <Skeleton className="h-3 w-1/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : orderItems.length > 0 ? (
+                  <div className="space-y-6">
+                    {orderItems.map((product, index) => (
+                      <div key={product.order_item_id}>
+                        <div className="flex gap-4 p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
+                          <div className="relative flex-shrink-0">
+                            <Image
+                              src={
+                                product.product_variant_image ||
+                                "/assets/model/QR_59794.jpg"
+                              }
+                              alt={product.product_variant_name}
+                              width={80}
+                              height={80}
+                              className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                            />
+                            <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[24px] text-center">
+                              {product.order_item_quantity}
+                            </div>
+                          </div>
 
-            {isLoading ? (
-              <div className="flex flex-col gap-4 justify-start items-start h-full">
-                <Skeleton className="w-full bg-gray-200 h-20" />
-                <Skeleton className="w-full max-w-sm bg-gray-200 h-20" />
-                <Skeleton className="w-full max-w-xs bg-gray-200 h-20" />
-              </div>
-            ) : orderDetails.order_items.length > 0 ? (
-              orderDetails.order_items.map((product) => (
-                <div
-                  key={product.order_item_id}
-                  className="flex items-center bg-white text-black gap-4"
-                >
-                  <div className="relative">
-                    <Image
-                      src={
-                        product.product_variant_image ||
-                        "/assets/model/QR_59794.jpg"
-                      }
-                      alt={product.product_variant_name}
-                      width={80}
-                      height={80}
-                      className="w-20 h-20 object-contain rounded-xl"
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-black text-lg mb-2">
+                              {product.product_variant_name}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2 text-sm text-black mb-3">
+                              <div>
+                                Color:{" "}
+                                <span className="font-medium">
+                                  {product.product_variant_color}
+                                </span>
+                              </div>
+                              <div className="text-black">
+                                Size:{" "}
+                                <span className="font-medium">
+                                  {product.product_variant_size}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm text-black">
+                                Qty: {product.order_item_quantity} × ₱
+                                {product.order_item_price?.toLocaleString() ||
+                                  "0"}
+                              </div>
+                              <div className="text-lg font-bold">
+                                ₱
+                                {(
+                                  product.order_item_price *
+                                  product.order_item_quantity
+                                ).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {index < orderItems.length - 1 && (
+                          <Separator className="mt-6" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-black">
+                    <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p>No items found for this order.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Customer Info */}
+            <Card className="shadow-sm border-0 bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg text-black">
+                  <User className="h-5 w-5 text-black" />
+                  Customer Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Email</Label>
+                    <Input
+                      readOnly
+                      value={order.order_email}
+                      className="bg-gray-50 border-gray-200 text-black"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <Input
+                      readOnly
+                      value={`+63${order.order_phone}`}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                </div>
 
-                    {/* Quantity Badge */}
-                    <div className="absolute -top-4 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {product.order_item_quantity}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">First Name</Label>
+                    <Input
+                      readOnly
+                      value={order.order_first_name}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Last Name</Label>
+                    <Input
+                      readOnly
+                      value={order.order_last_name}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delivery Info */}
+            <Card className="shadow-sm border-0 bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg text-black">
+                  <MapPin className="h-5 w-5 text-black" />
+                  Delivery Address
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Address</Label>
+                  <Input
+                    readOnly
+                    value={order.order_address}
+                    className="bg-gray-50 border-gray-200 text-black"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">City</Label>
+                    <Input
+                      readOnly
+                      value={order.order_city}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Barangay</Label>
+                    <Input
+                      readOnly
+                      value={order.order_barangay || "N/A"}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Province</Label>
+                    <Input
+                      readOnly
+                      value={order.order_state}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Postal Code</Label>
+                    <Input
+                      readOnly
+                      value={order.order_postal_code}
+                      className="bg-gray-50 border-gray-200 text-black"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
+            {/* Summary */}
+            <Card className="shadow-sm border-0 bg-white sticky top-6">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Receipt className="h-5 w-5 text-black" />
+                  Order Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 text-black">
+                {orderItems.length > 0 && (
+                  <>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>
+                          Subtotal (
+                          {orderItems.reduce(
+                            (total, item) => total + item.order_item_quantity,
+                            0
+                          )}{" "}
+                          items)
+                        </span>
+                        <span className="font-medium">
+                          ₱{subtotal.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="flex items-center gap-1">
+                          <Truck className="h-4 w-4" />
+                          Shipping
+                        </span>
+                        <span className="font-medium text-green-600">Free</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total</span>
+                        <span>₱{subtotal.toLocaleString()}</span>
+                      </div>
                     </div>
-                  </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
-                  {/* Product Details */}
-                  <div className="flex-1">
-                    <p className="font-semibold text-lg uppercase">
-                      {product.product_variant_name} -{" "}
-                      {product.product_variant_color}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Size: {product.product_variant_size}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Color: {product.order_item_color}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Quantity: {product.order_item_quantity}
-                    </p>
-                    <p className="text-gray-700 font-bold">
-                      ₱
-                      {(
-                        product.order_item_price * product.order_item_quantity
-                      ).toLocaleString()}
-                    </p>
+            {/* Payment Details */}
+            <Card className="shadow-sm border-0 bg-white">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5 text-black" />
+                  Payment Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Payment Method</Label>
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-black">
+                    <span className="font-medium">
+                      {order.order_payment_method?.toUpperCase() || "N/A"}
+                    </span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No items found for this order.</p>
-            )}
-            {orderDetails.order_items.length > 0 && (
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>₱{subtotal.toLocaleString()}</span>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Order Date</Label>
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-black">
+                    <span className="font-medium">
+                      {formatDate(order.order_created_at)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span>₱0.00</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>₱{subtotal.toLocaleString()}</span>
-                </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

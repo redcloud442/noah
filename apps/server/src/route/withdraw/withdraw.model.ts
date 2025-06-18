@@ -78,7 +78,7 @@ export const withdrawalListModel = async (params: typeWithdrawalListSchema) => {
 
   const filter: Prisma.reseller_withdrawal_tableWhereInput = {};
   const statusFilter: Prisma.reseller_withdrawal_tableWhereInput = {};
-  const offset = (skip - 1) * take;
+  const offset = skip ? (skip - 1) * take : 0;
 
   if (search) {
     filter.OR = [
@@ -139,7 +139,9 @@ export const withdrawalListModel = async (params: typeWithdrawalListSchema) => {
   }
 
   const data = await prisma.reseller_withdrawal_table.findMany({
-    where: { ...filter, ...statusFilter },
+    where: {
+      AND: [filter, statusFilter],
+    },
     select: {
       reseller_withdrawal_id: true,
       reseller_withdrawal_amount: true,

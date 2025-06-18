@@ -1,5 +1,5 @@
 import { order_table } from "@prisma/client";
-import { Order, OrderType } from "../utils/types";
+import { OrderItem, OrderType } from "../utils/types";
 import { apiClient } from "./axios";
 
 export const ordersService = {
@@ -22,7 +22,7 @@ export const ordersService = {
       throw new Error("Payment failed");
     }
 
-    return result.data as Order["order_items"];
+    return result.data as OrderItem;
   },
   getAllOrders: async (params: {
     take: number;

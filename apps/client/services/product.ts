@@ -48,7 +48,6 @@ export const productService = {
 
     return data;
   },
-
   getProductCollection: async (params: {
     take: number;
     skip: number;
@@ -56,10 +55,9 @@ export const productService = {
     teamId?: string;
     collectionSlug: string;
   }) => {
-    const { data } = await axios.post(
-      `/api/v1/product/collections/${params.collectionSlug}`,
-      { params }
-    );
+    const { data } = await axios.post(`/api/v1/product/collections/category`, {
+      params,
+    });
 
     if (data.error) {
       throw new Error(data.error);
@@ -84,13 +82,22 @@ export const productService = {
 
     return data;
   },
+  getProductCategories: async () => {
+    const { data } = await axios.get("/api/v1/product/categories");
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  },
   publicProduct: async (params: {
     take: number;
     skip: number;
-    search?: string;
-    category?: string;
-    sort?: string;
-    branch?: string;
+    search?: string | null;
+    category?: string | null;
+    sort?: string | null;
+    branch?: string | null;
   }) => {
     const { data } = await axios.get("/api/v1/publicRoutes/product-public", {
       params,
@@ -112,5 +119,17 @@ export const productService = {
     }
 
     return data;
+  },
+  publicProductOptions: async () => {
+    const { data } = await axios.get("/api/v1/publicRoutes/product-options");
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data as {
+      categories: { label: string; value: string }[];
+      teams: { label: string; value: string }[];
+    };
   },
 };

@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { withdrawalService } from "@/services/withdrawal";
 import { WithdrawalType } from "@/utils/types";
+import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react"; // Optional loading spinner icon
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner"; // Optional toast notification
 import { Button } from "../ui/button";
 
@@ -17,72 +18,74 @@ type WithdrawalModalProps = {
   resellerId: string;
   withdrawalId: string;
   status: "APPROVED" | "REJECTED";
-  setRequest: Dispatch<SetStateAction<WithdrawalType[]>>;
-  setCacheData: Dispatch<
-    SetStateAction<{
-      [key: string]: {
-        data: WithdrawalType[];
-        total: Record<string, number>;
-      };
-    }>
-  >;
+  queryKey: QueryKey;
 };
 
 const WithdrawalModal = ({
   resellerId,
   withdrawalId,
   status,
-  setRequest,
-  setCacheData,
+  queryKey,
 }: WithdrawalModalProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleAction = async () => {
-    setIsLoading(true);
-    try {
-      await withdrawalService.withdrawalAction({
+  const mutation = useMutation({
+    mutationFn: () =>
+      withdrawalService.withdrawalAction({
         resellerId,
         withdrawalId,
         status,
-      });
+      }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
 
-      setRequest((prev) =>
-        prev.map((withdrawal) =>
-          withdrawal.reseller_withdrawal_id === withdrawalId
-            ? { ...withdrawal, reseller_withdrawal_status: status }
-            : withdrawal
-        )
-      );
+      const previousData = queryClient.getQueryData<{
+        data: WithdrawalType[];
+        total: Record<string, number>;
+      }>(queryKey);
 
-      setCacheData((prev) => {
-        const updatedCache = { ...prev };
-        for (const key in updatedCache) {
-          if (
-            updatedCache[key].data.some(
-              (item) => item.reseller_withdrawal_id === withdrawalId
-            )
-          ) {
-            delete updatedCache[key];
-          }
-        }
-        return updatedCache;
-      });
+      if (previousData) {
+        queryClient.setQueryData(queryKey, (old: typeof previousData) => {
+          if (!old) return old;
 
-      setOpen(false);
+          const updatedData = old.data.filter((item) =>
+            item.reseller_withdrawal_id === withdrawalId
+              ? { ...item, reseller_withdrawal_status: status }
+              : item
+          );
 
+          const updatedTotal = {
+            ...old.total,
+            [status]: (old.total[status] ?? 0) + 1,
+            PENDING: (old.total.PENDING ?? 0) - 1,
+          };
+
+          return { data: updatedData, total: updatedTotal };
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Something went wrong. Reverting changes.");
+    },
+    onSuccess: () => {
       toast.success(
         `${status === "APPROVED" ? "Approved" : "Rejected"} successfully!`
       );
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Something went wrong.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+      setOpen(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
+    },
+  });
+
+  const handleAction = () => {
+    mutation.mutate();
   };
 
   return (
@@ -109,11 +112,17 @@ const WithdrawalModal = ({
         </DialogHeader>
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
-          <Button onClick={handleAction} disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleAction} disabled={mutation.isPending}>
+            {mutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Confirm
           </Button>
         </div>

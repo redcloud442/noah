@@ -3,6 +3,7 @@ import {
   productCollectionSlugController,
   productCreateController,
   productGetAllProductController,
+  productGetCategoriesController,
   productGetController,
   productSetFeaturedProductController,
   productVariantCreateController,
@@ -14,6 +15,7 @@ import {
   productCollectionsPostMiddleware,
   productCreateMiddleware,
   productGetAllProductMiddleware,
+  productGetCategoriesMiddleware,
   productSetFeaturedProductMiddleware,
   productUpdateMiddleware,
 } from "./product.middleware.js";
@@ -28,6 +30,18 @@ product.post(
   productCreateController
 );
 
+product.post(
+  "/collections/category",
+  productCollectionSlugMiddleware,
+  productCollectionSlugController
+);
+
+product.get(
+  "/categories",
+  productGetCategoriesMiddleware,
+  productGetCategoriesController
+);
+
 product.post("/", productCreateMiddleware, productVariantCreateController);
 
 product.put("/", productUpdateMiddleware, productVariantUpdateController);
@@ -36,12 +50,6 @@ product.post(
   "/all-product",
   productGetAllProductMiddleware,
   productGetAllProductController
-);
-
-product.post(
-  "/collections/:collectionSlug",
-  productCollectionSlugMiddleware,
-  productCollectionSlugController
 );
 
 product.post(

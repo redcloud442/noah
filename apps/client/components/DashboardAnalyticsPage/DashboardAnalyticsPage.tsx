@@ -46,8 +46,8 @@ const DashboardAnalyticsPage = () => {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: [
       "dashboard",
-      userData?.teamMemberProfile.team_member_team_id,
-      dateFilter,
+      dateFilter.dateFilter.start,
+      dateFilter.dateFilter.end,
     ],
     queryFn: () => {
       return dashboardService.get({
@@ -59,6 +59,8 @@ const DashboardAnalyticsPage = () => {
       });
     },
     enabled: !!userData?.teamMemberProfile.team_member_team_id,
+    staleTime: 1000 * 60 * 4,
+    gcTime: 1000 * 60 * 4,
   });
 
   const handleOnSubmit = async (data: FormData) => {

@@ -1,13 +1,10 @@
 "use client";
 
 import { productService } from "@/services/product";
-import { createClient } from "@/utils/supabase/client";
-import { ProductVariantTypeShop } from "@/utils/types";
-import { product_category_table, team_table } from "@prisma/client";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { HoverVariantTypeCard } from "../CollectionNamePage/CollectionNamePage";
 import { Button } from "../ui/button";
 import { FloatingLabelInput } from "../ui/floating-input";
@@ -18,15 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-type Props = {
-  variants: ProductVariantTypeShop[];
-};
 
 type FormType = {
-  search: string;
-  price: string;
-  category: string;
-  sort: string;
+  search: string | null;
+  price: string | null;
+  category: string | null;
+  sort: string | null;
   branch?: string;
 };
 
@@ -38,137 +32,70 @@ const sortOptions = [
   { label: "Featured", value: "featured" },
 ];
 
-const ShopPage = ({ variants: initialVariants }: Props) => {
-  const supabase = createClient();
+const ShopPage = () => {
   const searchParams = useSearchParams();
   const REFERRAL_CODE = searchParams.get("REFERRAL_CODE") as string;
-  const cache = useRef<Map<string, ProductVariantTypeShop[]>>(new Map());
 
-  const [variants, setVariants] =
-    useState<ProductVariantTypeShop[]>(initialVariants);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [activePage, setActivePage] = useState(2); // Skip value
-  const loaderRef = useRef(null);
-
-  const [categories, setCategories] = useState<product_category_table[]>([]);
-  const [branches, setBranches] = useState<team_table[]>([]);
-  const { register, handleSubmit, control, getValues } = useForm<FormType>({
+  const { register, handleSubmit, control } = useForm<FormType>({
     defaultValues: {
       branch: "16dcbf9a-1904-43f7-a98a-060f6903661d",
     },
   });
 
-  const handleFetchProduct = async () => {
-    try {
-      setIsLoading(true);
-      const { search, category, sort, branch } = getValues();
-      const cacheKey = `${search || ""}-${category || ""}-${sort || ""}-${branch || ""}-${activePage}`;
+  const [formValues, setFormValues] = useState<FormType>({
+    search: null,
+    price: null,
+    category: null,
+    sort: null,
+    branch: "16dcbf9a-1904-43f7-a98a-060f6903661d",
+  });
 
-      if (cache.current.has(cacheKey)) {
-        setVariants((prev) => [...prev, ...cache.current.get(cacheKey)!]);
-      } else {
-        const result = await productService.publicProduct({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["products", formValues],
+      queryFn: ({ pageParam = 1 }) => {
+        const { search, category, sort, branch } = formValues;
+        return productService.publicProduct({
           take: 15,
-          skip: activePage,
+          skip: pageParam,
           search,
           category,
           sort,
           branch,
         });
-
-        cache.current.set(cacheKey, result.data);
-        setVariants((prev) => [...prev, ...result.data]);
-        setHasMore(result.hasMore ?? result.data.length === 15);
-      }
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onSubmit = async (params: FormType) => {
-    try {
-      const { search, category, sort, branch } = params;
-      const cacheKey = `${search || ""}-${category || ""}-${sort || ""}-${branch || ""}-${activePage}`;
-
-      setActivePage(1);
-      setVariants([]);
-      setHasMore(true);
-
-      if (cache.current.has(cacheKey)) {
-        setVariants(cache.current.get(cacheKey)!);
-        return;
-      }
-
-      const result = await productService.publicProduct({
-        take: 15,
-        skip: activePage,
-        search,
-        category,
-        sort,
-        branch,
-      });
-
-      cache.current.set(cacheKey, result.data);
-      setVariants(result.data);
-      setHasMore(result.hasMore ?? result.data.length === 15);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
-    }
-  };
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .schema("product_schema")
-        .from("product_category_table")
-        .select("*");
-
-      if (error) toast.error(error.message);
-      else setCategories(data || []);
-
-      const { data: branchData, error: branchError } = await supabase
-        .schema("team_schema")
-        .from("team_table")
-        .select("*");
-
-      if (branchError) toast.error(branchError.message);
-      else setBranches(branchData || []);
-    };
-
-    fetchCategories();
-  }, []);
-
-  // Infinite scroll observer
-  useEffect(() => {
-    if (!hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setActivePage((prev) => prev + 1);
-        }
       },
-      { threshold: 1 }
-    );
+      getNextPageParam: (lastPage, pages) => {
+        return lastPage.length > 0 ? pages.length + 1 : undefined;
+      },
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 5,
+      initialPageParam: 1,
+    });
 
-    if (loaderRef.current) observer.observe(loaderRef.current);
+  const onSubmit = async (data: FormType) => {
+    setFormValues(data);
+  };
 
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [hasMore]);
+  const handleNextPage = () => {
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  };
 
-  // Fetch products on activePage change
-  useEffect(() => {
-    handleFetchProduct();
-  }, [activePage]);
+  const products = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data);
+  }, [data]);
+
+  const { data: categoriesOptions } = useQuery({
+    queryKey: ["categories-options"],
+    queryFn: () => {
+      return productService.publicProductOptions();
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 5,
+  });
+
+  const { categories, teams } = categoriesOptions || {};
 
   return (
     <div className="min-h-screen w-full mx-auto text-black py-8 mt-24 bg-gray-100">
@@ -190,18 +117,18 @@ const ShopPage = ({ variants: initialVariants }: Props) => {
             control={control}
             name="category"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} {...field}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <SelectTrigger className="w-[150px] text-sm h-8 px-2 py-1">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categories?.map((category) => (
                     <SelectItem
-                      key={category.product_category_id}
-                      value={category.product_category_id}
+                      key={category.value || ""}
+                      value={category.value}
                       className="text-sm"
                     >
-                      {category.product_category_name}
+                      {category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -218,13 +145,13 @@ const ShopPage = ({ variants: initialVariants }: Props) => {
                   <SelectValue placeholder="Branch" />
                 </SelectTrigger>
                 <SelectContent>
-                  {branches.map((branch) => (
+                  {teams?.map((team) => (
                     <SelectItem
-                      key={branch.team_id}
-                      value={branch.team_id}
+                      key={team.value || ""}
+                      value={team.value}
                       className="text-sm"
                     >
-                      {branch.team_name}
+                      {team.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -236,7 +163,7 @@ const ShopPage = ({ variants: initialVariants }: Props) => {
             control={control}
             name="sort"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} {...field}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <SelectTrigger className="w-[150px] text-sm h-8 px-2 py-1">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -265,24 +192,22 @@ const ShopPage = ({ variants: initialVariants }: Props) => {
         </form>
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {variants.map((item) => (
-            <HoverVariantTypeCard
-              key={item.product_variant_id}
-              variant={item}
-              product={item.product_variant_product}
-              currentDate={new Date()}
-              referralCode={REFERRAL_CODE}
-            />
-          ))}
+          {products &&
+            products?.map((item) => (
+              <HoverVariantTypeCard
+                key={`${item.product_variant_id}-${item.product_id}`}
+                variant={item}
+                product={item.product_variant_product}
+                currentDate={new Date()}
+                referralCode={REFERRAL_CODE}
+              />
+            ))}
         </div>
 
         {/* Loader div for IntersectionObserver */}
-        {hasMore && isLoading && (
-          <div
-            ref={loaderRef}
-            className="h-10 w-full flex justify-center items-center"
-          >
-            <p className="text-sm">Loading ...</p>
+        {hasNextPage && isFetchingNextPage && (
+          <div className="h-10 w-full flex justify-center items-center">
+            <Button onClick={handleNextPage}>Load more</Button>
           </div>
         )}
       </div>
