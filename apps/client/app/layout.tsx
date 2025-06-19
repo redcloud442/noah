@@ -26,9 +26,9 @@ const handleFetchCollections = async () => {
       `${process.env.API_URL}/api/v1/publicRoutes/product-collections-all`,
       {
         method: "GET",
-        next: {
-          revalidate: 60 * 10,
-        },
+        // next: {
+        //   revalidate: 60 * 10,
+        // },
       }
     );
 
