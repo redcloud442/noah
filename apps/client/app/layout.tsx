@@ -23,12 +23,12 @@ export const metadata: Metadata = {
 const handleFetchCollections = async () => {
   try {
     const data = await fetch(
-      `${process.env.API_URL}/api/v1/publicRoutes/product-collections-all`,
+      `https://noah-1v48.onrender.com/api/v1/publicRoutes/product-collections-all`,
       {
         method: "GET",
-        // next: {
-        //   revalidate: 60 * 10,
-        // },
+        next: {
+          revalidate: 60 * 10,
+        },
       }
     );
 
