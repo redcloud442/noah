@@ -79,7 +79,7 @@ export const paymentMiddleware = async (c: Context, next: Next) => {
 
   const isAllowed = await rateLimit(
     `rate-limit:${userData.id}:payment-create`,
-    50,
+    5,
     "1m",
     c
   );
@@ -124,7 +124,7 @@ export const paymentCreatePaymentMiddleware = async (
 
   const isAllowed = await rateLimit(
     `rate-limit:${userData.id}:payment-create`,
-    50,
+    5,
     "1m",
     c
   );
@@ -159,7 +159,7 @@ export const paymentGetMiddleware = async (c: Context, next: Next) => {
 
   const isAllowed = await rateLimit(
     `rate-limit:${userData.id}:payment-get`,
-    50,
+    5,
     "1m",
     c
   );

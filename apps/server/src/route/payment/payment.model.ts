@@ -427,9 +427,9 @@ export const getPayment = async (params: {
         });
 
         await resend.emails.send({
-          from: "Noir Clothing <hello@noir-clothing.com>",
+          from: "Noir Clothing <no-reply@noir-clothing.com>",
           to: orderDetails?.order_email ?? "",
-          subject: "✨ Payment confirmed — Your order is on its way!",
+          subject: "Payment confirmed — Your order is on its way!",
           text: `Hi there! Your payment has been successfully processed. Order #${orderDetails?.order_number} is now being prepared for shipment. Track your order at noir-clothing.com/track/${orderDetails?.order_number}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
@@ -484,7 +484,7 @@ export const getPayment = async (params: {
         });
       } else {
         await resend.emails.send({
-          from: "Noir Clothing <hello@noir-clothing.com>",
+          from: "Noir Clothing <no-reply@noir-clothing.com>",
           to: orderDetails?.order_email ?? "",
           subject: "Payment issue — Let's get this sorted",
           text: `Hi there, we encountered an issue processing your payment. Please try again or contact our support team at support@noir-clothing.com if you need assistance.`,
