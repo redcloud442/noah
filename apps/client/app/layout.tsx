@@ -32,7 +32,9 @@ const handleFetchCollections = async () => {
       }
     );
 
-    const { freshDrops, featuredProducts, collections } = await data.json();
+    const response = await data.json();
+
+    const { freshDrops, featuredProducts, collections } = response;
 
     return { freshDrops, featuredProducts, collections };
   } catch (error) {
