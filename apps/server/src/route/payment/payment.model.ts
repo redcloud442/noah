@@ -1,5 +1,5 @@
 import type { user_table } from "@prisma/client";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Resend } from "resend";
 import prisma from "../../utils/prisma.js";
 import type {
@@ -186,12 +186,17 @@ export const createPaymentMethod = async (
       throw new Error("Order not found");
     }
 
-    let expiry_year, expiry_month;
+    let expiry_month, expiry_year;
     if (payment_details?.card.card_expiry) {
       [expiry_month, expiry_year] = payment_details.card.card_expiry.split("/");
 
-      if (!expiry_year || !expiry_month) {
-        throw new Error("Invalid card expiry format. Expected YYYY-MM");
+      if (!expiry_month || !expiry_year) {
+        throw new Error("Invalid card expiry format. Expected MM/YY");
+      }
+
+      // Convert to full year (e.g., "31" → 2031)
+      if (expiry_year.length === 2) {
+        expiry_year = `${expiry_year}`;
       }
     }
 
@@ -201,19 +206,33 @@ export const createPaymentMethod = async (
         data: {
           attributes: {
             type:
-              payment_method === "card" ? "card" : payment_type?.toLowerCase(),
+              payment_method === "card"
+                ? "card"
+                : payment_method === "online_banking"
+                  ? "dob"
+                  : payment_type?.toLowerCase(),
             details:
               payment_method === "card"
                 ? {
-                    card: {
-                      number: payment_details?.card.card_number,
-                      expiry_year,
-                      expiry_month,
-                      cvv: payment_details?.card.card_cvv,
-                    },
+                    card_number: payment_details?.card.card_number,
+                    exp_month: parseInt(expiry_month ?? "0"),
+                    exp_year: parseInt(expiry_year ?? "0"),
+                    cvc: payment_details?.card.card_cvv,
                   }
-                : undefined,
+                : payment_method === "online_banking"
+                  ? {
+                      bank_code:
+                        payment_type?.toLowerCase() === "BPI" ? "bpi" : "ubp",
+                    }
+                  : undefined,
             billing: {
+              address: {
+                line1: orderDetails.order_address,
+                city: orderDetails.order_city,
+                state: orderDetails.order_state,
+                postal_code: orderDetails.order_postal_code,
+                country: "PH",
+              },
               name: `${orderDetails.order_first_name} ${orderDetails.order_last_name}`,
               email: orderDetails.order_email,
               phone: orderDetails.order_phone,
@@ -265,7 +284,7 @@ export const createPaymentMethod = async (
         order_payment_method_id: createPaymentMethod.data.data.id,
         order_payment_method:
           payment_method === "card" ? "card" : payment_type?.toLowerCase(),
-        order_status: "PENDING",
+        order_status: "UNPAID",
       },
     });
 
@@ -274,6 +293,9 @@ export const createPaymentMethod = async (
       nextAction: attachPaymentMethod.data.data.attributes.next_action,
     };
   } catch (error) {
+    if (error instanceof AxiosError) {
+      console.log(error.response?.data);
+    }
     throw new Error("Payment process failed");
   }
 };
@@ -291,7 +313,7 @@ export const getPayment = async (params: {
       },
     });
 
-    if (orderDetails?.order_status !== "PENDING") {
+    if (orderDetails?.order_status !== "UNPAID") {
       throw new Error("Payment already processed");
     }
 
@@ -313,7 +335,7 @@ export const getPayment = async (params: {
 
     const paymentStatus = paymentIntent.data.data.attributes.status;
 
-    let orderStatus: "PAID" | "CANCELED" | "PENDING" = "PENDING";
+    let orderStatus: "PAID" | "CANCELED" | "PENDING" | "UNPAID" = "PENDING";
 
     switch (paymentStatus) {
       case "succeeded":
@@ -323,12 +345,12 @@ export const getPayment = async (params: {
         orderStatus = "CANCELED";
         break;
       default:
-        orderStatus = "PENDING";
+        orderStatus = "UNPAID";
     }
 
     await prisma.$transaction(async (tx) => {
       const status = !!(await tx.order_table.findUnique({
-        where: { order_number: params.orderNumber, order_status: "PENDING" },
+        where: { order_number: params.orderNumber, order_status: "UNPAID" },
         select: { order_status: true },
       }));
 
@@ -405,52 +427,125 @@ export const getPayment = async (params: {
         });
 
         await resend.emails.send({
-          from: "Payment Success <support@help.noir-clothing.com>",
+          from: "Noir Clothing <hello@noir-clothing.com>",
           to: orderDetails?.order_email ?? "",
-          subject:
-            "🎉 Congratulations! Your Payment is Successful – Welcome to Noir Clothing!",
-          text: `Congratulations on completing your purchase! Your payment was successful.}`,
+          subject: "✨ Payment confirmed — Your order is on its way!",
+          text: `Hi there! Your payment has been successfully processed. Order #${orderDetails?.order_number} is now being prepared for shipment. Track your order at noir-clothing.com/track/${orderDetails?.order_number}`,
           html: `
-              <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #10B981; font-size: 24px;">🎉 Congratulations!</h2>
-                <p style="font-size: 16px;">We're excited to welcome you to <strong>Noir Clothing</strong>!</p>
-                <p style="font-size: 16px;">
-                  Your payment was <strong>successfully processed</strong>. You can now enjoy exclusive access to our latest collections and rewards.
-                </p>
-                <p style="font-size: 16px;">
-                  Track the status of your order anytime with the link below:
-                </p>
-                <p style="margin: 20px 0;">
-                  <a href="${orderDetails?.order_number ? `https://noir-clothing.com/track/${orderDetails.order_number}` : "#"}" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                    Track Your Order
-                  </a>
-                </p>
-                <br />
-                <p style="font-size: 14px; color: #555;">Thank you for trusting Noir Clothing. We’re excited to have you with us!</p>
-                <p style="font-weight: bold;">– The Noir Clothing Team</p>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
+                <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
+                <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
               </div>
-            `,
+              
+              <!-- Success Icon -->
+              <div style="text-align: center; padding: 32px 0 24px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #10b981; border-radius: 50%; margin-bottom: 16px;">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                    <path d="M20 6L9 17l-5-5"/>
+                  </svg>
+                </div>
+                <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Confirmed</h1>
+                <p style="color: #6b7280; font-size: 16px; margin: 0;">Your order is being prepared for shipment</p>
+              </div>
+              
+              <!-- Order Details Card -->
+              <div style="margin: 0 32px 32px; padding: 24px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h3 style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 16px;">Order Details</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="color: #6b7280; font-size: 14px;">Order Number</span>
+                  <span style="color: #111827; font-size: 14px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace;">#${orderDetails?.order_number || "N/A"}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="color: #6b7280; font-size: 14px;">Order Date</span>
+                  <span style="color: #111827; font-size: 14px; font-weight: 500;">${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #6b7280; font-size: 14px;">Status</span>
+                  <span style="display: inline-flex; align-items: center; padding: 4px 8px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600; border-radius: 6px;">
+                    <div style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></div>
+                    Processing
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background: #f9fafb; padding: 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">Questions? We're here to help.</p>
+                <div style="margin-bottom: 24px;">
+                  <a href="mailto:support@noir-clothing.com" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Contact Support</a>
+                  <a href="https://www.noir-clothing.com/help" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Help Center</a>
+                </div>
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2025 Noir Clothing. All rights reserved.</p>
+              </div>
+            </div>
+          `,
         });
       } else {
         await resend.emails.send({
-          from: "Noir Clothing Support <support@help.noir-clothing.com>",
+          from: "Noir Clothing <hello@noir-clothing.com>",
           to: orderDetails?.order_email ?? "",
-          subject: "Payment Unsuccessful - Please Try Again",
-          text: `Hi there, unfortunately your payment could not be processed. Please try again or contact our support team if the issue persists.`,
+          subject: "Payment issue — Let's get this sorted",
+          text: `Hi there, we encountered an issue processing your payment. Please try again or contact our support team at support@noir-clothing.com if you need assistance.`,
           html: `
-              <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                <h2 style="color: #EF4444; font-size: 24px;">Payment Unsuccessful</h2>
-                <p style="font-size: 16px; margin-bottom: 16px;">
-                  Unfortunately, we were unable to process your payment.
-                </p>
-                <p style="font-size: 16px; margin-bottom: 16px;">
-                  Please try again. If the issue continues, feel free to reach out to our support team for assistance.
-                </p>
-                <p style="font-size: 16px; margin-bottom: 32px;">
-                  We apologize for the inconvenience and appreciate your patience.
-                </p>
-                <p style="font-weight: bold;">– The Noir Clothing Team</p>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
+                <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
+                <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
               </div>
+              
+              <!-- Error Icon -->
+              <div style="text-align: center; padding: 32px 0 24px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #fef2f2; border: 2px solid #fecaca; border-radius: 50%; margin-bottom: 16px;">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                  </svg>
+                </div>
+                <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Issue</h1>
+                <p style="color: #6b7280; font-size: 16px; margin: 0;">We encountered a problem processing your payment</p>
+              </div>
+              
+              <!-- Issue Details -->
+              <div style="margin: 0 32px 32px; padding: 24px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+                <h3 style="color: #991b1b; font-size: 18px; font-weight: 600; margin: 0 0 12px;">What happened?</h3>
+                <p style="color: #7f1d1d; font-size: 14px; margin: 0 0 16px; line-height: 1.5;">Your payment could not be processed at this time. This could be due to insufficient funds, an expired card, or a temporary issue with your payment method.</p>
+                <div style="background: #ffffff; padding: 16px; border-radius: 8px; border: 1px solid #f3f4f6;">
+                  <p style="color: #374151; font-size: 14px; margin: 0; font-weight: 500;">💡 Quick fixes to try:</p>
+                  <ul style="color: #6b7280; font-size: 13px; margin: 8px 0 0 16px; padding: 0;">
+                    <li style="margin-bottom: 4px;">Check your card details and expiry date</li>
+                    <li style="margin-bottom: 4px;">Ensure sufficient funds are available</li>
+                    <li>Try a different payment method</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <!-- CTA Buttons -->
+              <div style="text-align: center; margin: 32px;">
+                <a href="https://noir-clothing.com/checkout" 
+                   style="display: inline-block; padding: 16px 32px; background: #111827; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 0 8px 16px;">
+                  Try Again
+                </a>
+                <br>
+                <a href="mailto:support@noir-clothing.com" 
+                   style="display: inline-block; padding: 12px 24px; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 0 8px;">
+                  Contact Support
+                </a>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background: #f9fafb; padding: 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">Need help? We're here for you 24/7.</p>
+                <div style="margin-bottom: 24px;">
+                  <a href="mailto:support@noir-clothing.com" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">support@noir-clothing.com</a>
+                  <a href="https://noir-clothing.com/help" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Help Center</a>
+                </div>
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2025 Noir Clothing. All rights reserved.</p>
+              </div>
+            </div>
             `,
         });
 

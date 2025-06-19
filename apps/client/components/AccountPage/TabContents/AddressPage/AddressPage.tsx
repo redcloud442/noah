@@ -3,19 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateAddress, useUpdateAddress } from "@/query/addressQuery";
 import { AddressCreateFormData, addressCreateSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import axios from "axios";
 import {
   Building,
   Home,
@@ -27,7 +19,6 @@ import {
   User,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 type Props = {
@@ -38,15 +29,13 @@ type Props = {
 const AddressPage = ({ type = "create", address }: Props) => {
   const params = useParams();
   const router = useRouter();
-
   const { toast } = useToast();
 
   const {
     register,
     handleSubmit,
-    watch,
     control,
-    setValue,
+    // setValue,
     formState: { errors },
   } = useForm<AddressCreateFormData>({
     resolver: zodResolver(addressCreateSchema),
@@ -66,80 +55,80 @@ const AddressPage = ({ type = "create", address }: Props) => {
         : address,
   });
 
-  const [provices, setProvices] = useState<
-    {
-      code: string;
-      name: string;
-      regionName: string;
-      islandGroupCode: string;
-    }[]
-  >([]);
+  // const [provices, setProvices] = useState<
+  //   {
+  //     code: string;
+  //     name: string;
+  //     regionName: string;
+  //     islandGroupCode: string;
+  //   }[]
+  // >([]);
 
-  const [cities, setCities] = useState<
-    { code: string; name: string; province_code: string }[]
-  >([]);
-  const [barangays, setBarangays] = useState<
-    { code: string; name: string; city_code: string }[]
-  >([]);
+  // const [cities, setCities] = useState<
+  //   { code: string; name: string; province_code: string }[]
+  // >([]);
+  // const [barangays, setBarangays] = useState<
+  //   { code: string; name: string; city_code: string }[]
+  // >([]);
 
-  const selectedProvince = watch("province");
-  const selectedCity = watch("city");
+  // const selectedProvince = watch("province");
+  // const selectedCity = watch("city");
 
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
-        setProvices(res.data);
+  // useEffect(() => {
+  //   const fetchProvinces = async () => {
+  //     try {
+  //       const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
+  //       setProvices(res.data);
 
-        if (type === "update" && address?.province) {
-          const provinceData = res.data.find(
-            (p: { name: string }) => p.name === address.province
-          );
-          if (provinceData) {
-            setValue("province", provinceData.code);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching provinces:", error);
-      }
-    };
+  //       if (type === "update" && address?.province) {
+  //         const provinceData = res.data.find(
+  //           (p: { name: string }) => p.name === address.province
+  //         );
+  //         if (provinceData) {
+  //           setValue("province", provinceData.code);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching provinces:", error);
+  //     }
+  //   };
 
-    fetchProvinces();
-  }, [type, address, setValue]);
+  //   fetchProvinces();
+  // }, [type, address, setValue]);
 
-  useEffect(() => {
-    if (selectedProvince) {
-      const fetchCities = async () => {
-        try {
-          const res = await axios.get(
-            `https://psgc.gitlab.io/api/provinces/${selectedProvince}/cities/`
-          );
-          setCities(res.data);
-          setValue("barangay", "");
-        } catch (error) {
-          console.error("Error fetching cities:", error);
-        }
-      };
-      fetchCities();
-    }
-  }, [selectedProvince, setValue]);
+  // useEffect(() => {
+  //   if (selectedProvince) {
+  //     const fetchCities = async () => {
+  //       try {
+  //         const res = await axios.get(
+  //           `https://psgc.gitlab.io/api/provinces/${selectedProvince}/cities/`
+  //         );
+  //         setCities(res.data);
+  //         setValue("barangay", "");
+  //       } catch (error) {
+  //         console.error("Error fetching cities:", error);
+  //       }
+  //     };
+  //     fetchCities();
+  //   }
+  // }, [selectedProvince, setValue]);
 
-  useEffect(() => {
-    if (selectedCity) {
-      const fetchBarangays = async () => {
-        try {
-          const res = await axios.get(
-            `https://psgc.gitlab.io/api/provinces/${selectedProvince}/barangays/`
-          );
+  // useEffect(() => {
+  //   if (selectedCity) {
+  //     const fetchBarangays = async () => {
+  //       try {
+  //         const res = await axios.get(
+  //           `https://psgc.gitlab.io/api/provinces/${selectedProvince}/barangays/`
+  //         );
 
-          setBarangays(res.data);
-        } catch (error) {
-          console.error("Error fetching barangays:", error);
-        }
-      };
-      fetchBarangays();
-    }
-  }, [selectedCity, setValue]);
+  //         setBarangays(res.data);
+  //       } catch (error) {
+  //         console.error("Error fetching barangays:", error);
+  //       }
+  //     };
+  //     fetchBarangays();
+  //   }
+  // }, [selectedCity, setValue]);
 
   const { mutate: createAddress, isPending: isCreating } = useCreateAddress();
   const { mutate: updateAddress, isPending: isUpdating } = useUpdateAddress();
@@ -180,8 +169,8 @@ const AddressPage = ({ type = "create", address }: Props) => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <MapPin className="w-8 h-8 text-blue-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-zinc-100 rounded-full mb-4">
+            <MapPin className="w-8 h-8 text-zinc-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {type === "create" ? "Add New Address" : "Update Address"}
@@ -201,8 +190,8 @@ const AddressPage = ({ type = "create", address }: Props) => {
             {/* Personal Information Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
-                  <User className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center justify-center w-8 h-8 bg-zinc-100 rounded-full">
+                  <User className="w-4 h-4 text-zinc-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   Personal Information
@@ -283,9 +272,9 @@ const AddressPage = ({ type = "create", address }: Props) => {
                       <span className="text-sm font-medium">🇵🇭 +63</span>
                     </div>
                     <Input
-                      {...register("phone", { required: true })}
                       type="text"
                       placeholder="9XX XXX XXXX"
+                      {...register("phone", { required: true })}
                       className="h-12 pl-20 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black"
                       maxLength={10}
                       onChange={(e) => {
@@ -308,8 +297,8 @@ const AddressPage = ({ type = "create", address }: Props) => {
             {/* Address Information Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full">
-                  <Home className="w-4 h-4 text-green-600" />
+                <div className="flex items-center justify-center w-8 h-8 bg-zinc-100 rounded-full">
+                  <Home className="w-4 h-4 text-zinc-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   Address Details
@@ -349,28 +338,14 @@ const AddressPage = ({ type = "create", address }: Props) => {
                     control={control}
                     defaultValue={address?.province || ""}
                     render={({ field }) => (
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setValue("city", "");
-                          setValue("barangay", "");
-                        }}
-                        defaultValue={address?.province}
-                      >
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
-                          <SelectValue placeholder="Select province" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {provices.map((province) => (
-                            <SelectItem
-                              key={province.code}
-                              value={province.code}
-                            >
-                              {province.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="Doe"
+                          className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                        />
+                      </>
                     )}
                   />
                 </div>
@@ -387,31 +362,14 @@ const AddressPage = ({ type = "create", address }: Props) => {
                       name="city"
                       control={control}
                       render={({ field }) => (
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setValue("barangay", "");
-                          }}
-                          defaultValue={address?.city}
-                          disabled={!selectedProvince}
-                        >
-                          <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
-                            <SelectValue
-                              placeholder={
-                                !selectedProvince
-                                  ? "Select province first"
-                                  : "Select city"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cities.map((city) => (
-                              <SelectItem key={city.code} value={city.code}>
-                                {city.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="Doe"
+                            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                          />
+                        </>
                       )}
                     />
                   </div>
@@ -427,33 +385,14 @@ const AddressPage = ({ type = "create", address }: Props) => {
                       name="barangay"
                       control={control}
                       render={({ field }) => (
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                          }}
-                          defaultValue={address?.barangay}
-                          disabled={!selectedCity}
-                        >
-                          <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-black">
-                            <SelectValue
-                              placeholder={
-                                !selectedCity
-                                  ? "Select city first"
-                                  : "Select barangay"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {barangays.map((barangay) => (
-                              <SelectItem
-                                key={barangay.code}
-                                value={barangay.code}
-                              >
-                                {barangay.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="Doe"
+                            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                          />
+                        </>
                       )}
                     />
                   </div>
@@ -487,7 +426,8 @@ const AddressPage = ({ type = "create", address }: Props) => {
           <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
             <Button
               type="submit"
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+              variant="secondary"
+              className="w-full h-12 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
               disabled={isCreating || isUpdating}
             >
               {isCreating || isUpdating ? (

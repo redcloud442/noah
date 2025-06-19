@@ -1,10 +1,40 @@
 import { siteConfig } from "@/components/config/site";
+import { newsLetterService } from "@/services/newsletter";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import Link from "next/link";
-import { FaEnvelope, FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { newsletterType } from "./SubscribeNowForm/SubscribeNowForm";
+
+export const newsletterSchema = z.object({
+  email: z.string().email(),
+});
 
 export const Footer = () => {
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const { register, handleSubmit } = useForm<newsletterType>({
+    resolver: zodResolver(newsletterSchema),
+  });
+
+  const handleSubscribe = async (data: newsletterType) => {
+    try {
+      await newsLetterService.subscribe(data);
+      setIsDisabled(true);
+      toast.success("Subscribed to newsletter");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message);
+      }
+    }
+  };
+
   return (
     <footer className="bg-zinc-950 text-white relative overflow-hidden">
       {/* Subtle background pattern */}
@@ -31,20 +61,24 @@ export const Footer = () => {
               {/* Newsletter Signup */}
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex items-center gap-3 mb-4">
-                  <FaEnvelope className="text-white/80" />
                   <h3 className="text-xl font-semibold">Stay in Style</h3>
                 </div>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Get exclusive access to new collections, style tips, and
-                  special offers.
+                  Where bold meets elegance. NOIR is more than fashion —
+                  it&apos;s a statement.
                 </p>
-                <form className="flex flex-col sm:flex-row gap-3">
+                <form
+                  className="flex flex-col sm:flex-row gap-3"
+                  onSubmit={handleSubmit(handleSubscribe)}
+                >
                   <Input
                     type="email"
                     placeholder="Enter your email address"
                     className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 rounded-xl px-4 py-3"
+                    {...register("email")}
                   />
                   <Button
+                    disabled={isDisabled}
                     type="submit"
                     className="bg-white text-black hover:bg-gray-100 font-semibold px-8 py-3 rounded-xl transition-all duration-200 hover:scale-105"
                   >
@@ -59,25 +93,20 @@ export const Footer = () => {
               <h3 className="text-xl font-semibold text-white">Quick Links</h3>
               <nav className="flex flex-col space-y-4">
                 <Link
-                  href="/about"
+                  href="https://www.facebook.com/profile.php?id=61576970657707"
                   className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
                 >
                   About Us
                 </Link>
                 <Link
-                  href="/contact"
+                  href="https://www.facebook.com/profile.php?id=61576970657707"
                   className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
                 >
                   Contact
                 </Link>
+
                 <Link
-                  href="/privacy"
-                  className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
-                >
-                  Privacy Policy
-                </Link>
-                <Link
-                  href="/terms"
+                  href="/policy/terms-of-service"
                   className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
                 >
                   Terms of Service
@@ -140,8 +169,7 @@ export const Footer = () => {
           <div className="container mx-auto px-6 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <p className="text-gray-400 text-sm sm:text-start text-center">
-                © {new Date().getFullYear()} Noir. All rights reserved. Crafted
-                with passion for fashion.
+                © {new Date().getFullYear()} Noir. All rights reserved.
               </p>
             </div>
           </div>

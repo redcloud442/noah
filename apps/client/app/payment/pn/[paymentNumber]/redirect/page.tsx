@@ -15,7 +15,7 @@ const page = async ({
   const payment = !!(await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
-      order_status: "PENDING",
+      order_status: "UNPAID",
     },
     select: {
       order_status: true,

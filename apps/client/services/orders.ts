@@ -38,7 +38,7 @@ export const ordersService = {
       throw new Error("Payment failed");
     }
 
-    return result.data as OrderItem;
+    return result.data as OrderItem[];
   },
   getAllOrders: async (params: {
     take: number;

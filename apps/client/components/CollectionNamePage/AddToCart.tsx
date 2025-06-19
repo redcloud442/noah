@@ -62,16 +62,6 @@ export const VariantSelectionToast = ({
 
       if (userData) {
         await handleCheckoutItems(item.cart_id);
-      } else {
-        const res = localStorage.getItem("shoppingCart");
-        const existingCart = res ? JSON.parse(res) : { products: [], count: 0 };
-
-        existingCart.products = existingCart.products.map((product: Product) =>
-          product.cart_id === item.cart_id
-            ? { ...product, cart_is_checked_out: true }
-            : product
-        );
-        localStorage.setItem("shoppingCart", JSON.stringify(existingCart));
       }
 
       await authService.createCheckoutToken(checkoutNumber, referralCode);
@@ -103,6 +93,7 @@ export const VariantSelectionToast = ({
 
   const handleAddToCart = async () => {
     try {
+      // Validation checks
       if (!selectedVariant || !selectedSize) {
         toaster({
           title: "Please select a size before adding to cart.",
@@ -111,7 +102,6 @@ export const VariantSelectionToast = ({
         return;
       }
 
-      setIsLoading(true);
       const selectedSizeData = selectedVariant.variant_sizes.find(
         (s) => s.variant_size_value === selectedSize
       );
@@ -124,8 +114,10 @@ export const VariantSelectionToast = ({
         return;
       }
 
-      const cartId = uuidv4();
+      setIsLoading(true);
 
+      // Prepare cart item
+      const cartId = uuidv4();
       const cartItem = {
         cart_id: cartId,
         product_id: selectedVariant.product_variant_product_id,
@@ -134,7 +126,6 @@ export const VariantSelectionToast = ({
         product_quantity: quantity,
         product_size: selectedSize,
         product_variant_id: selectedVariant.product_variant_id,
-        product_variant_size: selectedSize,
         product_variant_color: selectedVariant.product_variant_color,
         product_variant_quantity: selectedSizeData.variant_size_quantity,
         product_variant_image:
@@ -143,7 +134,9 @@ export const VariantSelectionToast = ({
         cart_is_checked_out: false,
       };
 
+      // Handle cart operationsc
       if (!userData) {
+        // Guest user - localStorage
         const existingItemIndex = cart.products.findIndex(
           (item) =>
             item.product_variant_id === cartItem.product_variant_id &&
@@ -151,18 +144,24 @@ export const VariantSelectionToast = ({
         );
 
         if (existingItemIndex !== -1) {
-          cart.products[existingItemIndex].product_quantity += quantity;
+          cart.products[existingItemIndex].product_quantity = quantity;
         } else {
-          cart.products.push(cartItem);
+          cart.products.push({
+            ...cartItem,
+            product_quantity: quantity,
+            product_variant_size: selectedSize,
+          });
         }
 
         localStorage.setItem("shoppingCart", JSON.stringify(cart));
-        addToCart(cartItem);
+        addToCart({ ...cartItem, product_variant_size: selectedSize });
       } else {
+        // Logged in user - API call
         const created = await cartService.create({
           ...cartItem,
-          cart_id: cartId,
+          product_variant_size: selectedSize,
         });
+
         const existingItemIndex = cart.products.findIndex(
           (item) =>
             item.product_variant_id === cartItem.product_variant_id &&
@@ -172,14 +171,23 @@ export const VariantSelectionToast = ({
         if (existingItemIndex !== -1) {
           cart.products[existingItemIndex].product_quantity += quantity;
         } else {
-          cart.products.push(cartItem);
+          cart.products.push({
+            ...cartItem,
+            cart_id: created.cart_id,
+            product_variant_size: selectedSize,
+          });
         }
 
-        addToCart({ ...cartItem, cart_id: created.cart_id });
+        addToCart({
+          ...cartItem,
+          cart_id: created.cart_id,
+          product_variant_size: selectedSize,
+        });
       }
 
       closeToast();
 
+      // Success toast
       toast.custom(
         () => (
           <div className="bg-white text-black p-6 shadow-xl border rounded-none border-gray-200 w-full">
@@ -223,7 +231,12 @@ export const VariantSelectionToast = ({
                 variant="default"
                 disabled={isLoading}
                 className="w-full bg-black text-white hover:bg-gray-800"
-                onClick={() => handleProceedToCheckout(cartItem)}
+                onClick={() =>
+                  handleProceedToCheckout({
+                    ...cartItem,
+                    product_variant_size: selectedSize,
+                  })
+                }
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -244,6 +257,7 @@ export const VariantSelectionToast = ({
       setIsLoading(false);
     }
   };
+
   const handleAddQuantity = (variant: "add" | "subtract") => {
     const selectedSizeData = selectedVariant.variant_sizes.find(
       (s) => s.variant_size_value === selectedSize

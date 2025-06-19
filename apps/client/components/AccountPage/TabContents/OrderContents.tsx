@@ -102,7 +102,7 @@ const OrderContents = ({
             When you place your first order, it will appear here for easy
             tracking.
           </p>
-          <Button asChild className="bg-blue-600 hover:bg-blue-700">
+          <Button asChild variant="secondary">
             <Link href="/shop">Start Shopping</Link>
           </Button>
         </div>

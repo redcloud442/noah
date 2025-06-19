@@ -9,13 +9,13 @@ export const checkoutSchema = z.object({
 export const paymentSchema = z
   .object({
     email: z.string().email(),
-    firstName: z.string(),
-    lastName: z.string(),
-    address: z.string(),
-    province: z.string(),
-    city: z.string(),
-    barangay: z.string(),
-    postalCode: z.string(),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    address: z.string().min(1, "Address is required"),
+    province: z.string().min(1, "Province is required"),
+    city: z.string().min(1, "City is required"),
+    barangay: z.string().min(1, "Barangay is required"),
+    postalCode: z.string().min(1, "Postal code is required"),
     phone: z.string(),
     amount: z.number(),
     order_number: z.string(),
@@ -38,9 +38,24 @@ export const cardPaymentSchema = z.object({
   payment_method: z.literal("card"),
   payment_details: z.object({
     card: z.object({
-      card_number: z.string().min(16).max(16),
-      card_expiry: z.string().min(5).max(5),
-      card_cvv: z.string().min(3).max(3),
+      card_number: z
+        .string()
+        .trim()
+        .min(16, "Card number must be 16 digits")
+        .max(16, "Card number must be 16 digits")
+        .regex(/^4[0-9]{15}$/, "Must be a valid Visa card number"),
+      card_expiry: z
+        .string()
+        .trim()
+        .min(5, "Expiry must be MM/YY")
+        .max(5, "Expiry must be MM/YY")
+        .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Invalid expiry format"),
+      card_cvv: z
+        .string()
+        .trim()
+        .min(3, "CVV must be 3 digits")
+        .max(3, "CVV must be 3 digits")
+        .regex(/^\d{3}$/, "Invalid CVV"),
     }),
   }),
   payment_type: z
@@ -52,7 +67,15 @@ export const nonCardPaymentSchema = z.object({
   order_number: z.string().min(8).max(8),
   payment_method: z.enum(["e_wallet", "online_banking"]),
   payment_type: z
-    .enum(["GCash", "GrabPay", "PayMaya", "BPI", "UnionBank"])
+    .enum([
+      "GCash",
+      "GrabPay",
+      "PayMaya",
+      "BPI",
+      "UnionBank",
+      "Visa",
+      "Mastercard",
+    ])
     .optional(),
 });
 

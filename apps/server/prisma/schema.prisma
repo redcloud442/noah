@@ -12,6 +12,7 @@ datasource db {
 
 enum OrderStatus {
   PENDING
+  UNPAID
   PAID
   SHIPPED
   COMPLETED
@@ -174,7 +175,7 @@ model order_item_table {
   order             order_table @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
   product_variant   product_variant_table @relation(fields: [product_variant_id], references: [product_variant_id], onDelete: Cascade)
 
-  @@unique([order_id, product_variant_id])
+  @@unique([order_id, product_variant_id,size])
   @@schema("order_schema")
 }
 

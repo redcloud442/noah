@@ -120,13 +120,11 @@ const ShoppingCartModal = () => {
           );
           localStorage.setItem("shoppingCart", JSON.stringify(parsedCart));
         }
+
         setCart({
           ...cart,
           products: cart.products.filter((item) => item.cart_id !== id),
-          count:
-            cart.count -
-            (cart.products.find((item) => item.cart_id === id)
-              ?.product_quantity ?? 0),
+          count: cart.count - 1,
         });
       } else {
         await cartService.delete(id);

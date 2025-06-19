@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
 import { paymentService } from "@/services/payment";
@@ -17,12 +10,9 @@ import {
 } from "@/utils/schema";
 import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import {
   ArrowRight,
   Banknote,
-  CreditCard,
   Loader2,
   Mail,
   MapPin,
@@ -54,7 +44,6 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   const {
     register,
     handleSubmit,
-    watch,
     control,
     setValue,
     formState: { isSubmitting },
@@ -72,9 +61,6 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
       order_number: params.checkoutNumber as string,
     },
   });
-
-  const selectedProvince = watch("province");
-  const selectedCity = watch("city");
 
   const totalAmount = useMemo(
     () =>
@@ -102,60 +88,60 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
     }
   }, [cart, setValue]);
 
-  const { data: provinces = [] } = useQuery({
-    queryKey: ["provinces"],
-    queryFn: async () => {
-      const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 60 * 24,
-    gcTime: 1000 * 60 * 60 * 24,
-  });
+  // const { data: provinces = [] } = useQuery({
+  //   queryKey: ["provinces"],
+  //   queryFn: async () => {
+  //     const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
+  //     return res.data;
+  //   },
+  //   staleTime: 1000 * 60 * 60 * 24,
+  //   gcTime: 1000 * 60 * 60 * 24,
+  // });
 
-  const { data: cities = [] } = useQuery({
-    queryKey: ["cities", selectedProvince],
-    queryFn: async () => {
-      const res = await axios.get(
-        `https://psgc.gitlab.io/api/provinces/${selectedProvince}/cities`
-      );
-      return res.data;
-    },
-    enabled: !!selectedProvince,
-    staleTime: 1000 * 60 * 60 * 24,
-    gcTime: 1000 * 60 * 60 * 24,
-  });
+  // const { data: cities = [] } = useQuery({
+  //   queryKey: ["cities", selectedProvince],
+  //   queryFn: async () => {
+  //     const res = await axios.get(
+  //       `https://psgc.gitlab.io/api/provinces/${selectedProvince}/cities`
+  //     );
+  //     return res.data;
+  //   },
+  //   enabled: !!selectedProvince,
+  //   staleTime: 1000 * 60 * 60 * 24,
+  //   gcTime: 1000 * 60 * 60 * 24,
+  // });
 
-  const { data: barangays = [] } = useQuery({
-    queryKey: ["barangays", selectedCity],
-    queryFn: async () => {
-      const res = await axios.get(
-        `https://psgc.gitlab.io/api/provinces/${selectedProvince}/barangays`
-      );
-      return res.data;
-    },
-    enabled: !!selectedCity,
-    staleTime: 1000 * 60 * 60 * 24,
-    gcTime: 1000 * 60 * 60 * 24,
-  });
+  // const { data: barangays = [] } = useQuery({
+  //   queryKey: ["barangays", selectedCity],
+  //   queryFn: async () => {
+  //     const res = await axios.get(
+  //       `https://psgc.gitlab.io/api/provinces/${selectedProvince}/barangays`
+  //     );
+  //     return res.data;
+  //   },
+  //   enabled: !!selectedCity,
+  //   staleTime: 1000 * 60 * 60 * 24,
+  //   gcTime: 1000 * 60 * 60 * 24,
+  // });
 
-  useEffect(() => {
-    if (provinces.length > 0) {
-      setValue("province", "");
-    }
-  }, [provinces, setValue]);
+  // useEffect(() => {
+  //   if (provinces.length > 0) {
+  //     setValue("province", "");
+  //   }
+  // }, [provinces, setValue]);
 
-  useEffect(() => {
-    if (cities.length > 0) {
-      setValue("city", "");
-      setValue("barangay", "");
-    }
-  }, [cities, setValue]);
+  // useEffect(() => {
+  //   if (cities.length > 0) {
+  //     setValue("city", "");
+  //     setValue("barangay", "");
+  //   }
+  // }, [cities, setValue]);
 
-  useEffect(() => {
-    if (barangays.length > 0) {
-      setValue("barangay", "");
-    }
-  }, [barangays, setValue]);
+  // useEffect(() => {
+  //   if (barangays.length > 0) {
+  //     setValue("barangay", "");
+  //   }
+  // }, [barangays, setValue]);
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
@@ -198,7 +184,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
           <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-600 rounded-xl">
+                <div className="p-2 bg-zinc-950 rounded-xl">
                   <ShoppingBag className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -223,10 +209,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
             <div className="lg:col-span-2 space-y-8">
               {/* Contact Information */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Mail className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-zinc-950 rounded-lg">
+                      <Mail className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
@@ -296,10 +282,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
 
               {/* Shipping Information */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <MapPin className="w-5 h-5 text-green-600" />
+                    <div className="p-2 bg-zinc-950 rounded-lg">
+                      <MapPin className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
@@ -340,23 +326,14 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                       control={control}
                       defaultValue=""
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange}>
-                          <SelectTrigger className="h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black">
-                            <SelectValue placeholder="Select Province" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {provinces.map(
-                              (province: { code: string; name: string }) => (
-                                <SelectItem
-                                  key={province.code}
-                                  value={province.code}
-                                >
-                                  {province.name}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
+                        <>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="Province"
+                            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                          />
+                        </>
                       )}
                     />
                   </div>
@@ -374,20 +351,14 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         control={control}
                         defaultValue=""
                         render={({ field }) => (
-                          <Select onValueChange={field.onChange}>
-                            <SelectTrigger className="h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black">
-                              <SelectValue placeholder="Select City" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {cities.map(
-                                (city: { code: string; name: string }) => (
-                                  <SelectItem key={city.code} value={city.code}>
-                                    {city.name}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <>
+                            <Input
+                              {...field}
+                              type="text"
+                              placeholder="City"
+                              className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                            />
+                          </>
                         )}
                       />
                     </div>
@@ -403,23 +374,14 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         control={control}
                         defaultValue=""
                         render={({ field }) => (
-                          <Select onValueChange={field.onChange}>
-                            <SelectTrigger className="h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black">
-                              <SelectValue placeholder="Select Barangay" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {barangays.map(
-                                (barangay: { code: string; name: string }) => (
-                                  <SelectItem
-                                    key={barangay.code}
-                                    value={barangay.code}
-                                  >
-                                    {barangay.name}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <>
+                            <Input
+                              {...field}
+                              type="text"
+                              placeholder="Barangay"
+                              className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                            />
+                          </>
                         )}
                       />
                     </div>
@@ -466,11 +428,11 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
 
               {/* Payment Information */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Shield className="w-5 h-5 text-purple-600" />
+                      <div className="p-2 bg-zinc-950 rounded-lg">
+                        <Shield className="w-5 h-5 text-white" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-gray-900">
@@ -508,7 +470,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                     </h3>
 
                     {/* Credit Cards */}
-                    <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+                    {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <CreditCard className="w-5 h-5 text-blue-600" />
@@ -535,7 +497,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* E-Wallets */}
                     <div className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors">
@@ -612,10 +574,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
             {/* Right Section: Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-32">
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 px-6 py-4 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 px-6 py-4 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <ShoppingBag className="w-5 h-5 text-orange-600" />
+                    <div className="p-2 bg-zinc-950 rounded-lg">
+                      <ShoppingBag className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
@@ -630,7 +592,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
 
                 <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
                   {cart.products.map((product) => (
-                    <div key={product.product_id} className="group">
+                    <div
+                      key={`${product.product_id}-${product.product_variant_id}`}
+                      className="group"
+                    >
                       <div className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                         <div className="relative flex-shrink-0">
                           <Image

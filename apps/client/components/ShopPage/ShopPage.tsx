@@ -106,7 +106,7 @@ const ShopPage = () => {
         {/* Filter Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="mb-10 flex flex-wrap gap-4 justify-start"
+          className="mb-10 flex flex-wrap gap-4 justify-center"
         >
           <FloatingLabelInput
             {...register("search")}
@@ -186,7 +186,7 @@ const ShopPage = () => {
           <Button
             type="submit"
             variant="secondary"
-            className="h-8 px-4 text-sm"
+            className="h-8 px-4 text-sm w-full sm:w-auto"
           >
             Apply
           </Button>

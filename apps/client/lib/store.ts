@@ -47,7 +47,7 @@ export const useCartStore = create<Store>((set) => ({
           index === existingProductIndex
             ? {
                 ...p,
-                product_quantity: p.product_quantity + product.product_quantity,
+                product_quantity: product.product_quantity,
               }
             : p
         );

@@ -114,15 +114,12 @@ export const paymentCreatePaymentMiddleware = async (
   const validate = paymentCreatePaymentSchema.safeParse({
     order_number,
     payment_method,
-    payment_type,
-    payment_details,
+    payment_type: payment_type ?? undefined,
+    payment_details: payment_method === "card" ? payment_details : undefined,
   });
 
   if (!validate.success) {
-    return c.json(
-      { message: "Invalid request", errors: validate.error.errors },
-      400
-    );
+    return c.json({ message: "Invalid request" }, 400);
   }
 
   const isAllowed = await rateLimit(

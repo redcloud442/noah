@@ -9,7 +9,7 @@ export const newsletterSubscribeMiddleware = async (c: Context, next: Next) => {
   const isAllowed = await rateLimit(
     `rate-limit:${email}:newsletter-subscribe`,
     1,
-    "1m",
+    "1h",
     c
   );
 

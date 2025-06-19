@@ -118,7 +118,10 @@ const AddressContent = ({
             </p>
           </div>
           <Link href="/account/address/create">
-            <Button className="inline-flex items-center gap-2 text-white shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-500 hover:bg-blue-600">
+            <Button
+              variant="secondary"
+              className="inline-flex items-center gap-2"
+            >
               <Plus className="w-4 h-4" />
               Add New Address
             </Button>
@@ -209,7 +212,7 @@ const AddressContent = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-start gap-2 lg:flex-col lg:items-end">
+                <div className="flex items-start justify-end gap-2 lg:flex-col lg:items-end">
                   <div className="flex gap-2">
                     {!addr.user_address_is_default && (
                       <Button

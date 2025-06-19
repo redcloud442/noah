@@ -213,11 +213,7 @@ export const LoginForm = ({
       </form>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary  ">
         By clicking continue, you agree to our{" "}
-        <Link href="/">Terms of Service</Link> and{" "}
-        <Link href="https://www.noirlxury.com/privacy-policy">
-          Privacy Policy
-        </Link>
-        .
+        <Link href="/policy/terms-of-service">Terms of Service</Link>.
       </div>
     </div>
   );

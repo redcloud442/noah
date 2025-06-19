@@ -33,7 +33,7 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
     queryKey: ["orderItems", order.order_number, userData?.userProfile.user_id],
     queryFn: async () => {
       const items = await ordersService.getOrderItems(order.order_number);
-      return [items];
+      return items;
     },
     enabled: !!userData && !!order.order_number,
   });
@@ -296,7 +296,7 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
             {/* Summary */}
             <Card className="shadow-sm border-0 bg-white sticky top-6">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-lg text-black">
                   <Receipt className="h-5 w-5 text-black" />
                   Order Summary
                 </CardTitle>
@@ -339,7 +339,7 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
             {/* Payment Details */}
             <Card className="shadow-sm border-0 bg-white">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-lg text-black">
                   <CreditCard className="h-5 w-5 text-black" />
                   Payment Details
                 </CardTitle>

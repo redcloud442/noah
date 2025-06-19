@@ -21,8 +21,8 @@ export const PaymentRedirectPage = ({
 }: PaymentRedirectPageProps) => {
   const router = useRouter();
   const [orderStatus, setOrderStatus] = useState<
-    "PAID" | "CANCELED" | "PENDING"
-  >("PENDING");
+    "PAID" | "CANCELED" | "PENDING" | "UNPAID"
+  >("UNPAID");
 
   useEffect(() => {
     const fetchPayment = async () => {

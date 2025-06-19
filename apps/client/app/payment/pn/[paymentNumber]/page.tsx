@@ -11,25 +11,37 @@ const page = async ({
 }) => {
   const { paymentNumber } = await params;
 
+  const jwtSecret = process.env.JWT_SECRET;
+
   if (!paymentNumber) {
     return redirect("/");
   }
-  const payment = await prisma.order_table.findUnique({
+  const payment = await prisma.order_table.findUniqueOrThrow({
     where: {
       order_number: paymentNumber,
-      order_status: "PENDING",
     },
   });
 
-  if (payment?.order_status !== "PENDING") {
+  if (!payment) {
+    return redirect("/");
+  }
+
+  if (
+    payment?.order_status !== "PENDING" &&
+    payment?.order_status === "UNPAID"
+  ) {
     return redirect("/");
   }
 
   const checkoutToken = (await cookies()).get("checkout_token");
 
+  if (!jwtSecret || !checkoutToken?.value) {
+    return redirect("/");
+  }
+
   const decoded = jwt.verify(
     checkoutToken?.value ?? "",
-    process.env.JWT_SECRET!
+    jwtSecret
   ) as unknown as {
     checkoutNumber: string;
     role: string;

@@ -9,7 +9,7 @@ import { FeaturedProductType, FreshDropsType } from "@/utils/types";
 import { User } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Footer } from "../Footer/Footer";
@@ -86,6 +86,9 @@ function ClientLayout({
   collections: RootLayoutProviderProps["collections"];
   featuredProducts: FeaturedProductType[];
 }) {
+  const pathname = usePathname();
+  const isPaymentPage =
+    pathname.includes("/payment") || pathname.includes("/checkout");
   return (
     <>
       <NavigationBar
@@ -93,11 +96,13 @@ function ClientLayout({
         collections={collections}
         featuredProducts={featuredProducts}
       />
-      <MobileNavigationBar
-        collections={collections}
-        freshDrops={freshDrops}
-        featuredProducts={featuredProducts}
-      />
+      {isPaymentPage ? null : (
+        <MobileNavigationBar
+          collections={collections}
+          freshDrops={freshDrops}
+          featuredProducts={featuredProducts}
+        />
+      )}
       <main>{children}</main>
       <Footer />
       <Toaster />
