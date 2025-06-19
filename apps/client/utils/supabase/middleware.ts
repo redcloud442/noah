@@ -84,38 +84,30 @@ const determineRouteAction = ({
   role,
   pathname,
 }: RouteActionParams): RouteAction => {
+  const isAdmin = role === CompanyMemberRole.ADMIN;
+
   if (!user) {
-    if (isPublicRoute(pathname)) return RouteAction.ALLOW;
-
-    if (isPrivateRoute(pathname) || isAdminRoute(pathname))
-      return RouteAction.REDIRECT_LOGIN;
-
-    return RouteAction.REDIRECT_LOGIN;
+    return isPublicRoute(pathname)
+      ? RouteAction.ALLOW
+      : RouteAction.REDIRECT_LOGIN;
   }
 
-  if (pathname.startsWith("/account") && role === CompanyMemberRole.ADMIN) {
+  // If an admin is trying to access a public route, redirect to admin dashboard
+  if (isAdmin && isPublicRoute(pathname)) {
     return RouteAction.REDIRECT_ADMIN;
   }
 
-  // Non-admin users visiting public route (e.g. `/account`)
-  if (isPublicRoute(pathname)) {
-    if (user?.user_metadata.role === CompanyMemberRole.ADMIN) {
-      return RouteAction.REDIRECT_ADMIN;
-    }
-    if (pathname === "/login" && user) return RouteAction.REDIRECT_DASHBOARD;
-    if (pathname !== "/account") return RouteAction.ALLOW;
+  // Special case: logged in user visiting /login → redirect to dashboard
+  if (pathname === "/login") {
+    return RouteAction.REDIRECT_DASHBOARD;
   }
 
   if (isPrivateRoute(pathname)) {
-    if (role !== CompanyMemberRole.ADMIN) {
-      return RouteAction.ALLOW;
-    } else {
-      return RouteAction.FORBIDDEN;
-    }
+    return RouteAction.ALLOW; // Any logged-in user allowed
   }
 
-  if (isAdminRoute(pathname) && role !== CompanyMemberRole.ADMIN) {
-    return RouteAction.FORBIDDEN;
+  if (isAdminRoute(pathname)) {
+    return isAdmin ? RouteAction.ALLOW : RouteAction.FORBIDDEN;
   }
 
   return RouteAction.ALLOW;

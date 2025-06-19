@@ -433,29 +433,23 @@ export const getPayment = async (params: {
           text: `Hi there! Your payment has been successfully processed. Order #${orderDetails?.order_number} is now being prepared for shipment. Track your order at noir-clothing.com/track/${orderDetails?.order_number}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <!-- Header -->
+            
               <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
                 <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
                 <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
               </div>
               
-              <!-- Success Icon -->
+     
               <div style="text-align: center; padding: 32px 0 24px;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #10b981; border-radius: 50%; margin-bottom: 16px;">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-                    <path d="M20 6L9 17l-5-5"/>
-                  </svg>
-                </div>
                 <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Confirmed</h1>
                 <p style="color: #6b7280; font-size: 16px; margin: 0;">Your order is being prepared for shipment</p>
               </div>
-              
-              <!-- Order Details Card -->
+            
               <div style="margin: 0 32px 32px; padding: 24px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
                 <h3 style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 16px;">Order Details</h3>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                   <span style="color: #6b7280; font-size: 14px;">Order Number</span>
-                  <span style="color: #111827; font-size: 14px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace;">#${orderDetails?.order_number || "N/A"}</span>
+                  <span style="color: #111827; font-size: 14px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace;"> #${orderDetails?.order_number || "N/A"}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                   <span style="color: #6b7280; font-size: 14px;">Order Date</span>
@@ -465,19 +459,9 @@ export const getPayment = async (params: {
                   <span style="color: #6b7280; font-size: 14px;">Status</span>
                   <span style="display: inline-flex; align-items: center; padding: 4px 8px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600; border-radius: 6px;">
                     <div style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></div>
-                    Processing
+                    PAID
                   </span>
                 </div>
-              </div>
-              
-              <!-- Footer -->
-              <div style="background: #f9fafb; padding: 32px; text-align: center; border-top: 1px solid #e5e7eb;">
-                <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">Questions? We're here to help.</p>
-                <div style="margin-bottom: 24px;">
-                  <a href="mailto:support@noir-clothing.com" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Contact Support</a>
-                  <a href="https://www.noir-clothing.com/help" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Help Center</a>
-                </div>
-                <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2025 Noir Clothing. All rights reserved.</p>
               </div>
             </div>
           `,
