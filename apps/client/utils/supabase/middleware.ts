@@ -97,10 +97,6 @@ const determineRouteAction = ({
     return RouteAction.REDIRECT_ADMIN;
   }
 
-  if (role === CompanyMemberRole.ADMIN && isPublicRoute(pathname)) {
-    return RouteAction.REDIRECT_ADMIN;
-  }
-
   // Non-admin users visiting public route (e.g. `/account`)
   if (isPublicRoute(pathname)) {
     if (pathname === "/login" && user) return RouteAction.REDIRECT_DASHBOARD;
