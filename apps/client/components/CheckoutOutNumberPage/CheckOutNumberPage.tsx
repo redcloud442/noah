@@ -12,14 +12,12 @@ import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRight,
-  Banknote,
   Loader2,
   Mail,
   MapPin,
   Phone,
   Shield,
   ShoppingBag,
-  Smartphone,
   User,
 } from "lucide-react";
 import Image from "next/image";
@@ -32,7 +30,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 type CheckOutNumberPageProps = {
-  formattedAddress: AddressCreateFormData;
+  formattedAddress: AddressCreateFormData | null;
 };
 
 const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
@@ -50,14 +48,14 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      email: formattedAddress.email,
-      firstName: formattedAddress.firstName,
-      lastName: formattedAddress.lastName,
-      address: formattedAddress.address,
-      province: formattedAddress.province,
-      city: formattedAddress.city,
-      postalCode: formattedAddress.postalCode,
-      phone: formattedAddress.phone,
+      email: formattedAddress?.email,
+      firstName: formattedAddress?.firstName,
+      lastName: formattedAddress?.lastName,
+      address: formattedAddress?.address,
+      province: formattedAddress?.province,
+      city: formattedAddress?.city,
+      postalCode: formattedAddress?.postalCode,
+      phone: formattedAddress?.phone,
       order_number: params.checkoutNumber as string,
     },
   });
@@ -310,7 +308,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                       {...register("address", { required: true })}
                       type="text"
                       placeholder="123 Main Street, Apartment 4B"
-                      className="h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black"
+                      className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
                     />
                   </div>
 
@@ -399,7 +397,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         {...register("postalCode", { required: true })}
                         type="text"
                         placeholder="1234"
-                        className="h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black"
+                        className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
                       />
                     </div>
                     <div>
@@ -418,7 +416,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           {...register("phone", { required: true })}
                           type="text"
                           placeholder="9123456789"
-                          className="pl-16 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl text-black"
+                          className="pl-16 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
                         />
                       </div>
                     </div>
@@ -464,13 +462,13 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                   </div>
 
                   {/* Payment Methods */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900 mb-4">
+                  {/* <div className="space-y-4"> */}
+                  {/* <h3 className="font-semibold text-gray-900 mb-4">
                       Accepted Payment Methods
-                    </h3>
+                    </h3> */}
 
-                    {/* Credit Cards */}
-                    {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+                  {/* Credit Cards */}
+                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <CreditCard className="w-5 h-5 text-blue-600" />
@@ -499,8 +497,8 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                       </div>
                     </div> */}
 
-                    {/* E-Wallets */}
-                    <div className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors">
+                  {/* E-Wallets */}
+                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <Smartphone className="w-5 h-5 text-green-600" />
@@ -535,10 +533,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
-                    {/* Online Banking */}
-                    <div className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                  {/* Online Banking */}
+                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <Banknote className="w-5 h-5 text-purple-600" />
@@ -565,8 +563,8 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </div> */}
+                  {/* </div> */}
                 </div>
               </div>
             </div>

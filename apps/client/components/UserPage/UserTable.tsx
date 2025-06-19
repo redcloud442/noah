@@ -11,7 +11,7 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -82,10 +82,7 @@ const UserTable = () => {
     gcTime: 1000 * 60 * 10,
   });
 
-  const { columns } = useMemo(
-    () => UserColumn({ formValue, activePage }),
-    [formValue, activePage]
-  );
+  const { columns } = UserColumn({ formValue, activePage });
 
   const table = useReactTable({
     data: data?.data || [],
@@ -111,7 +108,7 @@ const UserTable = () => {
 
   const pageCount = Math.ceil((data?.count || 0) / 15);
 
-  const tableColumns = useMemo(() => {
+  const tableColumns = () => {
     return table
       .getAllColumns()
       .filter((column) => column.getCanHide())
@@ -132,7 +129,7 @@ const UserTable = () => {
           toggleVisibility: column.toggleVisibility,
         };
       });
-  }, [table.getAllColumns()]);
+  };
 
   const handleFetch = useCallback(
     async (data: FilterFormValues) => {
@@ -188,7 +185,7 @@ const UserTable = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="shadow-md">
-              {tableColumns
+              {tableColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => {
                   return (

@@ -252,7 +252,7 @@ export const OrderListColumn = () => {
     },
 
     {
-      accessorKey: "order_user",
+      accessorKey: "order_email",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -263,7 +263,7 @@ export const OrderListColumn = () => {
         </Button>
       ),
       cell: ({ row }) => {
-        const value = row.getValue("order_user") as string;
+        const value = row.getValue("order_email") as string;
         return (
           <div className="flex items-center justify-center gap-2 text-wrap w-full">
             <span>{value}</span>

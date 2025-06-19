@@ -1,6 +1,7 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 
@@ -68,9 +69,11 @@ const ModernClothingEcommerce = () => {
                 speaks to your sophisticated taste.
               </p>
               <div className="flex space-x-4">
-                <Button className="bg-white text-black sm:text-sm md:text-base px-8 py-4 rounded-none font-semibold hover:bg-gray-200 transition-colors">
-                  Shop Collection
-                </Button>
+                <Link href="/shop">
+                  <Button className="bg-white text-black sm:text-sm md:text-base px-8 py-4 rounded-none font-semibold hover:bg-gray-200 transition-colors">
+                    Explore Shop
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

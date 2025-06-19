@@ -57,7 +57,9 @@ const ChangePasswordTab = ({ userId }: ChangePasswordTabProps) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password" className="text-white">
+                New Password
+              </Label>
               <FormControl>
                 <Input type="password" id="password" {...field} />
               </FormControl>
@@ -71,7 +73,9 @@ const ChangePasswordTab = ({ userId }: ChangePasswordTabProps) => {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-white">
+                Confirm Password
+              </Label>
               <FormControl>
                 <Input type="password" id="confirmPassword" {...field} />
               </FormControl>

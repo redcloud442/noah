@@ -36,7 +36,9 @@ export const useCartStore = create<Store>((set) => ({
   addToCart: (product) =>
     set((state) => {
       const existingProductIndex = state.cart.products.findIndex(
-        (p) => p.product_id === product.product_id
+        (p) =>
+          p.product_variant_id === product.product_variant_id &&
+          p.product_variant_size === product.product_variant_size
       );
 
       let updatedProducts;
@@ -47,7 +49,7 @@ export const useCartStore = create<Store>((set) => ({
           index === existingProductIndex
             ? {
                 ...p,
-                product_quantity: product.product_quantity,
+                product_quantity: p.product_quantity,
               }
             : p
         );
@@ -59,7 +61,7 @@ export const useCartStore = create<Store>((set) => ({
       return {
         cart: {
           products: updatedProducts,
-          count: state.cart.count + 1,
+          count: state.cart.count,
         },
       };
     }),

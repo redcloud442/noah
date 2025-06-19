@@ -89,7 +89,7 @@ export const productService = {
       throw new Error(data.error);
     }
 
-    return data;
+    return data as product_category_table[];
   },
   publicProduct: async (params: {
     take: number;

@@ -12,7 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconBrandFacebookFilled, IconBrandGoogle } from "@tabler/icons-react";
+import { IconBrandGoogle } from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -105,33 +105,6 @@ export const LoginPage = () => {
     }
   };
 
-  const handleSignInWithFacebook = async () => {
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
-        },
-      });
-
-      localStorage.removeItem("shoppingCart");
-    } catch (error) {
-      if (error instanceof Error) {
-        notifications.show({
-          title: "Error signing in with Facebook",
-          message: error.message,
-          color: "red",
-        });
-      } else {
-        notifications.show({
-          title: "Error signing in with Facebook",
-          message: "Error signing in with Facebook",
-          color: "red",
-        });
-      }
-    }
-  };
-
   return (
     <div className={classes.wrapper}>
       <Paper className={classes.form} radius={0} p={30}>
@@ -168,14 +141,6 @@ export const LoginPage = () => {
           />
 
           <ButtonGroup mt="xl">
-            <Button
-              fullWidth
-              onClick={handleSignInWithFacebook}
-              variant="default"
-              leftSection={<IconBrandFacebookFilled color="#339af0" />}
-            >
-              Facebook
-            </Button>
             <Button
               fullWidth
               onClick={handleSignInWithGoogle}

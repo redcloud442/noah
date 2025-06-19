@@ -15,10 +15,10 @@ import { formattedUpdateProductResponse } from "@/utils/function";
 import { ProductFormType, productSchema } from "@/utils/schema";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { product_category_table } from "@prisma/client";
+import { useQuery } from "@tanstack/react-query";
 import { PhilippinePeso, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ImageDropzone } from "../ProductCategoryPage/CreateProductCategory/ImageDropzone";
@@ -39,7 +39,6 @@ const EditProductPage = ({
   const router = useRouter();
 
   const { userData } = useUserDataStore();
-  const [categories, setCategories] = useState<product_category_table[]>([]);
   const [sizeGuidePreviewUrls, setSizeGuidePreviewUrls] = useState<
     Record<number, string>
   >(
@@ -67,30 +66,12 @@ const EditProductPage = ({
     name: "products",
   });
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabaseClient
-          .schema("product_schema")
-          .from("product_category_table")
-          .select("*");
-
-        if (error) {
-          toast.error(error.message);
-        }
-
-        setCategories(data || []);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("Error fetching categories");
-        }
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => productService.getProductCategories(),
+    gcTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 10,
+  });
 
   const onSubmit = async (data: ProductFormType) => {
     try {
@@ -181,7 +162,7 @@ const EditProductPage = ({
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
+                    {categories?.map((category) => (
                       <SelectItem
                         key={category.product_category_id}
                         value={category.product_category_id}

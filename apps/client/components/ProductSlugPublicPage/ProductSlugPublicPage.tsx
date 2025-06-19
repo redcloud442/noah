@@ -67,12 +67,12 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
         return;
       }
 
-      setIsLoading(true);
       if (!variantInfo || !selectedSize) {
         toast.error("Please select a size before adding to cart.");
-        setIsLoading(false);
         return;
       }
+
+      setIsLoading(true);
 
       const selectedSizeData = variantInfo.variant_sizes.find(
         (s) => s.variant_size_value === selectedSize
@@ -80,48 +80,91 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
 
       if (!selectedSizeData || selectedSizeData.variant_size_quantity <= 0) {
         toast.error("Selected size is out of stock.");
-        setIsLoading(false);
         return;
       }
 
+      const cartId = uuidv4();
       const cartItem = {
-        cart_id: uuidv4(),
+        cart_id: cartId,
         product_id: variantInfo.product_variant_product_id,
         product_name: product.product_name,
         product_price: product.product_price,
         product_quantity: quantity,
         product_size: selectedSize,
         product_variant_id: variantInfo.product_variant_id,
-        product_variant_size: selectedSize,
         product_variant_color: variantInfo.product_variant_color,
         product_variant_quantity: selectedSizeData.variant_size_quantity,
         product_variant_image:
           variantInfo?.variant_sample_images[0]
             ?.variant_sample_image_image_url ?? "",
         cart_is_checked_out: false,
+        product_variant_size: selectedSize,
       };
 
-      if (!userData) {
-        localStorage.setItem(
-          "shoppingCart",
-          JSON.stringify({ products: [cartItem], count: cart.count + quantity })
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
+      );
+
+      const existingQuantity =
+        existingItemIndex !== -1
+          ? cart.products[existingItemIndex].product_quantity
+          : 0;
+
+      const maxStock = selectedSizeData.variant_size_quantity;
+
+      if (existingQuantity + quantity > maxStock) {
+        toast.error(
+          `Cannot add more than ${maxStock} items for size ${selectedSize}.`
         );
-        addToCart(cartItem);
-      } else {
-        const created = await cartService.create({ ...cartItem });
-        addToCart({ ...cartItem, cart_id: created.cart_id });
+        return;
       }
+
+      if (!userData) {
+        if (existingItemIndex !== -1) {
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
+        } else {
+          cart.products.push({
+            ...cartItem,
+            product_quantity: quantity + existingQuantity,
+            product_variant_size: selectedSize,
+          });
+          cart.count = cart.count + 1;
+        }
+
+        localStorage.setItem("shoppingCart", JSON.stringify(cart));
+        addToCart({ ...cartItem, product_variant_size: selectedSize });
+      } else {
+        const created = await cartService.create(cartItem);
+
+        if (existingItemIndex !== -1) {
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
+        } else {
+          cart.products.push({
+            ...cartItem,
+            cart_id: created.cart_id,
+            product_variant_size: selectedSize,
+          });
+          cart.count = cart.count + 1;
+        }
+
+        addToCart({
+          ...cartItem,
+          cart_id: created.cart_id,
+        });
+      }
+
+      toast.success("Added to cart successfully!");
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error adding to cart.");
-      }
+      toast.error(
+        error instanceof Error ? error.message : "Error adding to cart."
+      );
     } finally {
       setIsLoading(false);
     }
-
-    toast.success("Added to cart successfully!");
   };
 
   const handleProceedToCheckout = async () => {

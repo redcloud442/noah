@@ -26,9 +26,6 @@ const handleFetchCollections = async () => {
       `https://noah-1v48.onrender.com/api/v1/publicRoutes/product-collections-all`,
       {
         method: "GET",
-        next: {
-          revalidate: 60 * 10,
-        },
       }
     );
 

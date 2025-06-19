@@ -405,7 +405,7 @@ export const getPayment = async (params: {
           },
         });
 
-        await prisma.variant_size_table.updateMany({
+        const updated = await tx.variant_size_table.updateMany({
           where: {
             variant_size_variant_id: {
               in: orderDetails?.order_items.map(
@@ -474,7 +474,6 @@ export const getPayment = async (params: {
           text: `Hi there, we encountered an issue processing your payment. Please try again or contact our support team at support@noir-clothing.com if you need assistance.`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <!-- Header -->
               <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
                 <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
                 <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
@@ -497,43 +496,12 @@ export const getPayment = async (params: {
               <div style="margin: 0 32px 32px; padding: 24px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
                 <h3 style="color: #991b1b; font-size: 18px; font-weight: 600; margin: 0 0 12px;">What happened?</h3>
                 <p style="color: #7f1d1d; font-size: 14px; margin: 0 0 16px; line-height: 1.5;">Your payment could not be processed at this time. This could be due to insufficient funds, an expired card, or a temporary issue with your payment method.</p>
-                <div style="background: #ffffff; padding: 16px; border-radius: 8px; border: 1px solid #f3f4f6;">
-                  <p style="color: #374151; font-size: 14px; margin: 0; font-weight: 500;">💡 Quick fixes to try:</p>
-                  <ul style="color: #6b7280; font-size: 13px; margin: 8px 0 0 16px; padding: 0;">
-                    <li style="margin-bottom: 4px;">Check your card details and expiry date</li>
-                    <li style="margin-bottom: 4px;">Ensure sufficient funds are available</li>
-                    <li>Try a different payment method</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <!-- CTA Buttons -->
-              <div style="text-align: center; margin: 32px;">
-                <a href="https://noir-clothing.com/checkout" 
-                   style="display: inline-block; padding: 16px 32px; background: #111827; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 0 8px 16px;">
-                  Try Again
-                </a>
-                <br>
-                <a href="mailto:support@noir-clothing.com" 
-                   style="display: inline-block; padding: 12px 24px; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 0 8px;">
-                  Contact Support
-                </a>
-              </div>
-              
-              <!-- Footer -->
-              <div style="background: #f9fafb; padding: 32px; text-align: center; border-top: 1px solid #e5e7eb;">
-                <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px;">Need help? We're here for you 24/7.</p>
-                <div style="margin-bottom: 24px;">
-                  <a href="mailto:support@noir-clothing.com" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">support@noir-clothing.com</a>
-                  <a href="https://noir-clothing.com/help" style="color: #111827; text-decoration: none; font-weight: 500; margin: 0 16px;">Help Center</a>
-                </div>
-                <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2025 Noir Clothing. All rights reserved.</p>
-              </div>
+              </div>       
             </div>
             `,
         });
 
-        await prisma.variant_size_table.updateMany({
+        await tx.variant_size_table.updateMany({
           where: {
             variant_size_variant_id: {
               in: orderDetails?.order_items.map(

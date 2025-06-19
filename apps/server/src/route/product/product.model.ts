@@ -193,7 +193,7 @@ export const productVariantCreateModel = async (
               ${product.product_description ?? "Experience the perfect blend of style and comfort with our newest addition!"}
             </p>
             <p style="margin: 20px 0;">
-              <a href="https://noir-clothing.com/shop" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; font-weight: bold; border-radius: 5px;">
+              <a href="https://www.noir-clothing.com/shop" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; font-weight: bold; border-radius: 5px;">
                 Shop Now
               </a>
             </p>
@@ -599,14 +599,6 @@ export const productPublicModel = async (params: ProductPublicParams) => {
 };
 
 export const productGetAllProductCollectionsModel = async () => {
-  const cacheKey = "product-get-all-product-collections";
-
-  const cachedData = await redis.get(cacheKey);
-
-  if (cachedData) {
-    return cachedData;
-  }
-
   const [collections, freshDrops, featuredProducts] = await Promise.all([
     prisma.product_category_table.findMany({
       select: {
@@ -687,8 +679,6 @@ export const productGetAllProductCollectionsModel = async () => {
     freshDrops,
     featuredProducts,
   };
-
-  await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 * 60 * 24 });
 
   return returnData;
 };

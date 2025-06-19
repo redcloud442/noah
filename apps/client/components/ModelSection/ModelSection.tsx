@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 
 const ModelSection = ({ products }: { products: ProductType[] }) => {
   return (
-    <div className="flex flex-wrap justify-center items-center w-full bg-white gap-4 p-4 pt-10">
+    <div className="flex flex-col justify-center items-center w-full bg-white gap-4 p-4 pt-10">
       <div className="text-center mb-16">
         <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-black via-zinc-950 to-zinc-900 bg-clip-text text-transparent mb-4">
           Latest Collection

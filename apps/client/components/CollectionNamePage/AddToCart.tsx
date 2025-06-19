@@ -93,6 +93,13 @@ export const VariantSelectionToast = ({
 
   const handleAddToCart = async () => {
     try {
+      if (isSoldOut) {
+        toaster({
+          title: "Selected size is out of stock.",
+          variant: "destructive",
+        });
+        return;
+      }
       // Validation checks
       if (!selectedVariant || !selectedSize) {
         toaster({
@@ -134,6 +141,26 @@ export const VariantSelectionToast = ({
         cart_is_checked_out: false,
       };
 
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
+      );
+
+      const existingQuantity =
+        existingItemIndex !== -1
+          ? cart.products[existingItemIndex].product_quantity
+          : 0;
+
+      const maxStock = selectedSizeData.variant_size_quantity;
+
+      if (existingQuantity + quantity > maxStock) {
+        toast.error(
+          `Cannot add more than ${maxStock} items for size ${selectedSize}.`
+        );
+        return;
+      }
+
       // Handle cart operationsc
       if (!userData) {
         // Guest user - localStorage
@@ -144,13 +171,15 @@ export const VariantSelectionToast = ({
         );
 
         if (existingItemIndex !== -1) {
-          cart.products[existingItemIndex].product_quantity = quantity;
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
         } else {
           cart.products.push({
             ...cartItem,
-            product_quantity: quantity,
+            product_quantity: quantity + existingQuantity,
             product_variant_size: selectedSize,
           });
+          cart.count = cart.count + 1;
         }
 
         localStorage.setItem("shoppingCart", JSON.stringify(cart));
@@ -169,13 +198,15 @@ export const VariantSelectionToast = ({
         );
 
         if (existingItemIndex !== -1) {
-          cart.products[existingItemIndex].product_quantity += quantity;
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
         } else {
           cart.products.push({
             ...cartItem,
             cart_id: created.cart_id,
             product_variant_size: selectedSize,
           });
+          cart.count = cart.count + 1;
         }
 
         addToCart({
@@ -459,6 +490,14 @@ export const VariantTypeSelectionToast = ({
 
   const handleAddToCart = async () => {
     try {
+      if (isSoldOut) {
+        toaster({
+          title: "Selected size is out of stock.",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Validation checks
       if (!selectedVariant || !selectedSize) {
         toaster({
           title: "Please select a size before adding to cart.",
@@ -466,8 +505,6 @@ export const VariantTypeSelectionToast = ({
         });
         return;
       }
-
-      setIsLoading(true);
 
       const selectedSizeData = selectedVariant.variant_sizes.find(
         (s) => s.variant_size_value === selectedSize
@@ -481,8 +518,10 @@ export const VariantTypeSelectionToast = ({
         return;
       }
 
-      const cartId = uuidv4();
+      setIsLoading(true);
 
+      // Prepare cart item
+      const cartId = uuidv4();
       const cartItem = {
         cart_id: cartId,
         product_id: selectedVariant.product_variant_product_id,
@@ -491,7 +530,6 @@ export const VariantTypeSelectionToast = ({
         product_quantity: quantity,
         product_size: selectedSize,
         product_variant_id: selectedVariant.product_variant_id,
-        product_variant_size: selectedSize,
         product_variant_color: selectedVariant.product_variant_color,
         product_variant_quantity: selectedSizeData.variant_size_quantity,
         product_variant_image:
@@ -500,7 +538,29 @@ export const VariantTypeSelectionToast = ({
         cart_is_checked_out: false,
       };
 
+      const existingItemIndex = cart.products.findIndex(
+        (item) =>
+          item.product_variant_id === cartItem.product_variant_id &&
+          item.product_size === cartItem.product_size
+      );
+
+      const existingQuantity =
+        existingItemIndex !== -1
+          ? cart.products[existingItemIndex].product_quantity
+          : 0;
+
+      const maxStock = selectedSizeData.variant_size_quantity;
+
+      if (existingQuantity + quantity > maxStock) {
+        toast.error(
+          `Cannot add more than ${maxStock} items for size ${selectedSize}.`
+        );
+        return;
+      }
+
+      // Handle cart operationsc
       if (!userData) {
+        // Guest user - localStorage
         const existingItemIndex = cart.products.findIndex(
           (item) =>
             item.product_variant_id === cartItem.product_variant_id &&
@@ -508,18 +568,26 @@ export const VariantTypeSelectionToast = ({
         );
 
         if (existingItemIndex !== -1) {
-          cart.products[existingItemIndex].product_quantity += quantity;
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
         } else {
-          cart.products.push(cartItem);
+          cart.products.push({
+            ...cartItem,
+            product_quantity: quantity + existingQuantity,
+            product_variant_size: selectedSize,
+          });
+          cart.count = cart.count + 1;
         }
 
         localStorage.setItem("shoppingCart", JSON.stringify(cart));
-        addToCart(cartItem);
+        addToCart({ ...cartItem, product_variant_size: selectedSize });
       } else {
+        // Logged in user - API call
         const created = await cartService.create({
           ...cartItem,
-          cart_id: cartId,
+          product_variant_size: selectedSize,
         });
+
         const existingItemIndex = cart.products.findIndex(
           (item) =>
             item.product_variant_id === cartItem.product_variant_id &&
@@ -527,16 +595,27 @@ export const VariantTypeSelectionToast = ({
         );
 
         if (existingItemIndex !== -1) {
-          cart.products[existingItemIndex].product_quantity += quantity;
+          cart.products[existingItemIndex].product_quantity =
+            quantity + existingQuantity;
         } else {
-          cart.products.push(cartItem);
+          cart.products.push({
+            ...cartItem,
+            cart_id: created.cart_id,
+            product_variant_size: selectedSize,
+          });
+          cart.count = cart.count + 1;
         }
 
-        addToCart({ ...cartItem, cart_id: created.cart_id });
+        addToCart({
+          ...cartItem,
+          cart_id: created.cart_id,
+          product_variant_size: selectedSize,
+        });
       }
 
       closeToast();
 
+      // Success toast
       toast.custom(
         () => (
           <div className="bg-white text-black p-6 shadow-xl border rounded-none border-gray-200 w-full">
@@ -578,9 +657,14 @@ export const VariantTypeSelectionToast = ({
 
               <Button
                 variant="default"
-                className="w-full bg-black text-white hover:bg-gray-800"
-                onClick={() => handleProceedToCheckout(cartItem)}
                 disabled={isLoading}
+                className="w-full bg-black text-white hover:bg-gray-800"
+                onClick={() =>
+                  handleProceedToCheckout({
+                    ...cartItem,
+                    product_variant_size: selectedSize,
+                  })
+                }
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -26,6 +26,8 @@ const sizes = [
   { label: "XXL", value: "XXL" },
 ];
 
+const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL"]; // adjust if needed
+
 type Props = {
   productIndex: number;
   control: Control<ProductFormType>;
@@ -199,25 +201,37 @@ export const ProductVariantsEdit = ({
                       <MultiSelect
                         options={sizes}
                         onValueChange={handleSizeChange}
-                        defaultValue={selected.map((s) => s.size)}
+                        defaultValue={[...selected]
+                          .sort(
+                            (a, b) =>
+                              sizeOrder.indexOf(a.size) -
+                              sizeOrder.indexOf(b.size)
+                          )
+                          .map((s) => s.size)}
                         placeholder="Select sizes"
                         maxCount={6}
                       />
 
-                      {selected.map((s) => (
-                        <div key={s.size} className="flex items-center gap-4">
-                          <p className="w-12 font-medium">{s.size}</p>
-                          <FloatingLabelInput
-                            label="Quantity"
-                            type="number"
-                            value={s.quantity}
-                            onChange={(e) =>
-                              updateQuantity(s.size, Number(e.target.value))
-                            }
-                            className="w-28"
-                          />
-                        </div>
-                      ))}
+                      {[...selected]
+                        .sort(
+                          (a, b) =>
+                            sizeOrder.indexOf(a.size) -
+                            sizeOrder.indexOf(b.size)
+                        )
+                        .map((s) => (
+                          <div key={s.size} className="flex items-center gap-4">
+                            <p className="w-12 font-medium">{s.size}</p>
+                            <FloatingLabelInput
+                              label="Quantity"
+                              type="number"
+                              value={s.quantity}
+                              onChange={(e) =>
+                                updateQuantity(s.size, Number(e.target.value))
+                              }
+                              className="w-28"
+                            />
+                          </div>
+                        ))}
                     </div>
                   );
                 }}

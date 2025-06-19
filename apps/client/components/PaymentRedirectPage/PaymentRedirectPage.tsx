@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"; // ShadCN Button
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCartStore } from "@/lib/store";
 import { authService } from "@/services/auth";
 import { paymentService } from "@/services/payment";
 import { motion } from "framer-motion"; // Animation library
@@ -20,6 +21,7 @@ export const PaymentRedirectPage = ({
   paymentIntentId,
 }: PaymentRedirectPageProps) => {
   const router = useRouter();
+  const { setCart } = useCartStore();
   const [orderStatus, setOrderStatus] = useState<
     "PAID" | "CANCELED" | "PENDING" | "UNPAID"
   >("UNPAID");
@@ -39,12 +41,27 @@ export const PaymentRedirectPage = ({
 
         if (response.orderStatus === "PAID") {
           setOrderStatus("PAID");
+          localStorage.removeItem("shoppingCart");
+          setCart({
+            products: [],
+            count: 0,
+          });
         } else {
           setOrderStatus("CANCELED");
+          localStorage.removeItem("shoppingCart");
+          setCart({
+            products: [],
+            count: 0,
+          });
         }
       } catch (error) {
         if (error instanceof Error) {
           setOrderStatus("CANCELED");
+          localStorage.removeItem("shoppingCart");
+          setCart({
+            products: [],
+            count: 0,
+          });
         }
       }
     };
