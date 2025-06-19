@@ -48,7 +48,7 @@ const page = async ({
   //     return redirect("/");
   //   }
 
-  const address = await prisma.user_address_table.findFirstOrThrow({
+  const address = await prisma.user_address_table.findFirst({
     where: {
       user_address_user_id: user?.id,
       user_address_is_default: true,
