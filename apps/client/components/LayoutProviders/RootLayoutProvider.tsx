@@ -119,6 +119,8 @@ export function Providers({
   featuredProducts,
 }: RootLayoutProviderProps) {
   const isAdmin = useMemo(() => user?.user_metadata.role === "ADMIN", [user]);
+  const pathname = usePathname();
+  const isAdminRoute = pathname.includes("/admin");
 
   useInitStores({ featuredProducts, collections });
   useFetchUser(user);
@@ -132,7 +134,7 @@ export function Providers({
         disableTransitionOnChange
       >
         <div key={isAdmin ? "admin" : "public"}>
-          {isAdmin ? (
+          {isAdminRoute ? (
             <AdminLayout>{children}</AdminLayout>
           ) : (
             <ClientLayout
