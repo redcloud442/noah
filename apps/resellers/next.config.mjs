@@ -7,7 +7,7 @@ const nextConfig = {
         destination: `${
           process.env.NODE_ENV === "development"
             ? "http://localhost:8080"
-            : "http://localhost:8080"
+            : "https://noah-1v48.onrender.com"
         }/api/v1/:path*`,
       },
     ];
