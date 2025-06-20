@@ -36,7 +36,7 @@ const ActionsModal = ({ orderId, status, queryKey }: ActionsModalProps) => {
         orders: OrderType[];
         count: number;
       }>(queryKey);
-      console.log(previousData);
+
       if (previousData) {
         queryClient.setQueryData(queryKey, (old: typeof previousData) => {
           if (!old) return old;

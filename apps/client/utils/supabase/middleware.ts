@@ -85,7 +85,10 @@ const determineRouteAction = ({
   role,
   pathname,
 }: RouteActionParams): RouteAction => {
-  // Handle unauthenticated users
+  if (pathname.startsWith("/api/v1")) {
+    return RouteAction.ALLOW;
+  }
+
   if (!user) {
     if (isPublicRoute(pathname)) return RouteAction.ALLOW;
     return RouteAction.REDIRECT_LOGIN;
