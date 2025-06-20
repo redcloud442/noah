@@ -59,4 +59,5 @@ app.route("/api/v1", route);
 export default {
   port: envConfig.PORT,
   fetch: app.fetch,
+  hostname: "0.0.0.0",
 };
