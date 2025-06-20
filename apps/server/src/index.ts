@@ -60,4 +60,6 @@ export default {
   port: envConfig.PORT,
   fetch: app.fetch,
   hostname: "0.0.0.0",
+  keepAliveTimeout: 10 * 1000,
+  headersTimeout: 11 * 1000,
 };
