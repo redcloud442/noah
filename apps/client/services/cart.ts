@@ -1,5 +1,5 @@
 import { Product } from "@/utils/types";
-import { apiClient } from "./axios";
+import axios from "axios";
 
 export const cartService = {
   create: async (params: {
@@ -14,7 +14,7 @@ export const cartService = {
     product_name: string;
     product_price: number;
   }) => {
-    const result = await apiClient.post("/cart", params);
+    const result = await axios.post("/api/v1/cart", params);
 
     if (result.status !== 200) {
       throw new Error("Login failed");
@@ -24,7 +24,7 @@ export const cartService = {
   },
 
   get: async () => {
-    const result = await apiClient.get("/cart");
+    const result = await axios.get("/api/v1/cart");
 
     if (result.status !== 200) {
       throw new Error("Error fetching cart");
@@ -34,7 +34,7 @@ export const cartService = {
   },
 
   checkedOut: async () => {
-    const result = await apiClient.get("/cart/checked-out");
+    const result = await axios.get("/api/v1/cart/checked-out");
 
     if (result.status !== 200) {
       throw new Error("Error fetching cart");
@@ -49,7 +49,7 @@ export const cartService = {
       product_variant_size: string;
     }[];
   }) => {
-    const result = await apiClient.post("/cart/quantity", params);
+    const result = await axios.post("/api/v1/cart/quantity", params);
 
     if (result.status !== 200) {
       throw new Error("Error fetching cart quantity");
@@ -58,13 +58,13 @@ export const cartService = {
     return result.data;
   },
   delete: async (id: string) => {
-    const result = await apiClient.delete(`/cart/${id}`);
+    const result = await axios.delete(`/api/v1/cart/${id}`);
 
     return result.data;
   },
 
   update: async (id: string, product_quantity: number) => {
-    const result = await apiClient.put(`/cart/${id}`, { product_quantity });
+    const result = await axios.put(`/api/v1/cart/${id}`, { product_quantity });
 
     if (result.status !== 200) {
       throw new Error("Update failed");
@@ -88,7 +88,7 @@ export const cartService = {
       cart_is_checked_out: boolean;
     }[];
   }) => {
-    const result = await apiClient.post("/cart/checkout", params);
+    const result = await axios.post("/api/v1/cart/checkout", params);
 
     if (result.status !== 200) {
       throw new Error("Error checking out items");

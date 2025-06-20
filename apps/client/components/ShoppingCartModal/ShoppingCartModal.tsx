@@ -206,7 +206,7 @@ const ShoppingCartModal = () => {
     }
   };
 
-  const hasInvalidProduct = cart.products.some((product) => {
+  const hasInvalidProduct = cart?.products?.some((product) => {
     const stock = currentStock.find(
       (s) =>
         s.variant_size_variant_id === product.product_variant_id &&

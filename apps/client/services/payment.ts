@@ -1,14 +1,14 @@
 import { CheckoutFormData, PaymentCreatePaymentFormData } from "@/utils/schema";
+import axios from "axios";
 import {
   PaymentMethodResponse,
   PaymentRedirectResponse,
   PaymentResponse,
 } from "../../../types/types";
-import { apiClient } from "./axios";
 
 export const paymentService = {
   create: async (params: CheckoutFormData) => {
-    const result = await apiClient.post("/payment", params);
+    const result = await axios.post("/api/v1/payment", params);
 
     if (result.status !== 200) {
       throw new Error(result.data.message);
@@ -17,7 +17,7 @@ export const paymentService = {
     return result as unknown as PaymentResponse;
   },
   createPaymentMethod: async (params: PaymentCreatePaymentFormData) => {
-    const result = await apiClient.post("/payment/create-payment", params);
+    const result = await axios.post("/api/v1/payment/create-payment", params);
 
     if (result.status !== 200) {
       throw new Error(result.data.message);
@@ -30,7 +30,7 @@ export const paymentService = {
     clientKey: string;
     orderNumber: string;
   }) => {
-    const result = await apiClient.get(`/payment/${params.orderNumber}`, {
+    const result = await axios.get(`/api/v1/payment/${params.orderNumber}`, {
       params: {
         paymentIntentId: params.paymentIntentId,
         clientKey: params.clientKey,

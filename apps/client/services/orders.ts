@@ -1,10 +1,10 @@
 import { order_table } from "@prisma/client";
+import axios from "axios";
 import { OrderItem, OrderType } from "../utils/types";
-import { apiClient } from "./axios";
 
 export const ordersService = {
   getOrders: async (params: { take: number; skip: number }) => {
-    const result = await apiClient.get("/orders", { params });
+    const result = await axios.get("/api/v1/orders", { params });
 
     if (result.status !== 200) {
       throw new Error("Payment failed");
@@ -20,7 +20,7 @@ export const ordersService = {
     skip: number;
     userId: string;
   }) => {
-    const result = await apiClient.post("/orders/list", { params });
+    const result = await axios.post("/api/v1/orders/list", { params });
 
     if (result.status !== 200) {
       throw new Error("Payment failed");
@@ -32,7 +32,7 @@ export const ordersService = {
     };
   },
   getOrderItems: async (order_number: string) => {
-    const result = await apiClient.get(`/orders/${order_number}/items`);
+    const result = await axios.get(`/api/v1/orders/${order_number}/items`);
 
     if (result.status !== 200) {
       throw new Error("Payment failed");
@@ -50,7 +50,7 @@ export const ordersService = {
     };
     teamId: string;
   }) => {
-    const result = await apiClient.post("/orders/list", { params });
+    const result = await axios.post("/api/v1/orders/list", { params });
 
     if (result.status !== 200) {
       throw new Error("Payment failed");

@@ -1,10 +1,10 @@
 import { typeDashboardSchema } from "@/utils/schema";
 import { DashboardType } from "@/utils/types";
-import { apiClient } from "./axios";
+import axios from "axios";
 
 export const dashboardService = {
   get: async (params: typeDashboardSchema) => {
-    const result = await apiClient.post("/dashboard", params);
+    const result = await axios.post("/api/v1/dashboard", params);
 
     if (result.status !== 200) {
       throw new Error("Dashboard failed");

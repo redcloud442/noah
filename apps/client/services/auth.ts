@@ -1,6 +1,6 @@
 import { Product, teamMemberProfile } from "@/utils/types";
 import { user_table } from "@prisma/client";
-import { apiClient } from "./axios";
+import axios from "axios";
 
 export const authService = {
   login: async (
@@ -10,7 +10,7 @@ export const authService = {
     userId?: string,
     cart?: Product[]
   ) => {
-    const result = await apiClient.post("/auth/login", {
+    const result = await axios.post("/api/v1/auth/login", {
       email,
       firstName,
       lastName,
@@ -34,7 +34,7 @@ export const authService = {
     userId: string;
     cart?: Product[];
   }) => {
-    const result = await apiClient.post("/auth/callback", params);
+    const result = await axios.post("/api/v1/auth/callback", params);
 
     if (result.status !== 200) {
       throw new Error("Callback failed");
@@ -44,7 +44,7 @@ export const authService = {
   },
 
   saveCart: async (cart: Product[]) => {
-    const result = await apiClient.post("/auth/save-cart", {
+    const result = await axios.post("/api/v1/auth/save-cart", {
       cart,
     });
 
@@ -64,7 +64,7 @@ export const authService = {
     firstName: string;
     lastName: string;
   }) => {
-    const result = await apiClient.post("/auth/register", {
+    const result = await axios.post("/api/v1/auth/register", {
       email,
       firstName,
       lastName,
@@ -77,7 +77,7 @@ export const authService = {
     checkoutNumber: string,
     referralCode?: string
   ) => {
-    const result = await apiClient.post("/auth/checkout-token", {
+    const result = await axios.post("/auth/checkout-token", {
       checkoutNumber,
       referralCode,
     });
@@ -88,7 +88,7 @@ export const authService = {
   },
 
   getUser: async () => {
-    const result = await apiClient.get("/user");
+    const result = await axios.get("/api/v1/user");
     if (result.status !== 200) {
       throw new Error("Failed to get user");
     }
@@ -100,7 +100,7 @@ export const authService = {
   },
 
   verifyCheckoutToken: async () => {
-    const result = await apiClient.get(`/auth/verify-checkout-token`);
+    const result = await axios.get(`/api/v1/auth/verify-checkout-token`);
     if (result.status !== 200) {
       throw new Error("Failed to verify checkout token");
     }
@@ -108,7 +108,7 @@ export const authService = {
   },
 
   deleteCheckoutToken: async () => {
-    const result = await apiClient.post("/auth/delete-checkout-token");
+    const result = await axios.post("/auth/delete-checkout-token");
     if (result.status !== 200) {
       throw new Error("Failed to delete checkout token");
     }
@@ -116,6 +116,6 @@ export const authService = {
   },
 
   logout: async () => {
-    await apiClient.post("/auth/logout");
+    await axios.post("/api/v1/auth/logout");
   },
 };
