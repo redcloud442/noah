@@ -33,79 +33,87 @@ export const createPaymentIntent = async (
     (item) => item.product_variant_id
   );
 
-  const existingProducts = await prisma.product_variant_table.findMany({
-    where: {
-      product_variant_id: { in: productVariantIds },
-    },
-    select: {
-      product_variant_id: true,
-      variant_sizes: {
-        select: {
-          variant_size_quantity: true,
-        },
-      },
-    },
-  });
-
-  const productStockMap = new Map(
-    existingProducts.map((product) => [
-      product.product_variant_id,
-      product.variant_sizes.reduce(
-        (total, size) => total + size.variant_size_quantity,
-        0
-      ),
-    ])
-  );
-
-  for (const item of productVariant) {
-    const availableStock = productStockMap.get(item.product_variant_id);
-    if (availableStock === undefined) {
-      throw new Error(`Product variant ${item.product_variant_id} not found.`);
-    }
-    if (availableStock < item.product_variant_quantity) {
-      throw new Error(
-        `Insufficient stock for product ${item.product_variant_id}.`
-      );
-    }
-  }
-
-  const dataAmount = Math.round(amount * 100);
-
-  const response = await axios.post(
-    "https://api.paymongo.com/v1/payment_intents",
-    {
-      data: {
-        attributes: {
-          amount: dataAmount, // must be an integer in centavos
-          payment_method_allowed: ["card", "dob", "paymaya", "gcash"],
-          payment_method_options: {
-            card: {
-              request_three_d_secure: "any",
-            },
-          },
-          currency: "PHP",
-          capture_type: "automatic",
-          description: `Payment for order ${order_number}`,
-          statement_descriptor: "Order Payment",
-        },
-      },
-    },
-    {
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
-      },
-    }
-  );
-
-  if (response.status !== 200) {
-    throw new Error("Failed to create payment intent");
-  }
-
-  const data = response.data;
-
   const paymentIntent = await prisma.$transaction(async (tx) => {
+    const lockedStock = await tx.$queryRawUnsafe<
+      {
+        product_variant_id: string;
+        total_quantity: number;
+        variant_sizes: { variant_size_quantity: number }[];
+      }[]
+    >(
+      `
+    SELECT 
+      pvt.product_variant_id, 
+      SUM(vs.variant_size_quantity) AS total_quantity
+    FROM product_schema.product_variant_table pvt
+    JOIN product_schema.variant_size_table vs ON vs.variant_size_variant_id = pvt.product_variant_id
+    WHERE pvt.product_variant_id IN (${productVariantIds.map((_, i) => `$${i + 1}`).join(",")})
+    GROUP BY pvt.product_variant_id
+    FOR UPDATE
+  `,
+      ...productVariantIds
+    );
+
+    const productStockMap = new Map(
+      lockedStock.map((product) => [
+        product.product_variant_id,
+        product.variant_sizes.reduce(
+          (total, size) => total + size.variant_size_quantity,
+          0
+        ),
+      ])
+    );
+
+    for (const item of productVariant) {
+      const availableStock = productStockMap.get(item.product_variant_id);
+      if (availableStock === undefined) {
+        throw new Error(
+          `Product variant ${item.product_variant_id} not found.`
+        );
+      }
+      if (availableStock < item.product_variant_quantity) {
+        throw new Error(
+          `Insufficient stock for product ${item.product_variant_id}.`
+        );
+      }
+    }
+
+    const dataAmount = Math.round(amount * 100);
+
+    const response = await axios.post(
+      "https://api.paymongo.com/v1/payment_intents",
+      {
+        data: {
+          attributes: {
+            amount: dataAmount, // must be an integer in centavos
+            payment_method_allowed: ["card", "dob", "paymaya", "gcash"],
+            payment_method_options: {
+              card: {
+                request_three_d_secure: "any",
+              },
+            },
+            currency: "PHP",
+            capture_type: "automatic",
+            description: `Payment for order ${order_number}`,
+            statement_descriptor: "Order Payment",
+          },
+        },
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY! + ":").toString("base64")}`,
+        },
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error("Failed to create payment intent");
+    }
+
+    const data = response.data;
+
     let referral = null;
     if (referralCode) {
       const referralData = await prisma.reseller_table.findUnique({
@@ -160,7 +168,7 @@ export const createPaymentIntent = async (
   });
 
   return {
-    paymentIntent: data.data.id,
+    paymentIntent: paymentIntent.paymentIntent,
     paymentIntentStatus: "SUCCESS",
     order_id: paymentIntent.order_id,
     order_number: order_number,
