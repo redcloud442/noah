@@ -19,7 +19,7 @@ const AuthCallback = () => {
         token_hash: hashed_token,
         type: "email",
       });
-      console.log(data, error);
+
       if (error || !data?.session) {
         setStatus("error");
         setTimeout(() => {
