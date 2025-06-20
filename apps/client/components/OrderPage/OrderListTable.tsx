@@ -237,7 +237,7 @@ const OrderListTable = () => {
           table={table}
           columns={columns}
           activePage={activePage}
-          totalCount={pageCount}
+          totalCount={data?.count || 0}
           isFetchingList={isFetching}
           setActivePage={setActivePage}
           pageCount={pageCount}
