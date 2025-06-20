@@ -77,7 +77,7 @@ export const authService = {
     checkoutNumber: string,
     referralCode?: string
   ) => {
-    const result = await axios.post("/auth/checkout-token", {
+    const result = await axios.post("/api/v1/auth/checkout-token", {
       checkoutNumber,
       referralCode,
     });
@@ -108,7 +108,7 @@ export const authService = {
   },
 
   deleteCheckoutToken: async () => {
-    const result = await axios.post("/auth/delete-checkout-token");
+    const result = await axios.post("/api/v1/auth/delete-checkout-token");
     if (result.status !== 200) {
       throw new Error("Failed to delete checkout token");
     }
