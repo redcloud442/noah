@@ -46,12 +46,12 @@ export const createPaymentIntent = async (
       }[]
     >(
       `
-    SELECT 
-      pvt.product_variant_id, 
+    SELECT
+      pvt.product_variant_id,
       vs.variant_size_value,
       vs.variant_size_quantity
     FROM product_schema.product_variant_table pvt
-    JOIN product_schema.variant_size_table vs 
+    JOIN product_schema.variant_size_table vs
       ON vs.variant_size_variant_id = pvt.product_variant_id
     WHERE pvt.product_variant_id IN (${placeholders})
     FOR UPDATE
@@ -89,7 +89,7 @@ export const createPaymentIntent = async (
         );
       }
     }
-    const dataAmount = Math.round(amount * 100);
+    const dataAmount = Math.round(20 * 100);
 
     const response = await axios.post(
       "https://api.paymongo.com/v1/payment_intents",
@@ -249,7 +249,7 @@ export const createPaymentMethod = async (
                 : payment_method === "online_banking"
                   ? {
                       bank_code:
-                        payment_type?.toLowerCase() === "BPI" ? "bpi" : "ubp",
+                        payment_type?.toLowerCase() === "bpi" ? "bpi" : "ubp",
                     }
                   : undefined,
             billing: {
@@ -327,26 +327,19 @@ export const createPaymentMethod = async (
   }
 };
 
-export const getPayment = async (params: {
+export const getPayment = async ({
+  paymentIntentId,
+  clientKey,
+  orderNumber,
+}: {
   paymentIntentId: string;
   clientKey: string;
   orderNumber: string;
 }) => {
   try {
-    const orderDetails = await prisma.order_table.findUnique({
-      where: { order_number: params.orderNumber },
-      include: {
-        order_items: true,
-      },
-    });
-
-    if (orderDetails?.order_status !== "UNPAID") {
-      throw new Error("Payment already processed");
-    }
-
-    // 🔄 1️⃣ Retrieve Payment Intent
+    // 🔄 Retrieve Payment Intent from PayMongo
     const paymentIntent = await axios.get(
-      `https://api.paymongo.com/v1/payment_intents/${params.paymentIntentId}?client_key=${params.clientKey}`,
+      `https://api.paymongo.com/v1/payment_intents/${paymentIntentId}?client_key=${clientKey}`,
       {
         headers: {
           accept: "application/json",
@@ -356,51 +349,56 @@ export const getPayment = async (params: {
       }
     );
 
-    if (paymentIntent.status !== 200 || !paymentIntent.data.data) {
-      throw new Error("Payment intent not found");
+    if (paymentIntent.status !== 200 || !paymentIntent.data?.data) {
+      throw new Error("Failed to retrieve payment intent from PayMongo");
     }
 
     const paymentStatus = paymentIntent.data.data.attributes.status;
 
-    let orderStatus: "PAID" | "CANCELED" | "PENDING" | "UNPAID" = "PENDING";
+    const statusMap = {
+      succeeded: "PAID",
+      failed: "CANCELED",
+    } as const;
 
-    switch (paymentStatus) {
-      case "succeeded":
-        orderStatus = "PAID";
-        break;
-      case "failed":
-        orderStatus = "CANCELED";
-        break;
-      default:
-        orderStatus = "UNPAID";
-    }
+    const orderStatus: "PAID" | "CANCELED" | "PENDING" | "UNPAID" =
+      statusMap[paymentStatus as keyof typeof statusMap] ?? "UNPAID";
 
     await prisma.$transaction(async (tx) => {
-      const status = !!(await tx.order_table.findUnique({
-        where: { order_number: params.orderNumber, order_status: "UNPAID" },
-        select: { order_status: true },
-      }));
+      const order = await tx.order_table.findUnique({
+        where: { order_number: orderNumber },
+        include: { order_items: true },
+      });
 
-      if (!status) {
-        throw new Error("Payment already processed");
-      }
+      if (!order) throw new Error("Order not found");
+      if (order.order_status !== "UNPAID")
+        throw new Error("Order already processed");
 
+      const variantIds = order.order_items.map((i) => i.product_variant_id);
+      const sizes = order.order_items.map((i) => i.size ?? "");
+      const quantities = order.order_items.reduce(
+        (sum, i) => sum + i.quantity,
+        0
+      );
+
+      // Update order status
       await tx.order_table.update({
-        where: { order_number: params.orderNumber },
+        where: { order_number: orderNumber },
         data: { order_status: orderStatus },
       });
+
       if (orderStatus === "PAID") {
-        if (orderDetails?.order_reseller_id) {
-          const referral = await tx.reseller_table.findUnique({
-            where: { reseller_id: orderDetails?.order_reseller_id ?? "" },
+        // Handle referral
+        if (order.order_reseller_id) {
+          const reseller = await tx.reseller_table.findUnique({
+            where: { reseller_id: order.order_reseller_id },
           });
 
-          if (referral) {
-            const referralAmount = (orderDetails?.order_total ?? 0) * 0.1;
+          if (reseller) {
+            const referralAmount = (order.order_total ?? 0) * 0.1;
 
             await tx.reseller_transaction_table.create({
               data: {
-                reseller_transaction_reseller_id: referral.reseller_id,
+                reseller_transaction_reseller_id: reseller.reseller_id,
                 reseller_transaction_amount: referralAmount,
                 reseller_transaction_type: "REFERRAL",
                 reseller_transaction_status: "NON-WITHDRAWABLE",
@@ -408,7 +406,7 @@ export const getPayment = async (params: {
             });
 
             await tx.reseller_table.update({
-              where: { reseller_id: referral.reseller_id },
+              where: { reseller_id: reseller.reseller_id },
               data: {
                 reseller_non_withdrawable_earnings: {
                   increment: referralAmount,
@@ -417,142 +415,138 @@ export const getPayment = async (params: {
             });
           }
         }
-        await tx.cart_table.deleteMany({
-          where: {
-            cart_product_variant_id: {
-              in: orderDetails?.order_items.map(
-                (item) => item.product_variant_id
-              ),
-            },
-            cart_size: {
-              in: orderDetails?.order_items.map((item) => item.size ?? ""),
-            },
-            cart_user_id: orderDetails?.order_user_id ?? undefined,
-            cart_to_be_checked_out: true,
-          },
-        });
 
-        const updated = await tx.variant_size_table.updateMany({
-          where: {
-            variant_size_variant_id: {
-              in: orderDetails?.order_items.map(
-                (item) => item.product_variant_id
-              ),
-            },
-            variant_size_value: {
-              in: orderDetails?.order_items.map((item) => item.size ?? ""),
-            },
-          },
-          data: {
-            variant_size_quantity: {
-              decrement: orderDetails?.order_items.reduce(
-                (total, item) => total + item.quantity,
-                0
-              ),
-            },
-          },
-        });
-
-        await resend.emails.send({
-          from: "Noir Clothing <no-reply@help.noir-clothing.com>",
-          to: orderDetails?.order_email ?? "",
-          subject: "Payment confirmed — Your order is on its way!",
-          text: `Hi there! Your payment has been successfully processed. Order #${orderDetails?.order_number} is now being prepared for shipment. Track your order at noir-clothing.com/track/${orderDetails?.order_number}`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-            
-              <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
-                <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
-                <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
-              </div>
-              
-     
-              <div style="text-align: center; padding: 32px 0 24px;">
-                <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Confirmed</h1>
-                <p style="color: #6b7280; font-size: 16px; margin: 0;">Your order is being prepared for shipment</p>
-              </div>
-            
-              <div style="margin: 0 32px 32px; padding: 24px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
-                <h3 style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 16px;">Order Details</h3>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <span style="color: #6b7280; font-size: 14px;">Order Number</span>
-                  <span style="color: #111827; font-size: 14px; font-weight: 600; font-family: 'SF Mono', Monaco, monospace;"> #${orderDetails?.order_number || "N/A"}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                  <span style="color: #6b7280; font-size: 14px;">Order Date</span>
-                  <span style="color: #111827; font-size: 14px; font-weight: 500;">${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: #6b7280; font-size: 14px;">Status</span>
-                  <span style="display: inline-flex; align-items: center; padding: 4px 8px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600; border-radius: 6px;">
-                    <div style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></div>
-                    PAID
-                  </span>
-                </div>
-              </div>
-            </div>
-          `,
-        });
-      } else {
-        await resend.emails.send({
-          from: "Noir Clothing <no-reply@help.noir-clothing.com>",
-          to: orderDetails?.order_email ?? "",
-          subject: "Payment issue — Let's get this sorted",
-          text: `Hi there, we encountered an issue processing your payment. Please try again or contact our support team at support@noir-clothing.com if you need assistance.`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
-                <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
-                <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
-              </div>
-              
-              <!-- Error Icon -->
-              <div style="text-align: center; padding: 32px 0 24px;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #fef2f2; border: 2px solid #fecaca; border-radius: 50%; margin-bottom: 16px;">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                  </svg>
-                </div>
-                <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Issue</h1>
-                <p style="color: #6b7280; font-size: 16px; margin: 0;">We encountered a problem processing your payment</p>
-              </div>
-              
-              <!-- Issue Details -->
-              <div style="margin: 0 32px 32px; padding: 24px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
-                <h3 style="color: #991b1b; font-size: 18px; font-weight: 600; margin: 0 0 12px;">What happened?</h3>
-                <p style="color: #7f1d1d; font-size: 14px; margin: 0 0 16px; line-height: 1.5;">Your payment could not be processed at this time. This could be due to insufficient funds, an expired card, or a temporary issue with your payment method.</p>
-              </div>       
-            </div>
-            `,
-        });
-
+        // Decrease inventory
         await tx.variant_size_table.updateMany({
           where: {
-            variant_size_variant_id: {
-              in: orderDetails?.order_items.map(
-                (item) => item.product_variant_id
-              ),
-            },
-            variant_size_value: {
-              in: orderDetails?.order_items.map((item) => item.size ?? ""),
-            },
+            variant_size_variant_id: { in: variantIds },
+            variant_size_value: { in: sizes },
           },
           data: {
             variant_size_quantity: {
-              increment: orderDetails?.order_items.reduce(
-                (total, item) => total + item.quantity,
-                0
-              ),
+              decrement: quantities,
             },
           },
         });
+
+        // Delete checked out cart items
+        if (order.order_user_id) {
+          await tx.cart_table.deleteMany({
+            where: {
+              cart_product_variant_id: { in: variantIds },
+              cart_size: { in: sizes },
+              cart_user_id: order.order_user_id,
+              cart_to_be_checked_out: true,
+            },
+          });
+        }
+
+        await sendSuccessEmail(order.order_email, order.order_number);
+      } else {
+        // Return stock if failed
+        await tx.variant_size_table.updateMany({
+          where: {
+            variant_size_variant_id: { in: variantIds },
+            variant_size_value: { in: sizes },
+          },
+          data: {
+            variant_size_quantity: {
+              increment: quantities,
+            },
+          },
+        });
+
+        await sendFailureEmail(order.order_email);
       }
     });
 
     return { orderStatus, paymentStatus };
   } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error("PayMongo error:", error.response?.data);
+    }
+    console.error("GetPayment failed:", error);
     throw new Error("Failed to retrieve payment status");
   }
 };
+
+async function sendSuccessEmail(email: string, orderNumber: string) {
+  if (!email) return;
+  await resend.emails.send({
+    from: "Noir Clothing <no-reply@help.noir-clothing.com>",
+    to: email,
+    subject: "Payment confirmed — Your order is on its way!",
+    text: `Hi there! Your payment has been successfully processed. Order #${orderNumber} is now being prepared for shipment. Track your order at noir-clothing.com/track/${orderNumber}`,
+    html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+
+            <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
+              <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
+              <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
+            </div>
+
+
+            <div style="text-align: center; padding: 32px 0 24px;">
+              <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Confirmed</h1>
+              <p style="color: #6b7280; font-size: 16px; margin: 0;">Your order is being prepared for shipment</p>
+            </div>
+
+            <div style="margin: 0 32px 32px; padding: 24px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
+              <h3 style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 16px;">Order Details</h3>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="color: #6b7280; font-size: 14px;">Order Number</span>
+                <span style="color: #111827; font-size: 14px;   : 600; font-family: 'SF Mono', Monaco, monospace;"> #${orderNumber}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="color: #6b7280; font-size: 14px;">Order Date</span>
+                <span style="color: #111827; font-size: 14px; font-weight: 500;">${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #6b7280; font-size: 14px;">Status</span>
+                <span style="display: inline-flex; align-items: center; padding: 4px 8px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600; border-radius: 6px;">
+                  <div style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></div>
+                  PAID
+                </span>
+              </div>
+            </div>
+          </div>
+        `,
+  });
+}
+
+async function sendFailureEmail(email: string) {
+  if (!email) return;
+  await resend.emails.send({
+    from: "Noir Clothing <no-reply@help.noir-clothing.com>",
+    to: email,
+    subject: "Payment issue — Let's get this sorted",
+    text: `Hi there, we encountered an issue processing your payment. Please try again or contact our support team at support@noir-clothing.com if you need assistance.`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px 32px; text-align: center;">
+          <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 2px;">NOIR</div>
+          <div style="color: #a3a3a3; font-size: 12px; font-weight: 500; letter-spacing: 1px; margin-top: 4px;">CLOTHING</div>
+        </div>
+
+        <!-- Error Icon -->
+        <div style="text-align: center; padding: 32px 0 24px;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #fef2f2; border: 2px solid #fecaca; border-radius: 50%; margin-bottom: 16px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <h1 style="color: #111827; font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.5px;">Payment Issue</h1>
+          <p style="color: #6b7280; font-size: 16px; margin: 0;">We encountered a problem processing your payment</p>
+        </div>
+
+        <!-- Issue Details -->
+        <div style="margin: 0 32px 32px; padding: 24px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+          <h3 style="color: #991b1b; font-size: 18px; font-weight: 600; margin: 0 0 12px;">What happened?</h3>
+          <p style="color: #7f1d1d; font-size: 14px; margin: 0 0 16px; line-height: 1.5;">Your payment could not be processed at this time. This could be due to insufficient funds, an expired card, or a temporary issue with your payment method.</p>
+        </div>
+      </div>
+      `,
+  });
+}

@@ -27,47 +27,37 @@ export const PaymentRedirectPage = ({
   >("UNPAID");
 
   useEffect(() => {
-    const fetchPayment = async () => {
-      if (!paymentIntentId) {
-        router.push("/");
-      }
+    if (!paymentIntentId) {
+      router.replace("/");
+      return;
+    }
 
+    const fetchPayment = async () => {
       try {
         const response = await paymentService.getPayment({
           paymentIntentId,
-          clientKey: "",
+          clientKey: "", // Consider making this configurable if needed
           orderNumber: paymentNumber,
         });
 
-        if (response.orderStatus === "PAID") {
+        if (response?.orderStatus === "PAID") {
           setOrderStatus("PAID");
-          localStorage.removeItem("shoppingCart");
-          setCart({
-            products: [],
-            count: 0,
-          });
         } else {
           setOrderStatus("CANCELED");
-          localStorage.removeItem("shoppingCart");
-          setCart({
-            products: [],
-            count: 0,
-          });
         }
+
+        localStorage.removeItem("shoppingCart");
+        setCart({ products: [], count: 0 });
       } catch (error) {
-        if (error instanceof Error) {
-          setOrderStatus("CANCELED");
-          localStorage.removeItem("shoppingCart");
-          setCart({
-            products: [],
-            count: 0,
-          });
-        }
+        console.error("Fetch payment error:", error);
+        setOrderStatus("CANCELED");
+        localStorage.removeItem("shoppingCart");
+        setCart({ products: [], count: 0 });
       }
     };
 
     fetchPayment();
-  }, [paymentIntentId]);
+  }, [paymentIntentId, paymentNumber, setCart]);
 
   const handleDeleteCheckoutToken = async () => {
     try {

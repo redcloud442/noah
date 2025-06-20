@@ -117,6 +117,7 @@ export const paymentCreatePaymentMiddleware = async (
     payment_type: payment_type ?? undefined,
     payment_details: payment_method === "card" ? payment_details : undefined,
   });
+  console.log(payment_type);
 
   if (!validate.success) {
     return c.json({ message: "Invalid request" }, 400);

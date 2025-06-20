@@ -1,6 +1,8 @@
 import { PaymentRedirectPage } from "@/components/PaymentRedirectPage/PaymentRedirectPage";
 import prisma from "@/utils/prisma/prisma";
+import { Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 const page = async ({
   searchParams,
@@ -27,10 +29,18 @@ const page = async ({
   }
 
   return (
-    <PaymentRedirectPage
-      paymentNumber={paymentNumber}
-      paymentIntentId={payment_intent_id}
-    />
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen bg-gray-100/20">
+          <Loader2 className="w-10 h-10 animate-spin" />
+        </div>
+      }
+    >
+      <PaymentRedirectPage
+        paymentNumber={paymentNumber}
+        paymentIntentId={payment_intent_id}
+      />
+    </Suspense>
   );
 };
 
