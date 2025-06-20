@@ -49,7 +49,7 @@ export const DashboardTable = () => {
     handlePageChange();
   }, [activePage]);
 
-  const totalPages = Math.ceil(count / 15);
+  const totalPages = Math.ceil((count ?? 0) / 15);
 
   return (
     <Paper withBorder shadow="sm" radius="lg" p="lg" mt="lg">

@@ -652,8 +652,8 @@ export const userGenerateLoginLinkModel = async (params: { email: string }) => {
 
   const link =
     process.env.NODE_ENV === "development"
-      ? `http://localhost:3001/auth/callback?hashedToken=${data.properties.hashed_token}`
-      : `https://www.noir-clothing.com/auth/callback?hashedToken=${data.properties.hashed_token}`;
+      ? `http://localhost:3001/auth/redirect?hashedToken=${data.properties.hashed_token}`
+      : `https://www.noir-clothing.com/auth/redirect?hashedToken=${data.properties.hashed_token}`;
 
   return {
     message: "Login link generated successfully",

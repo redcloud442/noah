@@ -23,7 +23,13 @@ export const resellerGetListModel = async (params: {
     },
   });
 
-  const total = await prisma.reseller_transaction_table.count();
+  const total = await prisma.reseller_transaction_table.count({
+    where: {
+      reseller_transaction_reseller: {
+        reseller_team_member_id: teamMemberId,
+      },
+    },
+  });
 
   return {
     data: resellers,
