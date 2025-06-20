@@ -2,7 +2,7 @@ import { AppSidebar } from "@/components/LayoutProviders/AdminLayout/App-sidebar
 import SidebarSeparator from "@/components/LayoutProviders/AdminLayout/SidebarInset";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import prisma from "@/utils/prisma/prisma";
-import { createClient } from "@/utils/supabase/server";
+import { protectionAdminMiddleware } from "@/utils/protectionMiddleware";
 import { redirect } from "next/navigation";
 import React from "react";
 
@@ -15,16 +15,7 @@ export default async function AdminLayout({
 }>) {
   const { teamName } = await params;
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return redirect("/login");
-  }
-
+  const user = await protectionAdminMiddleware();
   const teams = await prisma.team_member_table.findMany({
     where: {
       team_member_user_id: user.id,

@@ -8,7 +8,6 @@ const page = async ({
   params: Promise<{ orderNumber: string }>;
 }) => {
   const { orderNumber } = await params;
-
   const order = await prisma.order_table.findUnique({
     where: {
       order_number: orderNumber,

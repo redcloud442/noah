@@ -39,6 +39,27 @@ export const protectionUserMiddleware = async () => {
   return currentUser;
 };
 
+export const protectionPublicMiddleware = async () => {
+  const supabase = await createClient();
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (
+    currentUser?.user_metadata.role === "MEMBER" ||
+    currentUser?.user_metadata.role === "RESELLER"
+  ) {
+    return redirect("/account/orders");
+  }
+
+  if (currentUser?.user_metadata.role === "ADMIN") {
+    return redirect("/main/admin");
+  }
+
+  return currentUser;
+};
+
 export const supabaseMiddlewareHelper = async () => {
   const cookieStore = await cookies();
   const user = cookieStore.get("auth_token");
