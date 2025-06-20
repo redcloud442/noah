@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { timeout } from "hono/timeout";
 import { envConfig } from "./env.js";
 import { supabaseMiddleware } from "./middleware/auth.middleware.js";
 import { errorHandlerMiddleware } from "./middleware/error.middleware.js";
 import route from "./route/route.js";
+
 const app = new Hono();
 
 app.use(
@@ -56,10 +58,11 @@ app.use(logger());
 
 app.route("/api/v1", route);
 
+app.use(timeout(10 * 1000));
+
 export default {
   port: envConfig.PORT,
   fetch: app.fetch,
-  hostname: "0.0.0.0",
   keepAliveTimeout: 10 * 1000,
   headersTimeout: 11 * 1000,
 };
