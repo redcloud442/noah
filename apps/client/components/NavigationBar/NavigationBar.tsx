@@ -99,7 +99,7 @@ export const NavigationBar = ({
           </div>
         </Link>
 
-        <NavigationMenu>
+        <NavigationMenu className="z-50">
           <NavigationMenuList className="space-x-2">
             <NavigationMenuItem>
               <NavigationMenuTrigger
@@ -407,7 +407,7 @@ const ListItemWithImage = React.forwardRef<
     ref
   ) => {
     return (
-      <NavigationMenuLink asChild>
+      <NavigationMenuLink asChild className="z-50">
         <Link
           href={link || "#"}
           ref={ref}

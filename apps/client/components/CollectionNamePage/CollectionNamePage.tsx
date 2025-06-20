@@ -115,12 +115,12 @@ export const HoverImageCard = ({
   };
 
   return (
-    <Card
-      className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative group">
+    <Card className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer z-40">
+      <div
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
@@ -251,12 +251,12 @@ export const HoverVariantCard = ({
   };
 
   return (
-    <Card
-      className="overflow-hidden bg-white shadow-lg rounded-none border border-gray-200 cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative group">
+    <Card className="overflow-hidden bg-white shadow-lg rounded-none border border-gray-200 cursor-pointer">
+      <div
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
@@ -396,12 +396,12 @@ export const HoverVariantTypeCard = ({
   );
 
   return (
-    <Card
-      className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative group">
+    <Card className="overflow-hidden bg-white shadow-md rounded-none border-none cursor-pointer z-40">
+      <div
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <Image
           src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
           alt={product.product_name}
