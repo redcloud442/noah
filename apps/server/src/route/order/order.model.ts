@@ -1,5 +1,8 @@
 import type { Prisma } from "@prisma/client";
+import { Resend } from "resend";
 import prisma from "../../utils/prisma.js";
+
+const resendClient = new Resend(process.env.RESEND_API_KEY);
 
 export const orderGetModel = async (params: {
   userId: string;
@@ -191,4 +194,68 @@ export const orderGetListModel = async (params: {
   }));
 
   return { orders: formattedOrders, count };
+};
+
+export const orderUpdateModel = async (params: {
+  id: string;
+  status: "SHIPPED";
+}) => {
+  const { id, status } = params;
+
+  const order = await prisma.order_table.update({
+    where: { order_id: id },
+    data: { order_status: status },
+    select: {
+      order_email: true,
+      order_number: true,
+    },
+  });
+
+  let emailSubject = "Order Status Updated";
+  let emailContent = `<p>Your order has been updated to ${status}</p>`;
+  if (status === "SHIPPED") {
+    emailSubject = "Your Order Has Been Shipped!";
+    emailContent = `
+       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+
+
+    <h2 style="color: #333;">Great news! Your order has been shipped</h2>
+    <p style="font-size: 16px; color: #555;">
+      Your order <strong>#${order.order_number}</strong> is now on its way to you!
+    </p>
+    <p style="font-size: 16px; color: #555;">
+      You can track your package using the button below.
+    </p>
+    <div style="margin: 30px 0;">
+  <a href="https://www.noir-clothing.com/order/tracking" 
+     style="
+       display: block;
+       width: 100%;
+       background-color: #000;
+       color: white;
+       padding: 16px 0;
+       text-align: center;
+       text-decoration: none;
+       border-radius: 5px;
+       font-weight: bold;
+       box-sizing: border-box;
+     ">
+    Track Your Order
+  </a>
+</div>
+    <p style="font-size: 14px; color: #777;">
+      Thank you for shopping with Noir Clothing!
+    </p>
+  </div>
+    `;
+  }
+
+  await resendClient.emails.send({
+    from: "Noir Clothing <no-reply@help.noir-clothing.com>",
+    to: order.order_email,
+    subject: emailSubject,
+    html: emailContent,
+  });
+
+  return order;
 };

@@ -88,7 +88,7 @@ const OrderListTable = () => {
     gcTime: 1000 * 60 * 10,
   });
 
-  const { columns } = OrderListColumn();
+  const { columns } = OrderListColumn(queryKey);
 
   const table = useReactTable({
     data: data?.orders || [],

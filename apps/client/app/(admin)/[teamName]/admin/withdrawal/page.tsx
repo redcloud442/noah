@@ -1,6 +1,6 @@
 import WithdrawalPage from "@/components/WithdrawalPage/WithdrawalPage";
 
-const page = async () => {
+const page = () => {
   return <WithdrawalPage />;
 };
 

@@ -42,7 +42,7 @@ const DashboardAnalyticsPage = () => {
       },
     },
   });
-
+  console.log(userData);
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: [
       "dashboard",

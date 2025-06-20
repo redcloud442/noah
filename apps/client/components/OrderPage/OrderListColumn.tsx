@@ -1,17 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { formatDateToYYYYMMDD } from "@/utils/function";
 import { OrderType } from "@/utils/types";
+import { QueryKey } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, ClipboardCopy } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Badge } from "../ui/badge";
+import ActionsModal from "./ActionsModal";
+
 const statusColorMap: Record<string, string> = {
   PENDING: "bg-yellow-600 dark:bg-yellow-700 dark:text-white ",
   REJECTED: "bg-red-600 dark:bg-red-700 dark:text-white ",
   PAID: "bg-green-500 dark:bg-green-600 dark:text-white ",
+  SHIPPED: "bg-orange-500 dark:bg-orange-600 dark:text-white ",
 };
 
-export const OrderListColumn = () => {
+export const OrderListColumn = (queryKey: QueryKey) => {
   //   const handleUpdateStatus = async (
   //     status: string,
   //     requestId: string,
@@ -294,6 +298,25 @@ export const OrderListColumn = () => {
           {formatDateToYYYYMMDD(row.getValue("order_created_at"))}
         </div>
       ),
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        const data = row.original;
+        return (
+          <>
+            {data.order_status === "PAID" && (
+              <div className="flex gap-2 justify-center">
+                <ActionsModal
+                  orderId={data.order_id}
+                  status="SHIPPED"
+                  queryKey={queryKey}
+                />
+              </div>
+            )}
+          </>
+        );
+      },
     },
   ];
 

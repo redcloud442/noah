@@ -61,4 +61,15 @@ export const ordersService = {
       count: number;
     };
   },
+  updateOrderStatus: async (params: { orderId: string; status: string }) => {
+    const result = await axios.put(`/api/v1/orders/${params.orderId}`, {
+      status: params.status,
+    });
+
+    if (result.status !== 200) {
+      throw new Error("Payment failed");
+    }
+
+    return result.data;
+  },
 };

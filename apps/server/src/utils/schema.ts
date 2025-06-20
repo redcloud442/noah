@@ -241,3 +241,10 @@ export const cartGetQuantitySchema = z.object({
 });
 
 export type CartGetQuantityParams = z.infer<typeof cartGetQuantitySchema>;
+
+export const orderUpdateSchema = z.object({
+  id: z.string(),
+  status: z.enum(["SHIPPED"]),
+});
+
+export type OrderUpdateParams = z.infer<typeof orderUpdateSchema>;

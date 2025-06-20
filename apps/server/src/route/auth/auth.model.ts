@@ -233,7 +233,7 @@ export const authCallbackModel = async (params: {
   }
 
   if (userData.team_member_table[0].team_member_role === "ADMIN") {
-    redirectTo = `${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://www.noir-clothing.com"}/${userData.team_member_table[0].team_member_team.team_name.toLowerCase()}/admin`;
+    redirectTo = `${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "http://localhost:3001"}/${userData.team_member_table[0].team_member_team.team_name.toLowerCase()}/admin`;
   } else {
     redirectTo = `${process.env.NODE_ENV === "development" ? "http://localhost:3001" : "https://www.noir-clothing.com"}/account`;
   }

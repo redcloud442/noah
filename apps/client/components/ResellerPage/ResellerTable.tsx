@@ -89,10 +89,7 @@ const ResellerTable = () => {
     },
   });
 
-  const { columns } = useMemo(
-    () => ResellerColumn({ formValue, activePage }),
-    [formValue, activePage]
-  );
+  const { columns } = ResellerColumn({ formValue, activePage });
 
   const table = useReactTable({
     data: data?.data || [],
