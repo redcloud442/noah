@@ -28,20 +28,19 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getSession();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
 
+  const role = user?.user_metadata?.role as CompanyMemberRole | undefined;
+
   const action = determineRouteAction({
     user,
-    role: user?.user_metadata.role,
+    role: role || null,
     pathname,
   });
-
   switch (action) {
     case RouteAction.ALLOW:
       supabaseResponse.headers.set("x-session-checked", "true");
@@ -67,7 +66,7 @@ export async function updateSession(request: NextRequest) {
 
     case RouteAction.FORBIDDEN:
       return addSecurityHeaders(
-        NextResponse.redirect(new URL("/", request.url))
+        NextResponse.json({ error: "Forbidden" }, { status: 403 })
       );
 
     default:
@@ -86,37 +85,38 @@ const determineRouteAction = ({
   role,
   pathname,
 }: RouteActionParams): RouteAction => {
+  // Handle unauthenticated users
   if (!user) {
     if (isPublicRoute(pathname)) return RouteAction.ALLOW;
-
-    if (isPrivateRoute(pathname) || isAdminRoute(pathname))
-      return RouteAction.REDIRECT_LOGIN;
-
     return RouteAction.REDIRECT_LOGIN;
   }
 
+  // Handle admin-specific routes
+  if (isAdminRoute(pathname)) {
+    return role === CompanyMemberRole.ADMIN
+      ? RouteAction.ALLOW
+      : RouteAction.FORBIDDEN;
+  }
+
+  // Redirect admins away from regular user routes
   if (pathname.startsWith("/account") && role === CompanyMemberRole.ADMIN) {
     return RouteAction.REDIRECT_ADMIN;
   }
 
-  // Non-admin users visiting public route (e.g. `/account`)
-  if (isPublicRoute(pathname)) {
-    if (pathname === "/login" && user) return RouteAction.REDIRECT_DASHBOARD;
-    if (pathname !== "/account") return RouteAction.ALLOW;
-  }
-
+  // Handle private routes (non-admin)
   if (isPrivateRoute(pathname)) {
-    if (role !== CompanyMemberRole.ADMIN) {
-      return RouteAction.ALLOW;
-    } else {
-      return RouteAction.FORBIDDEN;
-    }
+    return role !== CompanyMemberRole.ADMIN
+      ? RouteAction.ALLOW
+      : RouteAction.FORBIDDEN;
   }
 
-  if (isAdminRoute(pathname) && role !== CompanyMemberRole.ADMIN) {
-    return RouteAction.FORBIDDEN;
+  // Handle public routes for authenticated users
+  if (isPublicRoute(pathname)) {
+    if (pathname === "/login") return RouteAction.REDIRECT_DASHBOARD;
+    return RouteAction.ALLOW;
   }
 
+  // Default allow if none of the above conditions match
   return RouteAction.ALLOW;
 };
 
