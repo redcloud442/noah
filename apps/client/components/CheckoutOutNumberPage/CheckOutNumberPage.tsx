@@ -10,6 +10,7 @@ import {
 } from "@/utils/schema";
 import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import {
   ArrowRight,
   Loader2,
@@ -166,8 +167,8 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
         router.push(`/payment/pn/${params.checkoutNumber}`);
       }
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message);
       } else {
         toast.error("Error submitting payment");
       }

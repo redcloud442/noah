@@ -46,6 +46,8 @@ const OrderContents = ({
         return "bg-green-50 text-green-700 border-green-200";
       case "CANCELLED":
         return "bg-red-50 text-red-700 border-red-200";
+      case "SHIPPED":
+        return "bg-orange-50 text-orange-700 border-orange-200";
       default:
         return "bg-gray-50 text-gray-700 border-gray-200";
     }

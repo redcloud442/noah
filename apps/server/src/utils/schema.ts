@@ -248,3 +248,10 @@ export const orderUpdateSchema = z.object({
 });
 
 export type OrderUpdateParams = z.infer<typeof orderUpdateSchema>;
+
+export const orderTrackingSchema = z.object({
+  order_number: z.string(),
+  order_id: z.string().uuid(),
+});
+
+export type OrderTrackingParams = z.infer<typeof orderTrackingSchema>;

@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { sign } from "hono/jwt";
 import { Resend } from "resend";
 import prisma from "../../utils/prisma.js";
 
@@ -207,8 +208,14 @@ export const orderUpdateModel = async (params: {
     data: { order_status: status },
     select: {
       order_email: true,
+      order_id: true,
       order_number: true,
     },
+  });
+
+  const redirectUrl = await orderTrackingModel({
+    order_number: order.order_number,
+    order_id: order.order_id,
   });
 
   let emailSubject = "Order Status Updated";
@@ -227,7 +234,7 @@ export const orderUpdateModel = async (params: {
       You can track your package using the button below.
     </p>
     <div style="margin: 30px 0;">
-  <a href="https://www.noir-clothing.com/order/tracking" 
+  <a href="${redirectUrl.redirectUrl}" 
      style="
        display: block;
        width: 100%;
@@ -258,4 +265,27 @@ export const orderUpdateModel = async (params: {
   });
 
   return order;
+};
+
+export const orderTrackingModel = async (params: {
+  order_number: string;
+  order_id: string;
+}) => {
+  const { order_number, order_id } = params;
+
+  const token = await sign(
+    {
+      order_id: order_id,
+      order_number: order_number,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
+    },
+    process.env.JWT_SECRET!,
+    "HS256"
+  );
+
+  const redirectUrl = `https://www.noir-clothing.com/order/tracking?token=${token}`;
+
+  return {
+    redirectUrl,
+  };
 };

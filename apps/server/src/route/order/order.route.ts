@@ -4,12 +4,14 @@ import {
   orderGetController,
   orderGetItemsController,
   orderGetListController,
+  orderTrackingController,
   orderUpdateController,
 } from "./order.controller.js";
 import {
   orderGetItemsMiddleware,
   orderGetListMiddleware,
   orderGetMiddleware,
+  orderTrackingMiddleware,
   orderUpdateMiddleware,
 } from "./order.middleware.js";
 
@@ -22,5 +24,7 @@ order.get("/", orderGetMiddleware, orderGetController);
 order.post("/list", orderGetListMiddleware, orderGetListController);
 
 order.put("/:id", orderUpdateMiddleware, orderUpdateController);
+
+order.post("/tracking", orderTrackingMiddleware, orderTrackingController);
 
 export default order;

@@ -1,7 +1,11 @@
 import type { Context, Next } from "hono";
 import { orderGetListSchema } from "../../schema/schema.js";
 import { rateLimit } from "../../utils/redis.js";
-import { orderGetSchema, orderUpdateSchema } from "../../utils/schema.js";
+import {
+  orderGetSchema,
+  orderTrackingSchema,
+  orderUpdateSchema,
+} from "../../utils/schema.js";
 
 export const orderGetMiddleware = async (c: Context, next: Next) => {
   const user = c.get("user");
@@ -124,6 +128,41 @@ export const orderUpdateMiddleware = async (c: Context, next: Next) => {
   const validated = orderUpdateSchema.safeParse({
     id,
     status,
+  });
+
+  if (!validated.success) {
+    return c.json({ message: "Invalid request" }, 400);
+  }
+
+  c.set("params", validated.data);
+  c.set("user", user);
+
+  await next();
+};
+
+export const orderTrackingMiddleware = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  if (!user) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${user.id}:order-update`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return c.json({ message: "Too many requests" }, 429);
+  }
+
+  const { order_number, order_id } = await c.req.json();
+
+  const validated = orderTrackingSchema.safeParse({
+    order_number,
+    order_id,
   });
 
   if (!validated.success) {

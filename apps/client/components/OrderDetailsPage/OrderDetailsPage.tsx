@@ -6,6 +6,7 @@ import { formatDate } from "@/utils/function";
 import { OrderItem } from "@/utils/types";
 import { order_table } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import {
   CreditCard,
   MapPin,
@@ -15,7 +16,9 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -24,9 +27,13 @@ import { Skeleton } from "../ui/skeleton";
 
 type OrderDetailsPageProps = {
   order: order_table;
+  isTracking?: boolean;
 };
 
-const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
+const OrderDetailsPage = ({
+  order,
+  isTracking = false,
+}: OrderDetailsPageProps) => {
   const { userData } = useUserDataStore();
 
   const { data: orderItems = [], isLoading } = useQuery<OrderItem[]>({
@@ -44,6 +51,23 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
     0
   );
 
+  const handleTrackOrder = async () => {
+    try {
+      const result = await ordersService.trackOrder({
+        orderNumber: order.order_number,
+        orderId: order.order_id,
+      });
+
+      window.open(result.redirectUrl, "_blank");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message);
+      } else {
+        toast.error("Failed to track order");
+      }
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PAID":
@@ -54,14 +78,26 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
         return "bg-red-50 text-red-700 border-red-200";
       case "PROCESSING":
         return "bg-blue-50 text-blue-700 border-blue-200";
+      case "SHIPPED":
+        return "bg-orange-50 text-orange-700 border-orange-200";
+      case "UNPAID":
+        return "bg-red-50 text-red-700 border-red-200";
       default:
         return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-400 p-4 sm:p-6 lg:p-8 text-white">
+    <div className="min-h-screen bg-slate-300 p-4 sm:p-6 lg:p-8 text-white">
       <div className="max-w-7xl mx-auto space-y-8">
+        {order.order_status === "SHIPPED" && (
+          <div className="flex flex-col justify-center items-center text-black">
+            <p className="text-2xl font-bold">Your order has been shipped.</p>
+            <p className="text-sm">
+              Please wait for your order to be delivered.
+            </p>
+          </div>
+        )}
         {/* Header */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -363,6 +399,23 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
                 </div>
               </CardContent>
             </Card>
+
+            {!isTracking && (
+              <Card className="shadow-sm border-0 bg-white">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg text-black">
+                    Tracking Order
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 flex flex-col ">
+                    <Button variant={"secondary"} onClick={handleTrackOrder}>
+                      Track Order
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

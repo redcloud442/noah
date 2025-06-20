@@ -404,7 +404,7 @@ export const createResellerRequestModel = async (params: {
   });
 
   const email = await resend.emails.send({
-    from: "Reseller Request Code <support@help.noir-clothing.com>",
+    from: "Reseller Request Code <no-reply@help.noir-clothing.com>",
     to: params.userEmail,
     subject: "Your Reseller Request Code",
     text: `Your reseller request code is: ${resellerCode}`, // plain text fallback
@@ -496,13 +496,13 @@ export const verifyResellerCodeModel = async (params: {
   }
 
   const email = await resend.emails.send({
-    from: "Reseller Promotion <support@help.noir-clothing.com>",
+    from: "Reseller Promotion <no-reply@help.noir-clothing.com>",
     to: params.userEmail,
-    subject: "🎉 Congratulations! You're Now a NOAH Reseller",
+    subject: "Congratulations! You're Now a NOAH Reseller",
     text: `Congratulations on becoming a reseller!`, // ✅ comma was missing here
     html: `
       <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-        <h2 style="color: #10B981; font-size: 24px;">🎉 Congratulations!</h2>
+        <h2 style="color: #10B981; font-size: 24px;">Congratulations!</h2>
         <p style="font-size: 16px;">We're thrilled to welcome you as a <strong>NOAH Reseller</strong>.</p>
         <p style="font-size: 16px;">
           You're now part of an amazing community earning rewards, exclusive commissions,

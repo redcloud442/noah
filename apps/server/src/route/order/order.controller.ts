@@ -3,6 +3,7 @@ import {
   orderGetItemsModel,
   orderGetListModel,
   orderGetModel,
+  orderTrackingModel,
   orderUpdateModel,
 } from "./order.model.js";
 
@@ -48,6 +49,18 @@ export const orderUpdateController = async (c: Context) => {
     const params = c.get("params");
 
     const order = await orderUpdateModel({ ...params });
+
+    return c.json(order);
+  } catch (error) {
+    return c.json({ message: "Internal server error" }, 500);
+  }
+};
+
+export const orderTrackingController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const order = await orderTrackingModel({ ...params });
 
     return c.json(order);
   } catch (error) {

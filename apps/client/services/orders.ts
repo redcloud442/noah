@@ -72,4 +72,19 @@ export const ordersService = {
 
     return result.data;
   },
+
+  trackOrder: async (params: { orderNumber: string; orderId: string }) => {
+    const result = await axios.post("/api/v1/orders/tracking", {
+      order_number: params.orderNumber,
+      order_id: params.orderId,
+    });
+
+    if (result.status !== 200) {
+      throw new Error("Payment failed");
+    }
+
+    return result.data as {
+      redirectUrl: string;
+    };
+  },
 };
