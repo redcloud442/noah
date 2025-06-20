@@ -11,11 +11,10 @@ app.use(
   "*",
   supabaseMiddleware(),
   cors({
-    origin: [
+    origin:
       process.env.NODE_ENV === "development"
-        ? "http://localhost:3000"
-        : "https://www.noir-clothing.com",
-    ],
+        ? ["http://localhost:3001", "http://localhost:3000"]
+        : ["https://www.noir-clothing.com", "https://www.noir-clothing.com"],
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
