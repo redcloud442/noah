@@ -23,7 +23,7 @@ const HomePage = () => {
 
       <Center>
         <Button
-          href="/auth/sign-in"
+          href="/dashboard"
           component="a"
           leftSection={<IconLogin />}
           variant="gradient"
@@ -34,14 +34,14 @@ const HomePage = () => {
           mx="auto"
           mt="xl"
         >
-          Sign In to Your Dashboard
+          Go to Dashboard
         </Button>
       </Center>
 
-      <Text c="dimmed" ta="center" size="sm" maw={580} mx="auto" mt="xl">
+      {/* <Text c="dimmed" ta="center" size="sm" maw={580} mx="auto" mt="xl">
         Don&apos;t have an account? Contact our team to become an official Noir
         reseller and unlock exclusive access to premium products and tools.
-      </Text>
+      </Text> */}
     </Stack>
   );
 };
