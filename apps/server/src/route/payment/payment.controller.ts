@@ -17,6 +17,7 @@ export const paymentPostController = async (c: Context) => {
 
     return c.json(paymentIntent, 200);
   } catch (error) {
+    console.log(error);
     return c.json({ message: "Internal Server Error" }, 500);
   }
 };

@@ -34,50 +34,61 @@ export const createPaymentIntent = async (
   );
 
   const paymentIntent = await prisma.$transaction(async (tx) => {
+    const placeholders = productVariantIds
+      .map((_, i) => `$${i + 1}::uuid`)
+      .join(", ");
+
     const lockedStock = await tx.$queryRawUnsafe<
       {
         product_variant_id: string;
-        total_quantity: number;
-        variant_sizes: { variant_size_quantity: number }[];
+        variant_size_value: string;
+        variant_size_quantity: number;
       }[]
     >(
       `
     SELECT 
       pvt.product_variant_id, 
-      SUM(vs.variant_size_quantity) AS total_quantity
+      vs.variant_size_value,
+      vs.variant_size_quantity
     FROM product_schema.product_variant_table pvt
-    JOIN product_schema.variant_size_table vs ON vs.variant_size_variant_id = pvt.product_variant_id
-    WHERE pvt.product_variant_id IN (${productVariantIds.map((_, i) => `$${i + 1}`).join(",")})
-    GROUP BY pvt.product_variant_id
+    JOIN product_schema.variant_size_table vs 
+      ON vs.variant_size_variant_id = pvt.product_variant_id
+    WHERE pvt.product_variant_id IN (${placeholders})
     FOR UPDATE
-  `,
+    `,
       ...productVariantIds
     );
 
-    const productStockMap = new Map(
-      lockedStock.map((product) => [
-        product.product_variant_id,
-        product.variant_sizes.reduce(
-          (total, size) => total + size.variant_size_quantity,
-          0
-        ),
-      ])
-    );
+    // Build nested Map<variant_id, Map<size, quantity>>
+    const productStockMap = new Map<string, Map<string, number>>();
 
+    for (const product of lockedStock) {
+      if (!productStockMap.has(product.product_variant_id)) {
+        productStockMap.set(product.product_variant_id, new Map());
+      }
+      productStockMap
+        .get(product.product_variant_id)!
+        .set(product.variant_size_value, product.variant_size_quantity);
+    }
+
+    // Validate
     for (const item of productVariant) {
-      const availableStock = productStockMap.get(item.product_variant_id);
+      const sizeMap = productStockMap.get(item.product_variant_id);
+      const sizeKey = item.product_variant_size ?? "";
+      const availableStock = sizeMap?.get(sizeKey);
+
       if (availableStock === undefined) {
         throw new Error(
-          `Product variant ${item.product_variant_id} not found.`
+          `Product variant ${item.product_variant_id} with size ${sizeKey} not found.`
         );
       }
+
       if (availableStock < item.product_variant_quantity) {
         throw new Error(
-          `Insufficient stock for product ${item.product_variant_id}.`
+          `Insufficient stock for product ${item.product_variant_id} size ${sizeKey}.`
         );
       }
     }
-
     const dataAmount = Math.round(amount * 100);
 
     const response = await axios.post(
@@ -86,7 +97,13 @@ export const createPaymentIntent = async (
         data: {
           attributes: {
             amount: dataAmount, // must be an integer in centavos
-            payment_method_allowed: ["card", "dob", "paymaya", "gcash"],
+            payment_method_allowed: [
+              "card",
+              "dob",
+              "paymaya",
+              "gcash",
+              "grab_pay",
+            ],
             payment_method_options: {
               card: {
                 request_three_d_secure: "any",
@@ -218,7 +235,9 @@ export const createPaymentMethod = async (
                 ? "card"
                 : payment_method === "online_banking"
                   ? "dob"
-                  : payment_type?.toLowerCase(),
+                  : payment_type?.toLowerCase() === "grabpay"
+                    ? "grab_pay"
+                    : payment_type?.toLowerCase(),
             details:
               payment_method === "card"
                 ? {

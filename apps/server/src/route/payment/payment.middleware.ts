@@ -123,7 +123,7 @@ export const paymentCreatePaymentMiddleware = async (
   }
 
   const isAllowed = await rateLimit(
-    `rate-limit:${userData.id}:payment-create`,
+    `rate-limit:${userData.id}:payment-get`,
     5,
     "1m",
     c
