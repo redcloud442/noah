@@ -47,9 +47,9 @@ export const PUBLIC_ROUTES = [
   "/auth/callback",
 ];
 
-export const PRIVATE_ROUTES = ["/account"];
+export const PRIVATE_ROUTES = ["/account", "/api/v1"];
 
-export const ADMIN_ROUTES = ["/main/admin"];
+export const ADMIN_ROUTES = ["/main/admin", "/api/v1"];
 
 export const isPublicRoute = (pathname: string) => {
   return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
