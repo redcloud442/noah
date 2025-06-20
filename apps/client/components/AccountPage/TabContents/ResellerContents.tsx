@@ -101,7 +101,7 @@ const ResellerContents = () => {
             <h2 className="text-xl font-medium text-green-600">
               You are already a verified NOAH Reseller ✅
             </h2>
-            <Link href="/dashboard">
+            <Link href="https://reseller.noir-clothing.com" target="_blank">
               <Button variant="secondary">Proceed to Reseller Dashboard</Button>
             </Link>
           </div>

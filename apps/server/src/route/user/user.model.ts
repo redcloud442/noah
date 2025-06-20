@@ -259,7 +259,9 @@ export const getUserListModel = async (params: {
         },
       },
     },
-    orderBy: orderBy,
+    orderBy: {
+      user_created_at: "desc",
+    },
     take,
     skip: offset,
   });
@@ -604,11 +606,15 @@ export const userPatchModel = async (params: {
           },
           data: {
             team_member_request_reseller: true,
-            team_member_role: "RESELLER",
           },
         });
       }
     });
+
+    await prisma.$executeRaw`
+    DELETE FROM auth.sessions
+    WHERE user_id = ${params.id}::uuid
+    `;
   }
 };
 
