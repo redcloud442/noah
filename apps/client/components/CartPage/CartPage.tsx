@@ -90,11 +90,8 @@ const CartPage = () => {
         })),
       });
       setCurrentStock(updatedCart);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Error fetching stock"
-      );
-    }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {}
   };
 
   useEffect(() => {

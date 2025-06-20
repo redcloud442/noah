@@ -34,7 +34,10 @@ export const authService = {
     userId: string;
     cart?: Product[];
   }) => {
-    const result = await axios.post("/api/v1/auth/callback", params);
+    const result = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/callback`,
+      params
+    );
 
     if (result.status !== 200) {
       throw new Error("Callback failed");

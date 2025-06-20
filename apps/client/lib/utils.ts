@@ -44,6 +44,7 @@ export const PUBLIC_ROUTES = [
   "/shop",
   "/payment",
   "/api/v1/auth/register",
+  "/auth/callback",
 ];
 
 export const PRIVATE_ROUTES = ["/account"];
