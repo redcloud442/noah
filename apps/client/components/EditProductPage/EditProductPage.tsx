@@ -61,6 +61,8 @@ const EditProductPage = ({
     defaultValues: formattedVariantInfo,
   });
 
+  console.log(errors)
+
   const { fields: productFields, remove: removeProduct } = useFieldArray({
     control,
     name: "products",

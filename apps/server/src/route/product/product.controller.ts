@@ -62,6 +62,7 @@ export const productVariantCreateController = async (c: Context) => {
 
     return c.json(data, 200);
   } catch (error) {
+    console.log(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return c.json({ message: "Internal server error" }, 500);
     } else if (error instanceof Error) {
