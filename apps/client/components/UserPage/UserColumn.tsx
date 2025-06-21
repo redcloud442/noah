@@ -190,6 +190,16 @@ export const UserColumn = ({ formValue, activePage }: UserColumnProps) => {
                     />
                   )}
 
+                  {user.team_member_role !== "CASHIER" && (
+                    <UserActionModal
+                      type="promote"
+                      userId={user.user_id}
+                      role="CASHIER"
+                      activePage={activePage}
+                      formValue={formValue}
+                    />
+                  )}
+
                   {user.team_member_role !== "ADMIN" && (
                     <UserActionModal
                       type="promote"

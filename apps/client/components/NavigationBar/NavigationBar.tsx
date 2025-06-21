@@ -277,8 +277,7 @@ export const NavigationBar = ({
             >
               <User className="w-5 h-5" />
             </Link>
-          ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ||
-            userData?.teamMemberProfile?.team_member_role === "RESELLER" ? (
+          ) : userData?.teamMemberProfile?.team_member_role !== "ADMIN" ? (
             <div className="flex items-center space-x-2">
               <Link
                 href="/account"

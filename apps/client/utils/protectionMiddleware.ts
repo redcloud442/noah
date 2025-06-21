@@ -52,7 +52,8 @@ export const protectionPublicMiddleware = async () => {
 
   if (
     currentUser?.user_metadata.role === "MEMBER" ||
-    currentUser?.user_metadata.role === "RESELLER"
+    currentUser?.user_metadata.role === "RESELLER" ||
+    currentUser?.user_metadata.role === "CASHIER"
   ) {
     return redirect("/account/orders");
   }
@@ -154,4 +155,20 @@ export const getUserDataLayout = async () => {
   });
 
   return userData;
+};
+
+export const protectionPosMiddleware = async () => {
+  const supabase = await createClient();
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (!currentUser) return redirect("/login");
+
+  if (currentUser.user_metadata.role !== "CASHIER") {
+    return redirect("/");
+  }
+
+  return currentUser;
 };

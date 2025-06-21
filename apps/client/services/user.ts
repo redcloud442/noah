@@ -59,7 +59,7 @@ export const userService = {
   },
   userAction: async (params: {
     userId: string;
-    role?: "ADMIN" | "MEMBER" | "RESELLER";
+    role?: "ADMIN" | "MEMBER" | "RESELLER" | "CASHIER";
     type: "ban" | "promote";
   }) => {
     const { data } = await axios.patch(`/api/v1/user/${params.userId}`, {

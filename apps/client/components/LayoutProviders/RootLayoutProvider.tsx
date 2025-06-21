@@ -10,7 +10,7 @@ import { User } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useParams, usePathname } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { Footer } from "../Footer/Footer";
 import { NavigationBar } from "../NavigationBar/NavigationBar";
@@ -118,7 +118,7 @@ export function Providers({
   freshDrops,
   featuredProducts,
 }: RootLayoutProviderProps) {
-  const isAdmin = useMemo(() => user?.user_metadata.role === "ADMIN", [user]);
+  const isAdmin = user?.user_metadata.role === "ADMIN";
   const pathname = usePathname();
   const isAdminRoute = pathname.includes("/admin");
 

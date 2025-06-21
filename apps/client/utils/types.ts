@@ -185,3 +185,44 @@ export type DashboardType = {
     total: number;
   };
 };
+
+export type VariantSizeType = {
+  variant_size_id: string;
+  variant_size_value: string;
+  variant_size_quantity: number;
+  variant_size_price: number;
+  variant_size_variant_id: string;
+};
+
+export type VariantSampleImageType = {
+  variant_sample_image_image_url: string;
+};
+
+export type ProductTypePos = {
+  product_name: string;
+  product_slug: string;
+  product_created_at: string;
+};
+
+export type VariantProductTypePos = {
+  product_variant_id: string;
+  product_variant_slug: string;
+  product_variant_is_featured: boolean;
+  product_variant_product: ProductType;
+  variant_sample_images: VariantSampleImageType[];
+  variant_sizes: VariantSizeType[];
+};
+
+export type ProductsResponse = {
+  data: VariantProductType[];
+};
+
+export type CartItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  sizeName: string;
+  price: number;
+  quantity: number;
+  image?: string;
+};

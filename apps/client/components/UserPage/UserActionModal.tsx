@@ -22,7 +22,7 @@ type FilterFormValues = {
 };
 
 type UserActionModalProps = {
-  role?: "ADMIN" | "MEMBER" | "RESELLER";
+  role?: "ADMIN" | "MEMBER" | "RESELLER" | "CASHIER";
   type: "ban" | "promote";
   userId: string;
   formValue: FilterFormValues;
@@ -45,7 +45,7 @@ const UserActionModal = ({
   const { mutate, isPending } = useMutation({
     mutationFn: (data: {
       userId: string;
-      role?: "ADMIN" | "MEMBER" | "RESELLER";
+      role?: "ADMIN" | "MEMBER" | "RESELLER" | "CASHIER";
       type: "ban" | "promote";
     }) => userService.userAction(data),
     onMutate: (data) => {
