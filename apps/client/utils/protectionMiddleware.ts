@@ -36,6 +36,10 @@ export const protectionUserMiddleware = async () => {
     return redirect("/");
   }
 
+  if (currentUser.user_metadata.role === "ADMIN") {
+    return redirect("/main/admin");
+  }
+
   return currentUser;
 };
 

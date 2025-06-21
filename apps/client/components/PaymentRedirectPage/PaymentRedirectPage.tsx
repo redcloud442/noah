@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"; // ShadCN Button
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/lib/store";
 import { authService } from "@/services/auth";
+import { emailSevice } from "@/services/email";
 import { paymentService } from "@/services/payment";
 import { motion } from "framer-motion"; // Animation library
 import { CheckCircle, XCircle } from "lucide-react"; // Icons for success & failure
@@ -14,11 +15,13 @@ import { toast } from "sonner";
 type PaymentRedirectPageProps = {
   paymentNumber: string;
   paymentIntentId: string;
+  email: string;
 };
 
 export const PaymentRedirectPage = ({
   paymentNumber,
   paymentIntentId,
+  email,
 }: PaymentRedirectPageProps) => {
   const router = useRouter();
   const { setCart } = useCartStore();
@@ -36,20 +39,80 @@ export const PaymentRedirectPage = ({
       try {
         const response = await paymentService.getPayment({
           paymentIntentId,
-          clientKey: "", // Consider making this configurable if needed
+          clientKey: "",
           orderNumber: paymentNumber,
         });
 
         if (response?.orderStatus === "PAID") {
           setOrderStatus("PAID");
+
+          // Send success email in the background
+          (async () => {
+            try {
+              await emailSevice.sendEmail({
+                to: email,
+                subject:
+                  "Congratulations! Your Payment is Successful – Welcome to Noir Clothing!",
+                text: `Congratulations on completing your purchase! Your payment was successful.`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <h2 style="color: #10B981; font-size: 24px;">🎉 Congratulations!</h2>
+                    <p style="font-size: 16px;">We're excited to welcome you to <strong>Noir Clothing</strong>!</p>
+                    <p style="font-size: 16px;">
+                      Your payment was <strong>successfully processed</strong>. You can now enjoy exclusive access to our latest collections and rewards.
+                    </p>
+                    <p style="font-size: 16px;">
+                      Track the status of your order anytime with the link below:
+                    </p>
+                    <p style="margin: 20px 0;">
+                      <a href="${paymentNumber ? `https://noir-clothing.com/track/${paymentNumber}` : "#"}" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                        Track Your Order
+                      </a>
+                    </p>
+                    <br />
+                    <p style="font-size: 14px; color: #555;">Thank you for trusting Noir Clothing. We’re excited to have you with us!</p>
+                    <p style="font-weight: bold;">– The Noir Clothing Team</p>
+                  </div>
+                `,
+              });
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (emailError) {}
+          })();
         } else {
           setOrderStatus("CANCELED");
+
+          // Send failure email in the background
+          (async () => {
+            try {
+              await emailSevice.sendEmail({
+                to: email,
+                subject: "Payment Unsuccessful - Please Try Again",
+                text: "Hi there, unfortunately your payment could not be processed. Please try again or contact our support team if the issue persists.",
+                html: `
+                  <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <h2 style="color: #EF4444; font-size: 24px;">Payment Unsuccessful</h2>
+                    <p style="font-size: 16px; margin-bottom: 16px;">
+                      Unfortunately, we were unable to process your payment.
+                    </p>
+                    <p style="font-size: 16px; margin-bottom: 16px;">
+                      Please try again. If the issue continues, feel free to reach out to our support team for assistance.
+                    </p>
+                    <p style="font-size: 16px; margin-bottom: 32px;">
+                      We apologize for the inconvenience and appreciate your patience.
+                    </p>
+                    <p style="font-weight: bold;">– The Noir Clothing Team</p>
+                  </div>
+                `,
+              });
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (emailError) {}
+          })();
         }
 
         localStorage.removeItem("shoppingCart");
         setCart({ products: [], count: 0 });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        console.error("Fetch payment error:", error);
         setOrderStatus("CANCELED");
         localStorage.removeItem("shoppingCart");
         setCart({ products: [], count: 0 });
@@ -61,8 +124,13 @@ export const PaymentRedirectPage = ({
 
   const handleDeleteCheckoutToken = async () => {
     try {
-      await authService.deleteCheckoutToken();
-      router.push("/");
+      if (orderStatus === "PAID") {
+        await authService.deleteCheckoutToken();
+        router.push("/");
+      }
+      if (orderStatus === "CANCELED") {
+        router.refresh();
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -135,7 +203,7 @@ export const PaymentRedirectPage = ({
               </p>
               <Button
                 className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white"
-                onClick={handleDeleteCheckoutToken}
+                onClick={() => router.refresh()}
               >
                 Try Again
               </Button>

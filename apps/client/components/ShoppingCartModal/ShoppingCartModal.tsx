@@ -89,12 +89,13 @@ const ShoppingCartModal = () => {
 
           setCart(response);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("Error fetching cart");
-        }
+        // if (error instanceof Error) {
+        //   toast.error(error.message);
+        // } else {
+        //   toast.error("Error fetching cart");
+        // }
       }
     };
 

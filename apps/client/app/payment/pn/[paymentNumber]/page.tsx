@@ -16,7 +16,7 @@ const page = async ({
   if (!paymentNumber) {
     return redirect("/");
   }
-  const payment = await prisma.order_table.findUniqueOrThrow({
+  const payment = await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
     },

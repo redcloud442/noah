@@ -14,15 +14,16 @@ const page = async ({
   const { payment_intent_id } = await searchParams;
   const { paymentNumber } = await params;
 
-  const payment = !!(await prisma.order_table.findUnique({
+  const payment = await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
       order_status: "UNPAID",
     },
     select: {
       order_status: true,
+      order_email: true,
     },
-  }));
+  });
 
   if (!payment) {
     return redirect("/");
@@ -39,6 +40,7 @@ const page = async ({
       <PaymentRedirectPage
         paymentNumber={paymentNumber}
         paymentIntentId={payment_intent_id}
+        email={payment.order_email}
       />
     </Suspense>
   );

@@ -34,6 +34,7 @@ export function NavUser() {
 
       setTimeout(() => {
         router.push("/login");
+        router.refresh();
       }, 1000);
 
       toast.success("Logged out successfully");
