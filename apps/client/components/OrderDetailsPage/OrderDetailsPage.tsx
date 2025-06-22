@@ -2,6 +2,7 @@
 
 import useUserDataStore from "@/lib/userDataStore";
 import { ordersService } from "@/services/orders";
+import { deliveryOptions } from "@/utils/constant";
 import { formatDate } from "@/utils/function";
 import { OrderItem } from "@/utils/types";
 import { order_table } from "@prisma/client";
@@ -86,6 +87,13 @@ const OrderDetailsPage = ({
         return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
+
+  const shippingFee =
+    deliveryOptions.find(
+      (option) => option.label === order.order_delivery_option
+    )?.rate || 0;
+
+  const totalAmount = subtotal + shippingFee;
 
   return (
     <div className="min-h-screen bg-slate-300 p-4 sm:p-6 lg:p-8 text-white">
@@ -278,6 +286,14 @@ const OrderDetailsPage = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label className="text-sm font-medium">Delivery Option</Label>
+                  <Input
+                    readOnly
+                    value={`${order.order_delivery_option} - ₱${shippingFee.toLocaleString()}`}
+                    className="bg-gray-50 border-gray-200 text-black"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label className="text-sm font-medium">Address</Label>
                   <Input
                     readOnly
@@ -359,12 +375,14 @@ const OrderDetailsPage = ({
                           <Truck className="h-4 w-4" />
                           Shipping
                         </span>
-                        <span className="font-medium text-green-600">Free</span>
+                        <span className="font-medium text-green-600">
+                          ₱{shippingFee.toLocaleString()}
+                        </span>
                       </div>
                       <Separator />
                       <div className="flex justify-between text-lg font-bold">
                         <span>Total</span>
-                        <span>₱{subtotal.toLocaleString()}</span>
+                        <span>₱{totalAmount.toLocaleString()}</span>
                       </div>
                     </div>
                   </>

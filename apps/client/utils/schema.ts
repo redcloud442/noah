@@ -8,16 +8,17 @@ export const checkoutSchema = z.object({
 //payment schema
 export const paymentSchema = z
   .object({
-    email: z.string().email(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    address: z.string().min(1, "Address is required"),
-    province: z.string().min(1, "Province is required"),
-    city: z.string().min(1, "City is required"),
-    barangay: z.string().min(1, "Barangay is required"),
-    postalCode: z.string().min(1, "Postal code is required"),
-    phone: z.string(),
-    amount: z.number(),
+    email: z.string().email("Invalid email address"),
+    firstName: z.string().min(4, "First name is required"),
+    lastName: z.string().min(4, "Last name is required"),
+    address: z.string().min(4, "Address is required"),
+    province: z.string().min(4, "Province is required"),
+    city: z.string().min(4, "City is required"),
+    shippingOption: z.string().min(4, "Shipping option is required"),
+    barangay: z.string().min(4, "Barangay is required"),
+    postalCode: z.string().min(4, "Postal code is required"),
+    phone: z.string().min(10, "Phone number is required"),
+    amount: z.number().min(4, "Amount is required"),
     order_number: z.string(),
     productVariant: z.array(
       z.object({
@@ -106,6 +107,7 @@ export const addressCreateSchema = z.object({
   postalCode: z.string(),
   phone: z.string(),
   is_default: z.boolean(),
+  shippingOption: z.string().min(4, "Shipping option is required"),
 });
 
 export type AddressCreateFormData = z.infer<typeof addressCreateSchema>;

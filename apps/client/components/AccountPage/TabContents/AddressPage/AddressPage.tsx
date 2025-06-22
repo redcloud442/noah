@@ -3,8 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateAddress, useUpdateAddress } from "@/query/addressQuery";
+import { deliveryOptions } from "@/utils/constant";
 import { AddressCreateFormData, addressCreateSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -138,12 +146,12 @@ const AddressPage = ({ type = "create", address }: Props) => {
       if (type === "create") {
         createAddress(data);
 
-        // toast({
-        //   title: "Address created successfully",
-        // });
-        // setTimeout(() => {
-        //   router.push("/account/address");
-        // }, 1000);
+        toast({
+          title: "Address created successfully",
+        });
+        setTimeout(() => {
+          router.push("/account/address");
+        }, 1000);
       } else {
         updateAddress({ data, addressId: params.addressId as string });
         toast({
@@ -323,6 +331,38 @@ const AddressPage = ({ type = "create", address }: Props) => {
                   {errors.address && (
                     <p className="text-sm text-red-600">Address is required</p>
                   )}
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="shippingFee"
+                    className="text-sm font-medium text-gray-700 mb-2 block"
+                  >
+                    Delivery Option
+                  </Label>
+                  <Controller
+                    name="shippingOption"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="text-black">
+                          <SelectValue placeholder="Select a delivery option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {deliveryOptions.map((option) => (
+                            <SelectItem key={option.label} value={option.label}>
+                              {option.label} - ₱{option.rate.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-2">

@@ -29,10 +29,36 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 type CheckOutNumberPageProps = {
   formattedAddress: AddressCreateFormData | null;
 };
+
+const deliveryOptions = [
+  {
+    label: "Metro Manila",
+    rate: 150,
+  },
+  {
+    label: "Luzon",
+    rate: 200,
+  },
+  {
+    label: "Visayas",
+    rate: 250,
+  },
+  {
+    label: "Mindanao",
+    rate: 350,
+  },
+];
 
 const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   const params = useParams();
@@ -45,6 +71,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
     handleSubmit,
     control,
     setValue,
+    watch,
     formState: { isSubmitting },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(paymentSchema),
@@ -55,11 +82,15 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
       address: formattedAddress?.address,
       province: formattedAddress?.province,
       city: formattedAddress?.city,
+      barangay: formattedAddress?.barangay,
       postalCode: formattedAddress?.postalCode,
       phone: formattedAddress?.phone,
+      shippingOption: formattedAddress?.shippingOption,
       order_number: params.checkoutNumber as string,
     },
   });
+
+  const shippingOption = watch("shippingOption");
 
   const totalAmount = useMemo(
     () =>
@@ -142,12 +173,17 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   //   }
   // }, [barangays, setValue]);
 
+  const shippingFee =
+    deliveryOptions.find((option) => option.label === shippingOption)?.rate ||
+    0;
+
   const onSubmit = async (data: CheckoutFormData) => {
     try {
       const { ...rest } = data;
 
       const res = await paymentService.create({
         ...rest,
+        amount: totalAmount + (shippingFee || 0),
         productVariant: cart.products.map((variant) => ({
           product_variant_id: variant.product_variant_id,
           product_variant_quantity: variant.product_quantity,
@@ -173,6 +209,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
         toast.error("Error submitting payment");
       }
     }
+  };
+
+  const calculateTotalAmount = (amount: number) => {
+    return amount + (shippingFee || 0);
   };
 
   return (
@@ -310,6 +350,41 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                       type="text"
                       placeholder="123 Main Street, Apartment 4B"
                       className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="shippingFee"
+                      className="text-sm font-medium text-gray-700 mb-2 block"
+                    >
+                      Delivery Option
+                    </Label>
+                    <Controller
+                      name="shippingOption"
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger className="text-black">
+                            <SelectValue placeholder="Select a delivery option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {deliveryOptions.map((option) => (
+                              <SelectItem
+                                key={option.label}
+                                value={option.label}
+                              >
+                                {option.label} - ₱{option.rate.toLocaleString()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                   </div>
 
@@ -643,15 +718,15 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
 
                 <div className="border-t border-gray-100 p-6 space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">
+                    <span className="text-black">Subtotal</span>
+                    <span className="font-medium text-black">
                       ₱{totalAmount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Billing Address</span>
+                    <span className="text-gray-600">Shipping Fee</span>
                     <span className="text-green-600 font-medium">
-                      Calculated at next step
+                      ₱{shippingFee?.toLocaleString()}
                     </span>
                   </div>
                   <div className="border-t border-gray-200 pt-3">
@@ -660,7 +735,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         Total
                       </span>
                       <span className="text-2xl font-bold text-gray-900">
-                        ₱{totalAmount.toLocaleString()}
+                        ₱{calculateTotalAmount(totalAmount).toLocaleString()}
                       </span>
                     </div>
                   </div>

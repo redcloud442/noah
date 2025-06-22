@@ -24,6 +24,7 @@ const page = async ({ params }: { params: Promise<{ addressId: string }> }) => {
       user_address_phone: true,
       user_address_postal_code: true,
       user_address_is_default: true,
+      user_address_delivery_option: true,
     },
   });
 
@@ -38,6 +39,7 @@ const page = async ({ params }: { params: Promise<{ addressId: string }> }) => {
     postalCode: address?.user_address_postal_code || "",
     phone: address?.user_address_phone || "",
     is_default: address?.user_address_is_default || false,
+    shippingOption: address?.user_address_delivery_option || "",
   };
 
   return <AddressPage type="update" address={formattedAddress} />;

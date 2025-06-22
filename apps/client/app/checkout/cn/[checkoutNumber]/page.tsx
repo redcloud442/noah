@@ -56,6 +56,7 @@ const page = async ({
       postalCode: address?.user_address_postal_code || "",
       phone: address?.user_address_phone || "",
       is_default: address?.user_address_is_default || false,
+      shippingOption: address?.user_address_delivery_option || "",
     };
   }
 
