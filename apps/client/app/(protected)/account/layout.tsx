@@ -16,6 +16,7 @@ export default async function AccountLayout({
   return (
     <div className="min-h-screen h-full bg-gray-100 mt-24 p-4 sm:p-10 space-y-10">
       <BreadcrumbUser />
+
       {children}
     </div>
   );

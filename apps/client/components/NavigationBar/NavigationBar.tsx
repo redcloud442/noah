@@ -267,8 +267,13 @@ export const NavigationBar = ({
           </div>
 
           {userData?.teamMemberProfile?.team_member_role === "ADMIN" ? (
-            <Link
-              href={`/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`}
+            <Button
+              variant="ghost"
+              onClick={() =>
+                router.push(
+                  `/${userData?.teamMemberProfile?.team_member_team.toLowerCase()}/admin`
+                )
+              }
               className={`${
                 isScrolled
                   ? "text-white hover:text-black hover:bg-gray-100"
@@ -276,13 +281,14 @@ export const NavigationBar = ({
               } p-2 rounded-lg transition-all duration-300`}
             >
               <User className="w-5 h-5" />
-            </Link>
+            </Button>
           ) : userData?.teamMemberProfile?.team_member_role === "MEMBER" ||
             userData?.teamMemberProfile?.team_member_role === "CASHIER" ||
             userData?.teamMemberProfile?.team_member_role === "RESELLER" ? (
             <div className="flex items-center space-x-2">
-              <Link
-                href="/account"
+              <Button
+                onClick={() => router.push("/account")}
+                variant="ghost"
                 className={`${
                   isScrolled
                     ? "text-white hover:text-black hover:bg-gray-100"
@@ -290,7 +296,7 @@ export const NavigationBar = ({
                 } p-2 rounded-lg transition-all duration-300`}
               >
                 <User className="w-5 h-5" />
-              </Link>
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

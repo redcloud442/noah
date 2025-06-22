@@ -24,6 +24,10 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import useUserDataStore from "@/lib/userDataStore";
+import { authService } from "@/services/auth";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 // This is sample data.
 
@@ -34,6 +38,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
   const activeTeamName = activeTeam.team_name.toLowerCase();
+  const { userData, setUserData } = useUserDataStore();
   const data = {
     navMain: [
       {
@@ -113,6 +118,23 @@ export function AppSidebar({ teams, activeTeam, ...props }: AppSidebarProps) {
       },
     ],
   };
+
+  useEffect(() => {
+    if (userData) return;
+
+    const fetchUser = async () => {
+      try {
+        const { userProfile, teamMemberProfile } = await authService.getUser();
+        setUserData({ userProfile, teamMemberProfile });
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Error fetching user"
+        );
+      }
+    };
+
+    fetchUser();
+  }, [userData]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
