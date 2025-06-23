@@ -439,10 +439,10 @@ const ProductSlugPublicPage = ({ product, variantInfo }: Props) => {
               />
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="shipping">
+          {/* <AccordionItem value="shipping">
             <AccordionTrigger>Shipping</AccordionTrigger>
             <AccordionContent>Shipping details go here.</AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
           <AccordionItem value="returns">
             <AccordionTrigger>
               Noir Clothing Philippines Corporation Returns
