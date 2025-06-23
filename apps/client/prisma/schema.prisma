@@ -329,3 +329,48 @@ model newsletter_table {
 
   @@schema("public")
 }
+
+model region_table {
+  region_id    Int           @id @default(autoincrement())
+  region_name  String
+  region_description String
+
+  province_table province_table[]
+
+  @@schema("location_schema")
+}
+
+model province_table {
+  province_id    Int           @id @default(autoincrement())
+  province_name  String
+  region_id Int
+  province_rate Float?
+
+  province_region region_table @relation(fields: [region_id], references: [region_id], onDelete: Cascade)
+
+  municipality_table municipality_table[]
+
+  @@schema("location_schema")
+}
+
+model municipality_table {
+  municipality_id    Int           @id @default(autoincrement())
+  province_id Int
+  municipality_name  String
+
+  municipality_province province_table @relation(fields: [province_id], references: [province_id], onDelete: Cascade)
+  barangay_table barangay_table[]
+
+  @@schema("location_schema")
+}
+
+model barangay_table {
+  barangay_id    Int           @id @default(autoincrement())
+  municipality_id Int
+  barangay_name  String
+
+  barangay_municipality municipality_table @relation(fields: [municipality_id], references: [municipality_id], onDelete: Cascade)
+
+  @@schema("location_schema")
+}
+
