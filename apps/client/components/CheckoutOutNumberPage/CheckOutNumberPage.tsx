@@ -2,7 +2,6 @@
 
 import { useCartStore } from "@/lib/store";
 import useUserDataStore from "@/lib/userDataStore";
-import { paymentService } from "@/services/payment";
 import {
   AddressCreateFormData,
   CheckoutFormData,
@@ -10,7 +9,8 @@ import {
 } from "@/utils/schema";
 import { Product } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AxiosError } from "axios";
+import { useQuery } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
 import {
   ArrowRight,
   Loader2,
@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
@@ -66,6 +66,9 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
   const { cart } = useCartStore();
   const { userData } = useUserDataStore();
 
+  const [selectedProvince, setSelectedProvince] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+
   const {
     register,
     handleSubmit,
@@ -90,6 +93,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
     },
   });
 
+  console.log(formState.errors);
   const shippingOption = watch("shippingOption");
 
   const totalAmount = useMemo(
@@ -118,60 +122,70 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
     }
   }, [cart, setValue]);
 
-  // const { data: provinces = [] } = useQuery({
-  //   queryKey: ["provinces"],
-  //   queryFn: async () => {
-  //     const res = await axios.get("https://psgc.gitlab.io/api/provinces/");
-  //     return res.data;
-  //   },
-  //   staleTime: 1000 * 60 * 60 * 24,
-  //   gcTime: 1000 * 60 * 60 * 24,
-  // });
+  const { data: provinces = [] } = useQuery({
+    queryKey: ["provinces"],
+    queryFn: async () => {
+      const res = await axios.get("/api/v2/location/province");
+      return res.data as {
+        province_id: string;
+        province_name: string;
+        province_rate: string;
+      }[];
+    },
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
 
-  // const { data: cities = [] } = useQuery({
-  //   queryKey: ["cities", selectedProvince],
-  //   queryFn: async () => {
-  //     const res = await axios.get(
-  //       `https://psgc.gitlab.io/api/provinces/${selectedProvince}/cities`
-  //     );
-  //     return res.data;
-  //   },
-  //   enabled: !!selectedProvince,
-  //   staleTime: 1000 * 60 * 60 * 24,
-  //   gcTime: 1000 * 60 * 60 * 24,
-  // });
+  const { data: cities = [] } = useQuery({
+    queryKey: ["cities", selectedProvince],
+    queryFn: async () => {
+      const res = await axios.get(
+        `/api/v2/location/municipality/${selectedProvince}`
+      );
+      return res.data as {
+        municipality_id: string;
+        municipality_name: string;
+        province_id: string;
+      }[];
+    },
+    enabled: !!selectedProvince,
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
 
-  // const { data: barangays = [] } = useQuery({
-  //   queryKey: ["barangays", selectedCity],
-  //   queryFn: async () => {
-  //     const res = await axios.get(
-  //       `https://psgc.gitlab.io/api/provinces/${selectedProvince}/barangays`
-  //     );
-  //     return res.data;
-  //   },
-  //   enabled: !!selectedCity,
-  //   staleTime: 1000 * 60 * 60 * 24,
-  //   gcTime: 1000 * 60 * 60 * 24,
-  // });
+  const { data: barangays = [] } = useQuery({
+    queryKey: ["barangays", selectedCity],
+    queryFn: async () => {
+      const res = await axios.get(`/api/v2/location/barangay/${selectedCity}`);
+      return res.data as {
+        barangay_id: string;
+        barangay_name: string;
+        municipality_id: string;
+      }[];
+    },
+    enabled: !!selectedCity,
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
 
-  // useEffect(() => {
-  //   if (provinces.length > 0) {
-  //     setValue("province", "");
-  //   }
-  // }, [provinces, setValue]);
+  useEffect(() => {
+    if (provinces.length > 0) {
+      setValue("province", "");
+    }
+  }, [provinces, setValue]);
 
-  // useEffect(() => {
-  //   if (cities.length > 0) {
-  //     setValue("city", "");
-  //     setValue("barangay", "");
-  //   }
-  // }, [cities, setValue]);
+  useEffect(() => {
+    if (cities.length > 0) {
+      setValue("city", "");
+      setValue("barangay", "");
+    }
+  }, [cities, setValue]);
 
-  // useEffect(() => {
-  //   if (barangays.length > 0) {
-  //     setValue("barangay", "");
-  //   }
-  // }, [barangays, setValue]);
+  useEffect(() => {
+    if (barangays.length > 0) {
+      setValue("barangay", "");
+    }
+  }, [barangays, setValue]);
 
   const shippingFee =
     deliveryOptions.find((option) => option.label === shippingOption)?.rate ||
@@ -179,29 +193,33 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      const { ...rest } = data;
+      const { province, city, barangay, ...rest } = data;
+      console.log(province, city, barangay);
 
-      const res = await paymentService.create({
-        ...rest,
-        amount: totalAmount + (shippingFee || 0),
-        productVariant: cart.products.map((variant) => ({
-          product_variant_id: variant.product_variant_id,
-          product_variant_quantity: variant.product_quantity,
-          product_variant_price: variant.product_price,
-          product_variant_size: variant.product_size,
-          product_variant_color: variant.product_variant_color,
-        })),
-      });
+      // const res = await paymentService.create({
+      //   ...rest,
+      //   province: province?.province_name,
+      //   city: city?.municipality_name,
+      //   barangay: barangay?.barangay_name,
+      //   amount: totalAmount + (shippingFee || 0),
+      //   productVariant: cart.products.map((variant) => ({
+      //     product_variant_id: variant.product_variant_id,
+      //     product_variant_quantity: variant.product_quantity,
+      //     product_variant_price: variant.product_price,
+      //     product_variant_size: variant.product_size,
+      //     product_variant_color: variant.product_variant_color,
+      //   })),
+      // });
 
-      if (!userData) {
-        localStorage.removeItem("cart");
-      }
+      // if (!userData) {
+      //   localStorage.removeItem("cart");
+      // }
 
-      if (res) {
-        toast.success("Payment on process");
+      // if (res) {
+      //   toast.success("Payment on process");
 
-        router.push(`/payment/pn/${params.checkoutNumber}`);
-      }
+      //   router.push(`/payment/pn/${params.checkoutNumber}`);
+      // }
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data.message);
@@ -353,7 +371,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label
                       htmlFor="shippingFee"
                       className="text-sm font-medium text-gray-700 mb-2 block"
@@ -386,7 +404,7 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         </Select>
                       )}
                     />
-                  </div>
+                  </div> */}
 
                   <div>
                     <Label
@@ -398,16 +416,29 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                     <Controller
                       name="province"
                       control={control}
-                      defaultValue=""
                       render={({ field }) => (
-                        <>
-                          <Input
-                            {...field}
-                            type="text"
-                            placeholder="Province"
-                            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
-                          />
-                        </>
+                        <Select
+                          onValueChange={(value) => {
+                            const parsedProvince = JSON.parse(value);
+                            setSelectedProvince(parsedProvince.province_id);
+                            field.onChange(parsedProvince);
+                          }}
+                          value={field.value ? JSON.stringify(field.value) : ""}
+                        >
+                          <SelectTrigger className="text-black">
+                            <SelectValue placeholder="Select a delivery option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {provinces.map((province) => (
+                              <SelectItem
+                                key={province.province_id}
+                                value={JSON.stringify(province)}
+                              >
+                                {province.province_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
                     />
                   </div>
@@ -423,16 +454,32 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                       <Controller
                         name="city"
                         control={control}
-                        defaultValue=""
                         render={({ field }) => (
-                          <>
-                            <Input
-                              {...field}
-                              type="text"
-                              placeholder="City"
-                              className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
-                            />
-                          </>
+                          <Select
+                            {...field}
+                            onValueChange={(value) => {
+                              const parsedCity = JSON.parse(value);
+                              setSelectedCity(parsedCity.municipality_id);
+                              field.onChange(parsedCity);
+                            }}
+                            value={
+                              field.value ? JSON.stringify(field.value) : ""
+                            }
+                          >
+                            <SelectTrigger className="text-black">
+                              <SelectValue placeholder="Select a delivery option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cities.map((city) => (
+                                <SelectItem
+                                  key={city.municipality_id}
+                                  value={JSON.stringify(city)}
+                                >
+                                  {city.municipality_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         )}
                       />
                     </div>
@@ -448,14 +495,25 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                         control={control}
                         defaultValue=""
                         render={({ field }) => (
-                          <>
-                            <Input
-                              {...field}
-                              type="text"
-                              placeholder="Barangay"
-                              className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-black"
-                            />
-                          </>
+                          <Select
+                            {...field}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger className="text-black">
+                              <SelectValue placeholder="Select a delivery option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {barangays.map((barangay) => (
+                                <SelectItem
+                                  key={barangay.barangay_id}
+                                  value={barangay.barangay_name}
+                                >
+                                  {barangay.barangay_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         )}
                       />
                     </div>
