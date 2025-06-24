@@ -94,6 +94,7 @@ export const NavigationBar = ({
               alt="Noire Luxury"
               width={isScrolled ? 70 : 80}
               height={isScrolled ? 70 : 80}
+              title="Noir Clothing - Premium Fashion & Lifestyle Brand"
               className="cursor-pointer transition-all duration-300 group-hover:scale-110"
             />
           </div>

@@ -127,6 +127,7 @@ export const HoverImageCard = ({
           width={2000}
           height={2000}
           quality={80}
+          title={product.product_name}
           className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
         />
 
@@ -263,6 +264,7 @@ export const HoverVariantCard = ({
           width={500}
           height={500}
           quality={80}
+          title={product.product_name}
           className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
           onClick={() => redirectToViewProduct(variant.product_variant_slug)}
         />

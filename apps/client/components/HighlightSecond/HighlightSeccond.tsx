@@ -74,6 +74,7 @@ const HighlightSecond = () => {
                   alt={item.product_variant_color}
                   width={800}
                   height={800}
+                  title={item.product_variant_product.product_name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
 
