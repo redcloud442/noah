@@ -20,7 +20,7 @@ const page = async ({
     where: {
       order_number: paymentNumber,
       order_status: {
-        in: ["PAID", "CANCELED"],
+        in: ["PAID", "CANCELED", "UNPAID"],
       },
       order_is_notified: false,
     },
