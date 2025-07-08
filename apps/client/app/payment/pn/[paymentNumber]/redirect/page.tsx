@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 const page = async ({
   searchParams,
   params,
@@ -17,11 +19,15 @@ const page = async ({
   const payment = await prisma.order_table.findUnique({
     where: {
       order_number: paymentNumber,
-      order_status: "UNPAID",
+      order_status: {
+        in: ["PAID", "CANCELED"],
+      },
+      order_is_notified: false,
     },
     select: {
       order_status: true,
       order_email: true,
+      order_number: true,
     },
   });
 
