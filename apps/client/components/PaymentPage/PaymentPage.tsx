@@ -25,7 +25,7 @@ type PaymentPageProps = {
 };
 
 const paymentMethods = {
-  card: ["Visa", "Mastercard"],
+  card: ["  ", "Mastercard"],
   eWallet: ["GCash", "GrabPay", "PayMaya"],
   onlineBanking: ["BPI", "UnionBank"],
 };
@@ -138,8 +138,6 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
   };
   const isCardPayment = watch("payment_method") === "card";
   const cardErrors = isCardPayment ? errors.payment_type : undefined;
-
-  console.log(selectedMethod);
 
   return (
     <div className="min-h-screen pt-24">
