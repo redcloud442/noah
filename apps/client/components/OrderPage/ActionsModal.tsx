@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { emailSevice } from "@/services/email";
 import { ordersService } from "@/services/orders";
 import { OrderType } from "@/utils/types";
 import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,9 +19,15 @@ type ActionsModalProps = {
   orderId: string;
   status: "SHIPPED";
   queryKey: QueryKey;
+  toBeEmailed: string;
 };
 
-const ActionsModal = ({ orderId, status, queryKey }: ActionsModalProps) => {
+const ActionsModal = ({
+  orderId,
+  status,
+  queryKey,
+  toBeEmailed,
+}: ActionsModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -57,7 +64,28 @@ const ActionsModal = ({ orderId, status, queryKey }: ActionsModalProps) => {
       }
       toast.error("Something went wrong. Reverting changes.");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      if (status === "SHIPPED") {
+        await emailSevice.sendEmail({
+          to: toBeEmailed,
+          subject: "Your Order Has Been Shipped – Noir Clothing",
+          text: `Your order has been shipped via our logistics partner and is on its way to you.`,
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+              <h2 style="color: #3B82F6; font-size: 24px;">Your Order is on the Way!</h2>
+              <p style="font-size: 16px;">
+                Great news! Your order from <strong>Noir Clothing</strong> has been shipped through our trusted logistics partner.
+              </p>
+              <br />
+              <p style="font-size: 14px; color: #555;">
+                If you have any questions or concerns, feel free to reply to this email or contact our support team.
+              </p>
+              <p style="font-weight: bold;">– The Noir Clothing Team</p>
+            </div>
+          `,
+        });
+      }
+
       toast.success(
         `${status === "SHIPPED" ? "Shipped" : "Rejected"} successfully!`
       );

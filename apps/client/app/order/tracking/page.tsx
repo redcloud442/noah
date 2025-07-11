@@ -1,4 +1,3 @@
-import OrderDetailsPage from "@/components/OrderDetailsPage/OrderDetailsPage";
 import prisma from "@/utils/prisma/prisma";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
@@ -8,6 +7,8 @@ const page = async ({
 }: {
   searchParams: Promise<{ token: string }>;
 }) => {
+  redirect("/");
+
   const { token } = await searchParams;
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
@@ -30,11 +31,11 @@ const page = async ({
     return redirect("/");
   }
 
-  return (
-    <div className="min-h-screen  text-white bg-black pt-20">
-      <OrderDetailsPage order={order} isTracking />
-    </div>
-  );
+  // return (
+  //   <div className="min-h-screen  text-white bg-black pt-20">
+  //     <OrderDetailsPage order={order} isTracking />
+  //   </div>
+  // );
 };
 
 export default page;

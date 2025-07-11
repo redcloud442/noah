@@ -311,6 +311,7 @@ export const OrderListColumn = (queryKey: QueryKey) => {
                   orderId={data.order_id}
                   status="SHIPPED"
                   queryKey={queryKey}
+                  toBeEmailed={data.order_email}
                 />
               </div>
             )}

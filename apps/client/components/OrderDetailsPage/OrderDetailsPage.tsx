@@ -7,7 +7,6 @@ import { formatDate } from "@/utils/function";
 import { OrderItem } from "@/utils/types";
 import { order_table } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import {
   CreditCard,
   MapPin,
@@ -17,9 +16,7 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
-import { toast } from "sonner";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -31,10 +28,7 @@ type OrderDetailsPageProps = {
   isTracking?: boolean;
 };
 
-const OrderDetailsPage = ({
-  order,
-  isTracking = false,
-}: OrderDetailsPageProps) => {
+const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
   const { userData } = useUserDataStore();
 
   const { data: orderItems = [], isLoading } = useQuery<OrderItem[]>({
@@ -52,22 +46,22 @@ const OrderDetailsPage = ({
     0
   );
 
-  const handleTrackOrder = async () => {
-    try {
-      const result = await ordersService.trackOrder({
-        orderNumber: order.order_number,
-        orderId: order.order_id,
-      });
+  // const handleTrackOrder = async () => {
+  //   try {
+  //     const result = await ordersService.trackOrder({
+  //       orderNumber: order.order_number,
+  //       orderId: order.order_id,
+  //     });
 
-      window.open(result.redirectUrl, "_blank");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message);
-      } else {
-        toast.error("Failed to track order");
-      }
-    }
-  };
+  //     window.open(result.redirectUrl, "_blank");
+  //   } catch (error) {
+  //     if (error instanceof AxiosError) {
+  //       toast.error(error.response?.data.message);
+  //     } else {
+  //       toast.error("Failed to track order");
+  //     }
+  //   }
+  // };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -418,7 +412,7 @@ const OrderDetailsPage = ({
               </CardContent>
             </Card>
 
-            {!isTracking && (
+            {/* {!isTracking && (
               <Card className="shadow-sm border-0 bg-white">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-lg text-black">
@@ -433,7 +427,7 @@ const OrderDetailsPage = ({
                   </div>
                 </CardContent>
               </Card>
-            )}
+            )} */}
           </div>
         </div>
       </div>
