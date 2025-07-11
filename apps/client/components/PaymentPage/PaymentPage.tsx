@@ -12,11 +12,13 @@ import { paymentService } from "@/services/payment";
 import { PaymentCreatePaymentFormData } from "@/utils/schema";
 import { order_table } from "@prisma/client";
 import { AxiosError } from "axios";
-import { Building2, Clock, Loader2, Wallet } from "lucide-react";
+import { Building2, Clock, CreditCard, Loader2, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 type PaymentPageProps = {
   order: order_table;
@@ -30,11 +32,15 @@ const paymentMethods = {
 
 const PaymentPage = ({ order }: PaymentPageProps) => {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+
   const router = useRouter();
+
   const {
     handleSubmit,
     setValue,
-    formState: { isSubmitting },
+    register,
+    watch,
+    formState: { isSubmitting, errors },
   } = useForm<PaymentCreatePaymentFormData>({
     defaultValues: {
       order_number: order.order_number,
@@ -130,6 +136,10 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
     setValue("payment_type", type);
     setSelectedMethod(type);
   };
+  const isCardPayment = watch("payment_method") === "card";
+  const cardErrors = isCardPayment ? errors.payment_type : undefined;
+
+  console.log(selectedMethod);
 
   return (
     <div className="min-h-screen pt-24">
@@ -159,11 +169,9 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
             </div>
           </div>
 
-          {/* Enhanced Payment Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Accordion type="single" collapsible className="space-y-4">
-              {/* Enhanced Cards Section */}
-              {/* <AccordionItem
+              <AccordionItem
                 value="card"
                 className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
               >
@@ -223,7 +231,7 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                       ))}
                     </div>
 
-                    {paymentMethod === "card" && (
+                    {isCardPayment && (
                       <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
                         <h4 className="text-lg font-semibold text-slate-800 mb-4">
                           Card Details
@@ -259,9 +267,9 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                               className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
                             />
 
-                            {cardErrors.payment_details?.card?.card_number && (
+                            {cardErrors?.message && (
                               <p className="text-red-500 text-sm mt-1">
-                                Card number is required
+                                {cardErrors?.message}
                               </p>
                             )}
                           </div>
@@ -311,10 +319,9 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                                 className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
                               />
 
-                              {cardErrors.payment_details?.card
-                                ?.card_expiry && (
+                              {cardErrors?.message && (
                                 <p className="text-red-500 text-sm mt-1">
-                                  Expiry date is required
+                                  {cardErrors?.message}
                                 </p>
                               )}
                             </div>
@@ -335,9 +342,9 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                                 maxLength={3}
                                 className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-black"
                               />
-                              {cardErrors.payment_details?.card?.card_cvv && (
+                              {cardErrors?.message && (
                                 <p className="text-red-500 text-sm mt-1">
-                                  CVV is required
+                                  {cardErrors?.message}
                                 </p>
                               )}
                             </div>
@@ -347,7 +354,7 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                     )}
                   </CardContent>
                 </AccordionContent>
-              </AccordionItem> */}
+              </AccordionItem>
 
               {/* Enhanced E-Wallet Section */}
               <AccordionItem

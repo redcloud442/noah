@@ -56,18 +56,10 @@ export const PaymentRedirectPage = ({
                 text: `Congratulations on completing your purchase! Your payment was successful.`,
                 html: `
                   <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                    <h2 style="color: #10B981; font-size: 24px;">🎉 Congratulations!</h2>
+                    <h2 style="color: #10B981; font-size: 24px;">Congratulations!</h2>
                     <p style="font-size: 16px;">We're excited to welcome you to <strong>Noir Clothing</strong>!</p>
                     <p style="font-size: 16px;">
                       Your payment was <strong>successfully processed</strong>. You can now enjoy exclusive access to our latest collections and rewards.
-                    </p>
-                    <p style="font-size: 16px;">
-                      Track the status of your order anytime with the link below:
-                    </p>
-                    <p style="margin: 20px 0;">
-                      <a href="${paymentNumber ? `https://noir-clothing.com/track/${paymentNumber}` : "#"}" style="display: inline-block; padding: 12px 24px; background-color: #10B981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                        Track Your Order
-                      </a>
                     </p>
                     <br />
                     <p style="font-size: 14px; color: #555;">Thank you for trusting Noir Clothing. We’re excited to have you with us!</p>

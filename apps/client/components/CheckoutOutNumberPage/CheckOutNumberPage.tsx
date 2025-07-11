@@ -13,12 +13,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import {
   ArrowRight,
+  Banknote,
+  CreditCard,
   Loader2,
   Mail,
   MapPin,
   Phone,
   Shield,
   ShoppingBag,
+  Smartphone,
   User,
 } from "lucide-react";
 import Image from "next/image";
@@ -538,13 +541,13 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                   </div>
 
                   {/* Payment Methods */}
-                  {/* <div className="space-y-4"> */}
-                  {/* <h3 className="font-semibold text-gray-900 mb-4">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 mb-4">
                       Accepted Payment Methods
-                    </h3> */}
+                    </h3>
 
-                  {/* Credit Cards */}
-                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+                    {/* Credit Cards */}
+                    <div className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <CreditCard className="w-5 h-5 text-blue-600" />
@@ -571,10 +574,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div> */}
+                    </div>
 
-                  {/* E-Wallets */}
-                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors">
+                    {/* E-Wallets */}
+                    <div className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <Smartphone className="w-5 h-5 text-green-600" />
@@ -609,10 +612,10 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div> */}
+                    </div>
 
-                  {/* Online Banking */}
-                  {/* <div className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                    {/* Online Banking */}
+                    <div className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <Banknote className="w-5 h-5 text-purple-600" />
@@ -639,8 +642,8 @@ const CheckOutNumberPage = ({ formattedAddress }: CheckOutNumberPageProps) => {
                           />
                         </div>
                       </div>
-                    </div> */}
-                  {/* </div> */}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

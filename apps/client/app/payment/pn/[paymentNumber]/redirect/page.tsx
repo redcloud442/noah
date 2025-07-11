@@ -7,13 +7,10 @@ import { Suspense } from "react";
 export const dynamic = "force-dynamic";
 
 const page = async ({
-  searchParams,
   params,
 }: {
-  searchParams: Promise<{ payment_intent_id: string }>;
   params: Promise<{ paymentNumber: string }>;
 }) => {
-  const { payment_intent_id } = await searchParams;
   const { paymentNumber } = await params;
 
   const payment = await prisma.order_table.findUnique({
@@ -28,6 +25,7 @@ const page = async ({
       order_status: true,
       order_email: true,
       order_number: true,
+      order_payment_id: true,
     },
   });
 
@@ -45,7 +43,7 @@ const page = async ({
     >
       <PaymentRedirectPage
         paymentNumber={paymentNumber}
-        paymentIntentId={payment_intent_id}
+        paymentIntentId={payment.order_payment_id}
         email={payment.order_email}
       />
     </Suspense>
