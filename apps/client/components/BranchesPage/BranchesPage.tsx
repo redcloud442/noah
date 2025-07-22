@@ -39,8 +39,7 @@ const branches = [
     mapLink:
       "https://www.google.com/maps/search/Ala+Moana+Build+,+maharlika+highway+,+brgy.+villasis+,+santiago+city,+isabela/@16.6913731,121.5517686,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MDYxNS4wIKXMDSoASAFQAw%3D%3D",
     status: "Open",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=200&fit=crop&crop=center",
+    image: "/assets/branches/PASIG_BRANCH.png",
   },
 ];
 
@@ -67,14 +66,12 @@ const BranchesPage = () => {
           </p>
         </div>
 
-        {/* Branches Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {branches.map((branch, index) => (
             <Card
               key={index}
               className="group bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 shadow-2xl hover:shadow-zinc-700/20 transition-all duration-500 hover:scale-[1.02] hover:bg-zinc-900/70 rounded-2xl overflow-hidden relative"
             >
-              {/* Status Badge */}
               <div className="absolute top-4 right-4 z-20">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
@@ -87,7 +84,6 @@ const BranchesPage = () => {
                 </span>
               </div>
 
-              {/* Image Header */}
               <div className="relative h-48 overflow-hidden">
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
