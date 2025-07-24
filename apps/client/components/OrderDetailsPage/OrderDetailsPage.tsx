@@ -394,23 +394,6 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* {!isTracking && (
-              <Card className="shadow-sm border-0 bg-white">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg text-black">
-                    Tracking Order
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 flex flex-col ">
-                    <Button variant={"secondary"} onClick={handleTrackOrder}>
-                      Track Order
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )} */}
           </div>
         </div>
       </div>

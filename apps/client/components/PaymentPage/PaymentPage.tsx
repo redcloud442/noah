@@ -14,7 +14,7 @@ import { order_table } from "@prisma/client";
 import { AxiosError } from "axios";
 import { Building2, Clock, CreditCard, Loader2, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
@@ -139,11 +139,22 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
   const isCardPayment = watch("payment_method") === "card";
   const cardErrors = isCardPayment ? errors.payment_type : undefined;
 
+  const cardNumber = watch("payment_details.card.card_number");
+
+  useEffect(() => {
+    const numeric = cardNumber?.replace(/\D/g, "") || "";
+    const formatted = numeric.match(/.{1,4}/g)?.join(" ") || "";
+    if (cardNumber !== formatted) {
+      setValue("payment_details.card.card_number", formatted, {
+        shouldValidate: true,
+      });
+    }
+  }, [cardNumber, setValue]);
+
   return (
-    <div className="min-h-screen pt-24">
+    <div className="min-h-screen pt-24 pb-10">
       <div className="bg-gradient-to-br from-zinc-50 via-zinc-100 to-zinc-100 min-h-screen pt-10 px-6">
         <div className="max-w-5xl mx-auto">
-          {/* Enhanced Header Card */}
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 p-8">
               <div className="flex justify-between items-start text-white">
@@ -249,14 +260,6 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
                               maxLength={19}
                               {...register("payment_details.card.card_number", {
                                 required: "Card number is required",
-                                onChange: (e) => {
-                                  let value = e.target.value.replace(/\D/g, "");
-
-                                  value =
-                                    value.match(/.{1,4}/g)?.join(" ") || "";
-
-                                  e.target.value = value;
-                                },
                                 pattern: {
                                   value: /^(\d{4} ){3}\d{4}$/,
                                   message: "Card number must be 16 digits",
@@ -483,8 +486,7 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
               </AccordionItem>
             </Accordion>
 
-            {/* Enhanced Submit Button */}
-            <div className="pt-6">
+            <div className="p-6">
               <Button
                 type="submit"
                 disabled={!selectedMethod || isSubmitting}
