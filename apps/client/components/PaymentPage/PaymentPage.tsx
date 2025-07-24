@@ -25,7 +25,7 @@ type PaymentPageProps = {
 };
 
 const paymentMethods = {
-  card: ["  ", "Mastercard"],
+  card: ["Visa", "Mastercard"],
   eWallet: ["GCash", "GrabPay", "PayMaya"],
   onlineBanking: ["BPI", "UnionBank"],
 };
