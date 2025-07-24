@@ -486,7 +486,7 @@ const PaymentPage = ({ order }: PaymentPageProps) => {
               </AccordionItem>
             </Accordion>
 
-            <div className="p-6">
+            <div className="p-6 m-6">
               <Button
                 type="submit"
                 disabled={!selectedMethod || isSubmitting}
