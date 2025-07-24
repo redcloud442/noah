@@ -32,17 +32,16 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const isAuthRoute = pathname.startsWith("/auth");
   const isPublicRoute = pathname === "/";
   const isProtectedRoute = pathname.startsWith("/dashboard");
 
-  // 🚫 If no user and trying to access protected routes, redirect to login
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    return NextResponse.redirect(
+      new URL("https://noir-clothing.com/login", request.url)
+    );
   }
 
-  // 🚫 If user is logged in but tries to access `/` or `/auth/*`, redirect to dashboard
-  if (user && (isPublicRoute || isAuthRoute)) {
+  if (user && isPublicRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
