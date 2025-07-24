@@ -1,19 +1,19 @@
 export const deliveryOptions = [
   {
     label: "Metro Manila",
-    rate: 150,
+    rate: 70,
   },
   {
     label: "Luzon",
-    rate: 200,
+    rate: 120,
   },
 
   {
     label: "Visayas",
-    rate: 250,
+    rate: 200,
   },
   {
     label: "Mindanao",
-    rate: 350,
+    rate: 250,
   },
 ];
