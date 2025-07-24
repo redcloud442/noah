@@ -107,7 +107,7 @@ const ActionsModal = ({
           variant="outline"
           className="text-sm cursor-pointer bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:text-white rounded-sm focus:bg-accent p-1 w-full"
         >
-          {status === "SHIPPED" ? "SHIPPED" : "Reject"}
+          {status === "SHIPPED" ? "PAID" : "REJECT"}
         </Button>
       </DialogTrigger>
 

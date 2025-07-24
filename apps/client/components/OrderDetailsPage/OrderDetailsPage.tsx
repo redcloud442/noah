@@ -46,23 +46,6 @@ const OrderDetailsPage = ({ order }: OrderDetailsPageProps) => {
     0
   );
 
-  // const handleTrackOrder = async () => {
-  //   try {
-  //     const result = await ordersService.trackOrder({
-  //       orderNumber: order.order_number,
-  //       orderId: order.order_id,
-  //     });
-
-  //     window.open(result.redirectUrl, "_blank");
-  //   } catch (error) {
-  //     if (error instanceof AxiosError) {
-  //       toast.error(error.response?.data.message);
-  //     } else {
-  //       toast.error("Failed to track order");
-  //     }
-  //   }
-  // };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PAID":
