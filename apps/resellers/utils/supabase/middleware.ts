@@ -30,6 +30,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user?.user_metadata.role !== "RESELLER") {
+    return NextResponse.redirect(
+      new URL("https://noir-clothing.com/login", request.url)
+    );
+  }
+
   const pathname = request.nextUrl.pathname;
 
   const isPublicRoute = pathname === "/";
