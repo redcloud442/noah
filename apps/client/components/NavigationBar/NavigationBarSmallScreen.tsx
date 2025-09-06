@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -85,55 +91,69 @@ export const MobileNavigationBar = ({
             <SheetTitle className="text-white hidden"></SheetTitle>
             <SheetDescription className="text-white hidden"></SheetDescription>
 
-            <div className="space-y-3">
-              <p className="text-sm uppercase font-semibold text-gray-400">
-                Collections
-              </p>
-              {collections.map((col) => (
-                <Link
-                  key={col.product_category_id}
-                  href={`/collections/${col.product_category_slug}`}
-                  className="block text-white hover:underline"
-                  onClick={() => setOpen(false)}
-                >
-                  {col.product_category_name.toUpperCase()}
-                </Link>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm uppercase font-semibold text-gray-400">
-                Featured Products
-              </p>
-              {featuredProducts.map((product) => (
-                <Link
-                  key={product.product_variant_id}
-                  href={`/products/${product.product_variant_slug}`}
-                  className="block text-white hover:underline"
-                  onClick={() => setOpen(false)}
-                >
-                  {product.product_variant_product.product_name.toUpperCase()} -{" "}
-                  {product.product_variant_color.toUpperCase()}
-                </Link>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm uppercase font-semibold text-gray-400">
-                Fresh Drops
-              </p>
-              {freshDrops.map((drop) => (
-                <Link
-                  key={drop.product_variant_id}
-                  href={`/drops/${drop.product_variant_slug}`}
-                  className="block text-white hover:underline"
-                  onClick={() => setOpen(false)}
-                >
-                  {drop.product_variant_product.product_name.toUpperCase()} -{" "}
-                  {drop.product_variant_color.toUpperCase()}
-                </Link>
-              ))}
-            </div>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>
+                  <p className="text-sm uppercase font-semibold text-gray-400">
+                    Collections
+                  </p>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  {collections.map((col) => (
+                    <Link
+                      key={col.product_category_id}
+                      href={`/collections/${col.product_category_slug}`}
+                      className="block text-white hover:underline"
+                      onClick={() => setOpen(false)}
+                    >
+                      {col.product_category_name.toUpperCase()}
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-2">
+                <AccordionTrigger>
+                  <p className="text-sm uppercase font-semibold text-gray-400">
+                    Featured Products
+                  </p>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  {" "}
+                  {featuredProducts.map((product) => (
+                    <Link
+                      key={product.product_variant_id}
+                      href={`/products/${product.product_variant_slug}`}
+                      className="block text-white hover:underline"
+                      onClick={() => setOpen(false)}
+                    >
+                      {product.product_variant_product.product_name.toUpperCase()}{" "}
+                      - {product.product_variant_color.toUpperCase()}
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-3">
+                <AccordionTrigger>
+                  <p className="text-sm uppercase font-semibold text-gray-400">
+                    Fresh Drops
+                  </p>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  {" "}
+                  {freshDrops.map((drop) => (
+                    <Link
+                      key={drop.product_variant_id}
+                      href={`/drops/${drop.product_variant_slug}`}
+                      className="block text-white hover:underline"
+                      onClick={() => setOpen(false)}
+                    >
+                      {drop.product_variant_product.product_name.toUpperCase()}{" "}
+                      - {drop.product_variant_color.toUpperCase()}
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             <div className="border-t border-white/20 pt-4 space-y-3">
               <Link href="/cart" className="flex items-center gap-2">

@@ -10,7 +10,6 @@ import { product_table } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "../ui/badge";
@@ -121,38 +120,58 @@ export const HoverImageCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Image
-          src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
-          alt={product.product_name}
-          width={2000}
-          height={2000}
-          quality={80}
-          title={product.product_name}
-          className="w-full min-h-[300px] h-auto object-cover transition-opacity duration-300"
-        />
+        <Link
+          href={`/product/${variant.product_variant_slug}`}
+          className="block"
+        >
+          <Image
+            src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
+            alt={product.product_name}
+            width={500}
+            height={500}
+            quality={80}
+            title={product.product_name}
+            className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md cursor-pointer"
+          />
+        </Link>
 
-        {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            onClick={() => handleAddToCart()}
-            size="sm"
-            variant="outline"
-            className="bg-white text-black z-50"
-          >
-            <PlusIcon className="w-4 h-4" /> Quick Add
-          </Button>
-          <Link href={`/product/${variant.product_variant_slug}`}>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="bg-white text-black"
-            >
-              View
-            </Button>
-          </Link>
+        <div className="absolute inset-0 bg-black/50 p-2 flex items-end justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex gap-2 pointer-events-auto">
+            {!isSoldOut && (
+              <Button
+                onClick={() => {
+                  handleAddToCart();
+                }}
+                size="sm"
+                variant="outline"
+                className="bg-white text-black"
+              >
+                <PlusIcon className="w-4 h-4" /> Quick Add
+              </Button>
+            )}
+
+            <Link href="/shop">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white text-black"
+              >
+                Shop
+              </Button>
+            </Link>
+
+            <Link href={`/product/${variant.product_variant_slug}`}>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white text-black"
+              >
+                View
+              </Button>
+            </Link>
+          </div>
         </div>
-        {/* Badges */}
-        {/* Badges */}
+
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
           <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
@@ -174,7 +193,7 @@ export const HoverImageCard = ({
           )}
 
           {variant.product_variant_is_featured && (
-            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+            <Badge className="bg-green-500 text-xs px-2 py-1 rounded text-white">
               Featured
             </Badge>
           )}
@@ -206,7 +225,6 @@ export const HoverVariantCard = ({
   product,
   currentDate,
 }: HoverVariantCardProps) => {
-  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -247,10 +265,6 @@ export const HoverVariantCard = ({
     [variant.variant_sizes]
   );
 
-  const redirectToViewProduct = (productVariantSlug: string | null) => {
-    router.push(`/product/${productVariantSlug}`);
-  };
-
   return (
     <Card className="overflow-hidden bg-white shadow-lg rounded-none border border-gray-200 cursor-pointer">
       <div
@@ -258,50 +272,58 @@ export const HoverVariantCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Image
-          src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
-          alt={product.product_name}
-          width={500}
-          height={500}
-          quality={80}
-          title={product.product_name}
-          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
-          onClick={() => redirectToViewProduct(variant.product_variant_slug)}
-        />
+        <Link
+          href={`/product/${variant.product_variant_slug}`}
+          className="block"
+        >
+          <Image
+            src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
+            alt={product.product_name}
+            width={500}
+            height={500}
+            quality={80}
+            title={product.product_name}
+            className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md cursor-pointer"
+          />
+        </Link>
 
-        <div className="absolute inset-0 p-2 flex items-end justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
-          {!isSoldOut && (
-            <Button
-              onClick={() => handleAddToCart()}
-              size="sm"
-              variant="outline"
-              className="bg-white text-black"
-            >
-              <PlusIcon className="w-4 h-4" /> Quick Add
-            </Button>
-          )}
+        <div className="absolute inset-0 bg-black/50 p-2 flex items-end justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex gap-2 pointer-events-auto">
+            {!isSoldOut && (
+              <Button
+                onClick={() => {
+                  handleAddToCart();
+                }}
+                size="sm"
+                variant="outline"
+                className="bg-white text-black"
+              >
+                <PlusIcon className="w-4 h-4" /> Quick Add
+              </Button>
+            )}
 
-          <Link href={`/shop`}>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="bg-white text-black"
-            >
-              Shop
-            </Button>
-          </Link>
-          <Link href={`/product/${variant.product_variant_slug}`}>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="bg-white text-black"
-            >
-              View
-            </Button>
-          </Link>
+            <Link href="/shop">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white text-black"
+              >
+                Shop
+              </Button>
+            </Link>
+
+            <Link href={`/product/${variant.product_variant_slug}`}>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white text-black"
+              >
+                View
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Badges */}
         {new Date(product.product_created_at).getTime() >
           currentDate.getTime() - 30 * 24 * 60 * 60 * 1000 && (
           <Badge className="absolute top-2 left-2 bg-black text-xs px-2 py-1 rounded text-white">
@@ -323,14 +345,13 @@ export const HoverVariantCard = ({
           )}
 
           {variant.product_variant_is_featured && (
-            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+            <Badge className="bg-green-500 text-xs px-2 py-1 rounded text-white">
               Featured
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Product Details */}
       <CardContent className="p-4 text-center text-black">
         <CardTitle className="text-sm font-semibold uppercase">
           {product.product_name} - {variant.product_variant_color}
@@ -404,34 +425,46 @@ export const HoverVariantTypeCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Image
-          src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
-          alt={product.product_name}
-          width={500}
-          height={500}
-          quality={80}
-          className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md"
-        />
+        <Link
+          href={`/product/${variant.product_variant_slug}`}
+          className="block"
+        >
+          <Image
+            src={imageUrls[currentImageIndex] || "/assets/model/QR_59794.jpg"}
+            alt={product.product_name}
+            width={500}
+            height={500}
+            quality={80}
+            title={product.product_name}
+            className="w-[500px] h-[500px] object-cover transition-opacity duration-300 rounded-md cursor-pointer"
+          />
+        </Link>
 
-        {/* "Add to Cart" button - initially hidden */}
-        <div className="absolute inset-0 p-2 z-50 flex items-end gap-2 justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            onClick={() => handleAddToCart()}
-            size="sm"
-            variant="outline"
-            className="bg-white text-black z-50"
-          >
-            <PlusIcon className="w-4 h-4" /> Quick Add
-          </Button>
-          <Link href={`/product/${variant.product_variant_slug}`}>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="bg-white text-black"
-            >
-              View
-            </Button>
-          </Link>
+        <div className="absolute inset-0 bg-black/50 p-2 flex items-end justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex gap-2 pointer-events-auto">
+            {!isSoldOut && (
+              <Button
+                onClick={() => {
+                  handleAddToCart();
+                }}
+                size="sm"
+                variant="outline"
+                className="bg-white text-black"
+              >
+                <PlusIcon className="w-4 h-4" /> Quick Add
+              </Button>
+            )}
+
+            <Link href={`/product/${variant.product_variant_slug}`}>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white text-black"
+              >
+                View
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {new Date(product.product_created_at).getTime() >
@@ -455,7 +488,7 @@ export const HoverVariantTypeCard = ({
           )}
 
           {variant.product_variant_is_featured && (
-            <Badge className="bg-green-500 text-center text-xs px-2 py-1 rounded text-white">
+            <Badge className="bg-green-500 text-xs px-2 py-1 rounded text-white">
               Featured
             </Badge>
           )}
