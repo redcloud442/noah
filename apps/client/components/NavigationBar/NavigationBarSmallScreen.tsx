@@ -122,7 +122,7 @@ export const MobileNavigationBar = ({
                   {featuredProducts.map((product) => (
                     <Link
                       key={product.product_variant_id}
-                      href={`/products/${product.product_variant_slug}`}
+                      href={`/product/${product.product_variant_slug}`}
                       className="block text-white hover:underline"
                       onClick={() => setOpen(false)}
                     >
@@ -143,7 +143,7 @@ export const MobileNavigationBar = ({
                   {freshDrops.map((drop) => (
                     <Link
                       key={drop.product_variant_id}
-                      href={`/drops/${drop.product_variant_slug}`}
+                      href={`/product/${drop.product_variant_slug}`}
                       className="block text-white hover:underline"
                       onClick={() => setOpen(false)}
                     >
