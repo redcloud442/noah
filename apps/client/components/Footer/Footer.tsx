@@ -99,7 +99,7 @@ export const Footer = () => {
                   About Us
                 </Link>
                 <Link
-                  href="https://www.facebook.com/profile.php?id=61576970657707"
+                  href="https://www.facebook.com/NoirCorpPH"
                   className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
                 >
                   Contact
