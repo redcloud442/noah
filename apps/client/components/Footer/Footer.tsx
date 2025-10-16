@@ -93,7 +93,7 @@ export const Footer = () => {
               <h3 className="text-xl font-semibold text-white">Quick Links</h3>
               <nav className="flex flex-col space-y-4">
                 <Link
-                  href="https://www.facebook.com/profile.php?id=61576970657707"
+                  href="/about-us"
                   className="text-gray-300 hover:text-white transition-colors duration-200 hover:translate-x-1 transform"
                 >
                   About Us
